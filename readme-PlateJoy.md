@@ -16,12 +16,12 @@ Company: PlateJoy
   The entire service would be based on an LLM since the user would be interacting with an input field which would be used to generate a prompt for an LLM which will return either an answer to their specific question or a certain document like a meal plan or grocery list or a link to instacart with everything preloaded.
 
 6. Validation Guardrail: No LLM-generated artifact reaches the user without passing through a validator.
-  The LLM response can be validated by first checking to make sure certain conditions are met like the correct format, or that certain words are not used, or that the sentiment is not negative or harmful.
+  The LLM response can be validated by first checking to make sure certain conditions are met like the correct format, or that certain details like quantity of food is within a certain range or type of food is from a list of safe foods, or that the sentiment is not negative or harmful in a response to a specific person.
 
 7. Self-Correction Loop: Validation errors must automatically feed back into the LLM to retry/correct.
   The failed validation response can be regenerated until an appropriate response is given or at a certain limit a response can be given that the user should enter a different prompt.
 
 8. Deployability: If built, you are able to fully deploy it.
-  Only a web interface is needed for deployment, no physical elements.
+  Only a web interface with access to interact with external sites like Instacart is needed for deployment, no physical elements.
 
 
