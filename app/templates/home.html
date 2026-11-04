@@ -6,11 +6,13 @@
   <button>{% if plan and plan.status == 'ok' %}Regenerate week{% else %}Generate my week{% endif %}</button>
 </form>
 {% if plan and plan.status == 'ok' %}
+<p class="totals">Estimated total: <strong>${{ '%.2f' % plan.total_cost }}</strong> of your <strong>${{ '%.2f' % plan.budget }}</strong> budget
+  <span class="{% if plan.total_cost <= plan.budget %}ok{% else %}error{% endif %}">(${{ '%.2f' % (plan.budget - plan.total_cost) }} left)</span></p>
 <table class="plan">
   {% for day in range(7) %}
   <tr><th>{{ weekdays[day] }}</th>
     {% for slot in slots %}
-      {% for m in plan.meals if m.day == day and m.slot == slot %}<td><small class="muted">{{ slot }}</small><br>{{ m.name }}</td>{% endfor %}
+      {% for m in plan.meals if m.day == day and m.slot == slot %}<td><small class="muted">{{ slot }}</small><br>{{ m.name }}<br><span class="cost">${{ '%.2f' % m.cost }}</span></td>{% endfor %}
     {% endfor %}
   </tr>
   {% endfor %}

@@ -169,6 +169,7 @@ def test_violation_triggers_regeneration(onboarded):
     good = good_plan()
     bad = copy.deepcopy(good)
     bad["meals"][0]["ingredients"].append(dict(name="peanut butter", quantity=1, unit="tbsp", section="pantry", cost=0.1))
+    bad["meals"][0]["cost"] = round(bad["meals"][0]["cost"] + 0.1, 2)
     onboarded.post("/survey", data={"restrictions_present": "1", "restrictions": ["nut_allergy"]})
     llm = Scripted(bad, good_plan(restrictions=["nut_allergy"]))
     onboarded.app.dependency_overrides[get_llm] = lambda: llm
@@ -229,3 +230,23 @@ def test_plan_prefers_pantry_items():
 def test_home_mentions_shared_ingredients(onboarded):
     onboarded.post("/plan/generate")
     assert "reused across meals" in onboarded.get("/").text
+
+
+def test_costs_shown_per_meal_and_total(onboarded):
+    onboarded.post("/plan/generate")
+    page = onboarded.get("/").text
+    p = plans(onboarded)[0]
+    assert f"${p.total_cost:.2f}" in page and "$100.00" in page
+    ms = meals(onboarded)
+    assert abs(sum(m.cost for m in ms) - p.total_cost) < 0.02
+    assert f"${ms[0].cost:.2f}" in page
+
+
+def test_meal_cost_must_match_ingredients():
+    import copy
+
+    c = ctx()
+    raw = copy.deepcopy(FakeLLM().generate_plan(c))
+    raw["meals"][0]["cost"] = 0.01
+    _, errors = validate_plan(raw, c)
+    assert any("reports cost" in e for e in errors)

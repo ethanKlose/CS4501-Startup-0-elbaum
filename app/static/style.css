@@ -23,3 +23,6 @@ legend { font-weight:700; padding:0 .4rem; }
 .dayname { width:6.5rem; font-weight:600; }
 ul.plain { list-style:none; padding:0; margin:0; }
 .row { display:flex; gap:.5rem; flex-wrap:wrap; }
+table.plan { border-collapse:collapse; width:100%; margin:1rem 0; }
+table.plan th, table.plan td { border:1px solid var(--line); padding:.4rem .6rem; vertical-align:top; text-align:left; }
+.cost { color:var(--muted); font-size:.85rem; }

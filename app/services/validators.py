@@ -82,7 +82,17 @@ def check_goal(plan: dict, ctx: PlanContext) -> List[str]:
     return errors
 
 
-CHECKS = [check_coverage, check_time, check_budget, check_diet, check_goal]
+def check_cost_integrity(plan: dict, ctx: PlanContext) -> List[str]:
+    """Displayed per-meal cost must equal the sum of its ingredient costs (no hand-waved numbers)."""
+    errors = []
+    for m in plan["meals"]:
+        total = round(sum(i["cost"] for i in m["ingredients"]), 2)
+        if abs(total - m["cost"]) > 0.05:
+            errors.append(f"'{m['name']}' reports cost ${m['cost']:.2f} but its ingredients sum to ${total:.2f}.")
+    return errors[:10]
+
+
+CHECKS = [check_coverage, check_time, check_cost_integrity, check_budget, check_diet, check_goal]
 
 
 def validate_plan(raw, ctx: PlanContext):
