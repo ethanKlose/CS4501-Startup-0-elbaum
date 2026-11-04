@@ -18,8 +18,9 @@ from typing import Dict, List
 from app.config import settings
 from app.services.catalog import RECIPES
 from app.services.diet import meal_violations
+from app.services.schedule import capacities, storage_days
 from app.services.types import SLOTS, WEEKDAYS, PlanContext
-from app.services.validators import HIGH_PROTEIN_DAILY_G
+from app.services.validators import HIGH_PROTEIN_DAILY_G, schedule_for
 
 # ----------------------------------------------------------------------------- fake
 
@@ -62,7 +63,22 @@ class FakeLLM:
 
     # -- plan generation ----------------------------------------------------------------
     def generate_plan(self, ctx: PlanContext, feedback=()) -> Dict:
+        """Pick meals ignoring *when* they are cooked, schedule the cooking, and if it does not fit the
+        available time, weigh cooking time more heavily and pick again."""
+        best = None
+        for lam in (0.0, 0.03, 0.08, 0.2, 0.5):
+            plan = self._pick(ctx, lam)
+            sched = schedule_for(plan, ctx)
+            over = sum(u - cap for u, cap in sched.overbooked.values())
+            if best is None or over < best[0]:
+                best = (over, plan)
+            if over == 0:
+                break
+        return best[1]
+
+    def _pick(self, ctx: PlanContext, lam: float) -> Dict:
         rng = random.Random(ctx.seed)
+        caps = capacities(ctx.days, ctx.prep_style, ctx.prep_days, ctx.prep_minutes)
         pinned = {(m["day"], m["slot"]): m for m in ctx.pinned}
         pantry = {p["name"].lower() for p in ctx.pantry}
         leftovers = {x.lower() for x in ctx.leftovers}
@@ -74,6 +90,7 @@ class FakeLLM:
 
         meals: List[dict] = [m for m in ctx.pinned if not _day(ctx, m["day"]).skipped]
         used = Counter()
+        times = Counter(m["name"] for m in meals)
         for m in meals:
             used.update(i["name"].lower() for i in m["ingredients"])
         spent = sum(m["cost"] for m in meals)
@@ -81,9 +98,19 @@ class FakeLLM:
         slots_left = len(open_slots)
         target_cal = ctx.calorie_target
 
-        for day in ctx.active_days():
+        def fresh_ok(r, day):  # fresh dishes can't be cooked days ahead, so their cook day needs spare time
+            if storage_days(r) != 1:
+                return True
+            return caps.get(day, 0) >= r["cook_minutes"] or caps.get(day - 1, 0) >= r["cook_minutes"]
+
+        active = ctx.active_days()
+        for n_done, day in enumerate(active):
             todays = [m for m in meals if m["day"] == day.weekday]
-            minutes_left = day.minutes - sum(m["cook_minutes"] for m in todays)
+            day_target = target_cal
+            if target_cal:  # steer the weekly average: make up yesterday's shortfall (or overshoot) today, within reason
+                so_far = sum(m["calories"] for m in meals if m["day"] != day.weekday)
+                gap = (target_cal * n_done - so_far) / max(len(active) - n_done, 1)
+                day_target = target_cal + max(-300, min(300, gap))
             open_today = [s for s in SLOTS if (day.weekday, s) not in pinned]
             if not open_today:
                 continue
@@ -92,49 +119,53 @@ class FakeLLM:
             hard_cap = ctx.budget - spent - future_min
             soft = (ctx.budget - spent) / max(slots_left, 1) * len(open_today)
 
-            def score(r):
+            sc: Dict[str, float] = {}
+            for r in allowed:
                 ings = [i["name"].lower() for i in r["ingredients"]]
-                s = 2.0 * sum(i in pantry for i in ings) + 1.5 * sum(i in leftovers for i in ings)
-                s += 0.8 * sum(1 for i in ings if used[i] > 0)
-                s += 3.0 if r["name"] in ctx.liked else 0
-                s -= 2.5 if r["name"] in ctx.avoid else 0
-                s += rng.random() * 1.2
+                v = 2.0 * sum(i in pantry for i in ings) + 1.5 * sum(i in leftovers for i in ings)
+                v += 0.8 * sum(1 for i in ings if used[i] > 0)
+                v += 3.0 if r["name"] in ctx.liked else 0
+                v -= 2.5 if r["name"] in ctx.avoid else 0
+                n = times[r["name"]]  # a little repetition batches well; a lot is boring
+                v += 0.8 if 1 <= n <= 3 else (-2.5 * (n - 3) if n > 3 else 0)
+                v += rng.random() * 1.2
                 if ctx.goal == "high_protein":
-                    s += r["protein"] / 15
+                    v += r["protein"] / 15
                 if target_cal:
-                    s -= abs(r["calories"] - target_cal / 3.0) / 100.0
-                return s - 0.25 * r["cost"]
+                    v -= abs(r["calories"] - target_cal / 3.0) / 100.0
+                sc[r["name"]] = v - 0.25 * r["cost"] - lam * r["cook_minutes"]
 
             cands = []
             for slot in open_today:
-                pool = sorted((r for r in allowed if slot in r["slots"]), key=score, reverse=True)[:8]
-                cands.append(pool)
+                pool = [r for r in allowed if slot in r["slots"]]
+                pool = [r for r in pool if fresh_ok(r, day.weekday)] or pool
+                cands.append(sorted(pool, key=lambda r: sc[r["name"]], reverse=True)[:8])
             best, best_val = None, None
             base_cal = sum(m["calories"] for m in todays)
             base_pro = sum(m["protein"] for m in todays)
             for combo in itertools.product(*cands):
-                t = sum(r["cook_minutes"] for r in combo)
                 c = sum(r["cost"] for r in combo)
-                if t > minutes_left or c > hard_cap:
+                if c > hard_cap:
                     continue
-                val = sum(score(r) for r in combo) - max(0.0, c - soft) * 1.5
+                val = sum(sc[r["name"]] for r in combo) - max(0.0, c - soft) * 1.5
+                if len({r["name"] for r in combo}) < len(combo):
+                    val -= 3.0  # same dish twice in one day
                 cal = base_cal + sum(r["calories"] for r in combo)
                 pro = base_pro + sum(r["protein"] for r in combo)
                 if target_cal:
-                    val -= abs(cal - target_cal) / 120.0
+                    val -= abs(cal - day_target) / 70.0
                 if ctx.goal == "high_protein":
                     val -= max(0.0, HIGH_PROTEIN_DAILY_G + 15 - pro) / 8.0
                 if best_val is None or val > best_val:
                     best, best_val = combo, val
-            if best is None:  # infeasible: return the cheapest/shortest anyway; validators will reject it
-                best = tuple(min(pool, key=lambda r: (r["cook_minutes"], r["cost"])) if pool else None for pool in cands)
-                best = tuple(b for b in best if b)
+            if best is None:  # budget infeasible: return the cheapest anyway; the validators will reject it
+                best = tuple(min(pool, key=lambda r: r["cost"]) for pool in cands if pool)
             for slot, r in zip(open_today, best):
                 m = _recipe_to_meal(r, day.weekday, slot)
                 meals.append(m)
                 spent += m["cost"]
                 used.update(i["name"].lower() for i in m["ingredients"])
-                minutes_left -= m["cook_minutes"]
+                times[m["name"]] += 1
             slots_left -= len(open_today)
         return {"meals": meals}
 

@@ -160,7 +160,15 @@ def test_free_text_applied_to_plan_not_just_stored(client):
     for m in ms:
         text = (m.name + " " + " ".join(i["name"] for i in m.ingredients)).lower()
         assert "salmon" not in text and "tuna" not in text and "chicken" not in text
-    assert sum(m.cook_minutes for m in ms if m.day == 0) <= 15
+    from collections import Counter
+
+    from app.services.schedule import MAX_BATCH, batch_minutes
+
+    cooked_monday = Counter(m.name for m in ms if m.cook_day == 0 and m.cook_minutes > 0)
+    base = {m.name: m.cook_minutes for m in ms}
+    minutes = sum(batch_minutes(base[n], min(c, MAX_BATCH)) + (batch_minutes(base[n], c - MAX_BATCH) if c > MAX_BATCH else 0)
+                  for n, c in cooked_monday.items())
+    assert minutes <= 15  # the cooking limit applies on the day the cooking happens
 
 
 def test_violation_triggers_regeneration(onboarded):
@@ -189,8 +197,8 @@ def test_cooking_time_limit_enforced():
 
 def test_goal_calorie_target():
     c = ctx(goal="calorie_target", calorie_target=2000, days=[DayCtx(i, 60) for i in range(7)])
-    _, hard, _soft = validate_full(FakeLLM().generate_plan(c), c)
-    assert hard == [], hard  # (soft issues are checked strictly once the fake planner is schedule-aware)
+    plan, errors = validate_plan(FakeLLM().generate_plan(c), c)
+    assert errors == [], errors
 
 
 def test_goal_high_protein():

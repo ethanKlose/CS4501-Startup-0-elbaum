@@ -10,7 +10,6 @@ from tests.helpers import signup
 NOTE = "I can't cook in the middle of the week on Wednesdays and Thursdays"
 
 
-@pytest.mark.xfail(strict=True, reason="batch-cooking scheduler lands in the next chunks")
 def test_reported_scenario_generates_a_plan(client):
     signup(client)
     client.post("/survey", data={"budget": "200", "goal": "calorie_target", "calorie_target": "2000", "free_text": NOTE})
