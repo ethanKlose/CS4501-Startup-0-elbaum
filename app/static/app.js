@@ -1,6 +1,7 @@
 /* PlateJoy front-end: small, dependency-free, progressive enhancement only. */
 (function () {
   'use strict';
+  document.documentElement.classList.add('js');
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
@@ -70,4 +71,51 @@
   /* a form marked data-autosubmit fires itself (used right after onboarding) */
   var auto = $('form[data-autosubmit]');
   if (auto) setTimeout(function () { if (auto.requestSubmit) auto.requestSubmit(); else auto.submit(); }, 900);
+})();
+
+/* ---- survey wizard ---- */
+(function () {
+  'use strict';
+  var form = document.getElementById('wizard');
+  if (!form) return;
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var steps = $$('.wstep', form), tabs = $$('.wiz-tabs button', form), first = form.dataset.first === '1';
+  var cur = 0;
+  function go(i) {
+    cur = Math.max(0, Math.min(steps.length - 1, i));
+    steps.forEach(function (s, k) { s.classList.toggle('on', k === cur); });
+    tabs.forEach(function (t, k) { t.classList.toggle('on', k === cur); t.classList.toggle('done', k < cur); });
+    document.getElementById('wiz-progress').style.width = ((cur + 1) / steps.length * 100) + '%';
+    form.classList.toggle('last', cur === steps.length - 1);
+    steps.forEach(function (_, k) { form.classList.remove('step' + k); }); form.classList.add('step' + cur);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  tabs.forEach(function (t, k) { t.addEventListener('click', function () { go(k); }); });
+  var next = form.querySelector('[data-next]'), prev = form.querySelector('[data-prev]');
+  if (next) next.addEventListener('click', function () {
+    var budget = form.elements.budget;  // step 1 requires a valid budget before moving on
+    if (cur === 0 && first && (!budget.value || parseFloat(budget.value) < 30)) { budget.focus(); budget.reportValidity && budget.reportValidity(); return; }
+    go(cur + 1);
+  });
+  if (prev) prev.addEventListener('click', function () { go(cur - 1); });
+  form.addEventListener('keydown', function (e) {   // Enter inside the wizard means "Next", not "submit"
+    if (first && e.key === 'Enter' && e.target.tagName === 'INPUT' && cur < steps.length - 1) { e.preventDefault(); next.click(); }
+  });
+  /* preset buttons fill their target input */
+  $$('.presets', form).forEach(function (box) {
+    var input = form.elements[box.getAttribute('data-target')];
+    function sync() { $$('.pill', box).forEach(function (b) { b.classList.toggle('on', String(input.value) === b.getAttribute('data-set')); }); }
+    box.addEventListener('click', function (e) { var b = e.target.closest('.pill'); if (!b) return; input.value = b.getAttribute('data-set'); sync(); input.dispatchEvent(new Event('input')); });
+    input.addEventListener('input', sync); sync();
+  });
+  /* calorie field only when relevant */
+  var cal = document.getElementById('cal-field');
+  function syncGoal() { var g = form.querySelector('input[name=goal]:checked'); cal.classList.toggle('show', !!g && g.value === 'calorie_target'); }
+  $$('input[name=goal]', form).forEach(function (r) { r.addEventListener('change', syncGoal); }); syncGoal();
+  /* busy toggle tints the row */
+  $$('.dayrow', form).forEach(function (row) { var cb = row.querySelector('input[type=checkbox]'); cb.addEventListener('change', function () { row.classList.toggle('is-busy', cb.checked); }); });
+  /* jump to the first step that has a server-side error, otherwise start at 0 */
+  var start = 0; steps.some(function (s, k) { if (s.getAttribute('data-has-error')) { start = k; return true; } });
+  go(start);
+  if (!first) form.classList.add('last');
 })();

@@ -1,100 +1,145 @@
 {% extends "base.html" %}
-{% block title %}Survey · PlateJoy<section class="card" id="pantry" style="max-width:640px">
-  <h2>Pantry <span class="muted">(optional)</span></h2>
-  <p class="muted">What you already have. Plans will use these first and your grocery list will skip them.</p>
-  {% if pantry_error %}<p class="error" role="alert">{{ pantry_error }}</p>{% endif %}
-  <ul class="plain">
-    {% for item in pantry %}
-    <li>{{ item.name }}{% if item.quantity is not none %} — {{ '%g' % item.quantity }} {{ item.unit }}{% endif %}
-      <form method="post" action="/pantry/{{ item.id }}/delete" class="inline"><button class="link" aria-label="Remove {{ item.name }}">remove</button></form></li>
-    {% else %}<li class="muted">Nothing yet.</li>{% endfor %}
-  </ul>
-  <form method="post" action="/pantry/add" class="row">
-    <input name="name" placeholder="item (e.g. rice)" required aria-label="Item name">
-    <input name="quantity" type="number" step="any" min="0" placeholder="qty" style="width:5rem" aria-label="Quantity">
-    <input name="unit" placeholder="unit" style="width:5rem" aria-label="Unit">
-    <button>Add</button>
-  </form>
-</section>
-{% endblock %}
+{% from "_icons.html" import icon %}
+{% block title %}{{ "Set up your week" if not profile.onboarded else "Your preferences" }} · PlateJoy{% endblock %}
 {% block content %}
-<h1>{% if profile.onboarded %}Your survey{% else %}Let's get you set up{% endif %}</h1>
-{% if not profile.onboarded %}<p class="muted">About 3 minutes. Only your <strong>budget</strong> is required — everything marked optional can be skipped and edited later.</p>{% endif %}
-{% if saved %}<p class="ok" role="status">Saved.</p>{% endif %}
-{% if profile.onboarded %}<section class="card understood" data-testid="understood" style="max-width:640px">
-  <strong>What we understood</strong>
-  <ul>{% for line in understood %}<li>{{ line }}</li>{% endfor %}</ul>
-  <small class="muted">Not right? Edit the answers below.</small>
-</section>{% endif %}
-<form method="post" class="card" style="max-width:640px">
-  <fieldset>
-    <legend>Budget</legend>
-    <label>Weekly grocery budget ($, minimum 30)
-      <input type="number" name="budget" step="0.01" min="30" required
-             value="{{ form.budget if form is defined else (profile.budget if profile.budget is not none else '') }}">
-    </label>
-    {% if errors.budget %}<p class="error" role="alert">{{ errors.budget }}</p>{% endif %}
-  </fieldset>
-  <fieldset>
-    <legend>Dietary restrictions &amp; allergies</legend>
-    <input type="hidden" name="restrictions_present" value="1">
-    {% for key, label in restriction_options.items() %}
-    <label class="check"><input type="checkbox" name="restrictions" value="{{ key }}"
-      {% if (form is defined and key in form_restrictions) or (form is not defined and key in (profile.restrictions or [])) %}checked{% endif %}> {{ label }}</label>
-    {% endfor %}
-  </fieldset>
-  <fieldset>
-    <legend>Nutrition or fitness goal <span class="muted">(optional)</span></legend>
-    {% set cur_goal = form.get('goal') if form is defined else profile.goal %}
-    <label>Goal
-      <select name="goal">
-        {% for key, label in goal_options.items() %}<option value="{{ key }}" {% if cur_goal == key %}selected{% endif %}>{{ label }}</option>{% endfor %}
-      </select>
-    </label>
-    <label>Daily calories (only for "Daily calorie target")
-      <input type="number" name="calorie_target" min="1200" max="4500"
-        value="{{ form.get('calorie_target') if form is defined else (profile.calorie_target or '') }}">
-    </label>
-    {% if errors.goal %}<p class="error" role="alert">{{ errors.goal }}</p>{% endif %}
-  </fieldset>
-  <fieldset>
-    <legend>Anything else? <span class="muted">(optional)</span></legend>
-    <label>Extra preferences, in your own words
-      <textarea name="free_text" rows="3" maxlength="500" placeholder="e.g. no fish, I hate cooking on Mondays">{{ form.get('free_text') if form is defined else profile.free_text }}</textarea>
-    </label>
-    {% if errors.free_text %}<p class="error" role="alert">{{ errors.free_text }}</p>{% endif %}
-  </fieldset>
-  <fieldset>
-    <legend>Your week</legend>
-    <p class="muted">Tick busy days and set how many minutes you can spend cooking that day (0 = no cooking).</p>
-    {% for d in days %}
-    <div class="dayrow">
-      <span class="dayname">{{ weekdays[d.weekday] }}</span>
-      <label class="check"><input type="checkbox" name="busy_{{ d.weekday }}" {% if (form is defined and form.get('busy_' ~ d.weekday)) or (form is not defined and d.busy) %}checked{% endif %}> Busy</label>
-      <label class="check"><input type="number" name="minutes_{{ d.weekday }}" min="0" max="480" required style="width:5rem"
-         value="{{ form.get('minutes_' ~ d.weekday) if form is defined else d.minutes }}"> min</label>
+{% set first = not profile.onboarded %}
+{% set ns = namespace(days_err=false) %}{% for k in errors %}{% if k[:8] == 'minutes_' %}{% set ns.days_err = true %}{% endif %}{% endfor %}
+<div class="wiz-layout">
+<div>
+  {% if first %}
+  <div class="auth-steps"><span><b>{{ icon('check', 12) }}</b> Account</span><span class="on"><b>2</b> Preferences</span><span><b>3</b> Your week</span></div>
+  <h1>Let’s set up your week</h1>
+  <p class="muted">About a minute. Only your <strong>budget</strong> is required; everything else can be skipped and edited later.</p>
+  {% else %}
+  <h1>Your preferences</h1>
+  <p class="muted">Your survey answers. Changes apply to the next plan you generate or regenerate.</p>
+  {% endif %}
+  {% if saved %}<div class="alert info" role="status">{{ icon('check-circle') }}<span>Saved. Regenerate your week to apply the changes.</span></div>{% endif %}
+  {% if errors %}<div class="alert error" role="alert">{{ icon('alert') }}<div>Please fix this first:<ul>{% for m in errors.values() %}<li>{{ m }}</li>{% endfor %}</ul></div></div>{% endif %}
+
+  <form method="post" id="wizard" class="wiz" data-first="{{ '1' if first else '' }}" novalidate>
+    <nav class="wiz-tabs" aria-label="Survey sections">
+      <button type="button" data-goto="0"><b>1</b><span>Budget &amp; goal</span></button>
+      <button type="button" data-goto="1"><b>2</b><span>Food</span></button>
+      <button type="button" data-goto="2"><b>3</b><span>Your week</span></button>
+      <button type="button" data-goto="3"><b>4</b><span>Cooking</span></button>
+    </nav>
+    <div class="wiz-bar"><span id="wiz-progress"></span></div>
+
+    <section class="wstep card pad-lg" data-step="0" data-has-error="{{ '1' if errors.budget or errors.goal else '' }}">
+      <h2>What’s your weekly grocery budget?</h2>
+      <p class="muted">Every plan stays under this. Minimum $30.</p>
+      <label class="money"><span class="sr">Weekly grocery budget in dollars</span>
+        <span class="money-in"><i>$</i><input type="number" name="budget" step="0.01" min="30" required inputmode="decimal" placeholder="75" value="{{ '%g' % values.budget if values.budget is number else values.budget }}"></span>
+      </label>
+      <div class="presets" data-target="budget">{% for n in [40, 60, 80, 100, 150] %}<button type="button" class="pill" data-set="{{ n }}">${{ n }}</button>{% endfor %}</div>
+      <h2 style="margin-top:26px">Any nutrition goal? <span class="muted" style="font-weight:600">(optional)</span></h2>
+      <div class="optcards" data-goal>
+        {% for key, label, sub, ico in [('none','No specific goal','Just eat well','leaf'),('high_protein','High protein','75g+ a day','flame'),('calorie_target','Calorie target','Set a daily number','target')] %}
+        <label class="optcard"><input type="radio" name="goal" value="{{ key }}" {{ 'checked' if values.goal == key }}><span class="oc">{{ icon(ico, 20) }}<b>{{ label }}</b><small>{{ sub }}</small></span></label>
+        {% endfor %}
+      </div>
+      <label class="cal-field" id="cal-field">Daily calories
+        <input type="number" name="calorie_target" min="1200" max="4500" placeholder="2000" value="{{ values.calorie_target }}">
+      </label>
+    </section>
+
+    <section class="wstep card pad-lg" data-step="1" data-has-error="{{ '1' if errors.free_text else '' }}">
+      <h2>Any dietary restrictions or allergies?</h2>
+      <p class="muted">We check every ingredient in every meal against these.</p>
+      <input type="hidden" name="restrictions_present" value="1">
+      <div class="chips">
+        {% for key, label in restriction_options.items() %}
+        <label class="chipcheck"><input type="checkbox" name="restrictions" value="{{ key }}" {{ 'checked' if key in values.restrictions }}><span>{{ label }}</span></label>
+        {% endfor %}
+      </div>
+      <h2 style="margin-top:26px">Anything else, in your own words? <span class="muted" style="font-weight:600">(optional)</span></h2>
+      <label><span class="sr">Extra preferences</span>
+        <textarea name="free_text" rows="3" maxlength="500" placeholder="e.g. no fish, no mushrooms, I can't cook on Wednesdays">{{ values.free_text }}</textarea>
+      </label>
+      {% if errors.free_text %}<p class="error">{{ errors.free_text }}</p>{% endif %}
+    </section>
+
+    <section class="wstep card pad-lg" data-step="2" data-has-error="{{ '1' if ns.days_err else '' }}">
+      <h2>How much time can you cook each day?</h2>
+      <p class="muted">Busy days don’t mean skipped meals. We’ll have you cook ahead on freer days and reheat. Use 0 for “no cooking”.</p>
+      <div class="days">
+        {% for d in values.days %}
+        <div class="dayrow {{ 'is-busy' if d.busy }}">
+          <span class="dn">{{ weekdays[d.weekday] }}</span>
+          <label class="switch"><input type="checkbox" name="busy_{{ d.weekday }}" {{ 'checked' if d.busy }}><span class="sw"></span><span class="swl">Busy</span></label>
+          <span class="mins"><input type="number" name="minutes_{{ d.weekday }}" min="0" max="480" required value="{{ d.minutes }}" aria-label="{{ weekdays[d.weekday] }} cooking minutes"><em>min</em></span>
+          <span class="presets" data-target="minutes_{{ d.weekday }}">{% for n in [0, 15, 30, 60, 90] %}<button type="button" class="pill sm" data-set="{{ n }}">{{ n }}</button>{% endfor %}</span>
+        </div>
+        {% if errors.get('minutes_' ~ d.weekday) %}<p class="error">{{ errors.get('minutes_' ~ d.weekday) }}</p>{% endif %}
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="wstep card pad-lg" data-step="3" data-has-error="{{ '1' if errors.prep else '' }}">
+      <h2>How do you like to cook?</h2>
+      <input type="hidden" name="prep_present" value="1">
+      <div class="optcards two">
+        {% for key, label in prep_styles.items() %}
+        <label class="optcard"><input type="radio" name="prep_style" value="{{ key }}" {{ 'checked' if values.prep_style == key }}><span class="oc">
+          {{ icon({'auto':'sparkles','daily':'flame','sessions':'calendar','one_session':'chef'}[key], 20) }}<b>{{ label }}</b>
+          <small>{{ {'auto':'We pick the best cooking days','daily':'Fresh meals, little batching','sessions':'2–3 cooking days a week','one_session':'One big session, then reheat'}[key] }}</small></span></label>
+        {% endfor %}
+      </div>
+      <h3 style="margin-top:22px">Preferred cooking days <span class="muted" style="font-weight:600">(optional)</span></h3>
+      <div class="chips">
+        {% for i in range(7) %}<label class="chipcheck"><input type="checkbox" name="prep_days" value="{{ i }}" {{ 'checked' if i|string in values.prep_days }}><span>{{ weekdays[i][:3] }}</span></label>{% endfor %}
+      </div>
+      <label style="max-width:260px;margin-top:14px">Length of a cooking session (minutes)
+        <input type="number" name="prep_minutes" min="30" max="480" value="{{ values.prep_minutes }}">
+      </label>
+      {% if errors.prep %}<p class="error">{{ errors.prep }}</p>{% endif %}
+    </section>
+
+    <div class="wiz-nav">
+      <button type="button" class="btn line" data-prev>{{ icon('back', 16) }} Back</button>
+      <span class="grow"></span>
+      <button type="button" class="btn primary" data-next>Next {{ icon('arrow', 16) }}</button>
+      <button class="btn primary" data-save>{% if first %}{{ icon('sparkles', 16) }} Build my week{% else %}Save changes{% endif %}</button>
     </div>
-    {% if errors.get('minutes_' ~ d.weekday) %}<p class="error" role="alert">{{ errors.get('minutes_' ~ d.weekday) }}</p>{% endif %}
-    {% endfor %}
-  </fieldset>
-  <fieldset>
-    <legend>How do you like to cook? <span class="muted">(optional)</span></legend>
-    <input type="hidden" name="prep_present" value="1">
-    <p class="muted">Busy days don't mean skipped meals. We can have you cook a bigger batch on a freer day and reheat it later.</p>
-    {% set cur_style = form.get('prep_style') if form is defined else profile.prep_style %}
-    <label>Cooking style
-      <select name="prep_style">{% for key, label in prep_styles.items() %}<option value="{{ key }}" {% if cur_style == key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
-    </label>
-    <div>Preferred cooking days (e.g. Sunday for a big prep session)</div>
-    <div class="row">
-      {% for i in range(7) %}<label class="check"><input type="checkbox" name="prep_days" value="{{ i }}"
-        {% if (form is defined and i|string in form_prep_days) or (form is not defined and i in (profile.prep_days or [])) %}checked{% endif %}> {{ weekdays[i][:3] }}</label>{% endfor %}
-    </div>
-    <label>Length of a prep session (minutes)
-      <input type="number" name="prep_minutes" min="30" max="480" value="{{ form.get('prep_minutes') if form is defined else profile.prep_minutes }}">
-    </label>
-    {% if errors.prep %}<p class="error" role="alert">{{ errors.prep }}</p>{% endif %}
-  </fieldset>
-  <button>Save</button>
-</form>
+  </form>
+
+  <section class="card pad-lg" id="pantry" style="margin-top:20px">
+    <h2>Pantry <span class="muted" style="font-weight:600">(optional)</span></h2>
+    <p class="muted">What you already have. Plans use these first and your grocery list skips them.</p>
+    {% if pantry_error %}<p class="error" role="alert">{{ pantry_error }}</p>{% endif %}
+    <ul class="plain pantry">
+      {% for item in pantry %}
+      <li><span class="pname">{{ item.name }}{% if item.quantity is not none %} — {{ '%g' % item.quantity }} {{ item.unit }}{% endif %}</span>
+        <form method="post" action="/pantry/{{ item.id }}/delete" class="inline"><button class="iconbtn sm" aria-label="Remove {{ item.name }}">{{ icon('x', 14) }}</button></form></li>
+      {% else %}<li class="muted">Nothing yet.</li>{% endfor %}
+    </ul>
+    <form method="post" action="/pantry/add" class="row pantry-add">
+      <input name="name" placeholder="item (e.g. rice)" required aria-label="Item name" style="flex:2;min-width:140px">
+      <input name="quantity" type="number" step="any" min="0" placeholder="qty" aria-label="Quantity" style="flex:1;min-width:70px">
+      <input name="unit" placeholder="unit" aria-label="Unit" style="flex:1;min-width:70px">
+      <button class="btn soft">Add</button>
+    </form>
+  </section>
+</div>
+
+<aside class="wiz-side">
+  {% if profile.onboarded %}
+  <section class="card understood" data-testid="understood">
+    <h3>{{ icon('eye', 18) }} What we understood</h3>
+    <ul class="plain">{% for line in understood %}<li>{{ line }}</li>{% endfor %}</ul>
+    <small class="muted">Not right? Edit the answers on the left.</small>
+  </section>
+  {% else %}
+  <section class="card">
+    <h3>{{ icon('shield', 18) }} Why we ask</h3>
+    <ul class="plain why">
+      <li><b>Budget</b> is a hard limit. Plans over it are rejected.</li>
+      <li><b>Restrictions</b> are checked ingredient by ingredient.</li>
+      <li><b>Time</b> decides when you cook. Busy days get reheated meals.</li>
+    </ul>
+  </section>
+  {% endif %}
+</aside>
+</div>
 {% endblock %}

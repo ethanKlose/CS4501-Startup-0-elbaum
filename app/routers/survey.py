@@ -164,8 +164,9 @@ APPLIERS = [apply_budget, apply_days, apply_restrictions, apply_goal, apply_free
 @router.get("/survey")
 def survey_form(request: Request, user: User = Depends(current_user), db: Session = Depends(get_db)):
     ctx = survey_context(db, user)
+    values = field_values(ctx["profile"], ctx["days"])
     db.commit()
-    return render(request, "survey.html", user, errors={}, saved=request.query_params.get("saved"), pantry_error=request.query_params.get("pantry_error"), **ctx)
+    return render(request, "survey.html", user, errors={}, values=values, saved=request.query_params.get("saved"), pantry_error=request.query_params.get("pantry_error"), **ctx)
 
 
 def understood(profile: Profile, days) -> List[str]:
@@ -195,6 +196,23 @@ def understood(profile: Profile, days) -> List[str]:
     return out
 
 
+def field_values(profile: Profile, days, form=None) -> dict:
+    """What every input should show: the saved answers, or (after a rejected submit) what the user just typed."""
+    if form is None:
+        return dict(
+            budget=profile.budget if profile.budget is not None else "", goal=profile.goal or "none",
+            calorie_target=profile.calorie_target or "", free_text=profile.free_text or "",
+            restrictions=list(profile.restrictions or []), prep_style=profile.prep_style or "auto",
+            prep_days=[str(d) for d in (profile.prep_days or [])], prep_minutes=profile.prep_minutes or 120,
+            days=[dict(weekday=d.weekday, busy=d.busy, minutes=d.minutes) for d in days])
+    return dict(
+        budget=form.get("budget", ""), goal=form.get("goal", profile.goal or "none"), calorie_target=form.get("calorie_target", ""),
+        free_text=form.get("free_text", ""), restrictions=form.getlist("restrictions"),
+        prep_style=form.get("prep_style", profile.prep_style or "auto"), prep_days=form.getlist("prep_days"),
+        prep_minutes=form.get("prep_minutes", profile.prep_minutes or 120),
+        days=[dict(weekday=d.weekday, busy=form.get(f"busy_{d.weekday}") is not None, minutes=form.get(f"minutes_{d.weekday}", d.minutes)) for d in days])
+
+
 def survey_context(db, user):
     pantry = list(db.scalars(select(PantryItem).where(PantryItem.user_id == user.id).order_by(PantryItem.name)))
     profile, days = get_profile(db, user), get_days(db, user)
@@ -212,7 +230,7 @@ async def survey_submit(request: Request, user: User = Depends(current_user), db
         db.rollback()
         ctx = survey_context(db, user)
         db.rollback()
-        return render(request, "survey.html", user, 400, errors=errors, form=dict(form), form_restrictions=form.getlist("restrictions"), form_prep_days=form.getlist("prep_days"), **ctx)
+        return render(request, "survey.html", user, 400, errors=errors, values=field_values(ctx["profile"], ctx["days"], form), **ctx)
     if "free_text" in form:  # remember how the note was understood, to show it back to the user
         try:
             profile.interpreted = llm.interpret_preferences(profile.free_text) if profile.free_text else {}
@@ -223,7 +241,8 @@ async def survey_submit(request: Request, user: User = Depends(current_user), db
         profile.onboarded = True
     db.commit()
     if first_time and profile.onboarded:
-        return RedirectResponse("/", 303)  # finished setup: on to the plan
+        request.session["welcome"] = True  # the home page will offer to build the first week right away
+        return RedirectResponse("/", 303)
     return RedirectResponse("/survey?saved=1", 303)
 
 

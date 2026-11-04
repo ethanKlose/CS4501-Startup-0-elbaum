@@ -77,7 +77,9 @@ def test_restrictions_saved_and_filtered(client):
     client.post("/survey", data={"restrictions_present": "1", "restrictions": ["vegan", "nut_allergy", "bogus"]})
     assert profile(client).restrictions == ["nut_allergy", "vegan"]
     page = client.get("/survey").text
-    assert 'value="vegan"\n      checked' in page or "checked> Vegan" in page
+    import re
+
+    assert re.search(r'value="vegan"\s+checked', page) and not re.search(r'value="halal"\s+checked', page)
 
 
 def test_restrictions_can_be_cleared(client):
@@ -200,8 +202,8 @@ def test_all_answers_viewable_and_editable_later(client):
     signup(client)
     client.post("/survey", data=full_payload())
     page = client.get("/survey").text
-    assert 'value="80.0"' in page and "no fish" in page and 'value="2000"' in page
-    assert "Your survey" in page  # no longer the first-run heading
+    assert 'value="80"' in page and "no fish" in page and 'value="2000"' in page
+    assert "Your preferences" in page and "set up your week" not in page  # no longer the first-run heading
     # edit every section
     client.post("/survey", data=days_payload(budget="45", restrictions_present="1", goal="high_protein",
                                              free_text="no nuts", minutes_3="90"))
