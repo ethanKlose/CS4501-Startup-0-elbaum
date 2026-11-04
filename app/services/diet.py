@@ -32,28 +32,29 @@ RESTRICTION_TERMS: Dict[str, List[str]] = {
     "halal": PORK_HALAL,
 }
 
-# Phrases that contain a flagged word but are not that thing.
-SAFE_PHRASES = [
-    "coconut milk", "almond milk", "oat milk", "soy milk", "rice milk", "peanut butter", "almond butter",
-    "cocoa butter", "nut-free", "chicken broth", "gluten-free", "gluten free", "cream of tartar", "coconut cream",
-    "butternut", "nutmeg", "coconut",
-]
-# 'almond milk' etc. are non-dairy but still contain nuts; handle by checking nut terms on the raw text.
-NUT_SAFE_EXEMPT = ["nutmeg", "butternut", "coconut", "nut-free"]
+# Exempt only the specific word replaced by a known substitute. Removing a
+# whole phrase for every restriction would hide nuts in almond milk, for example.
+WORD_EXCEPTIONS = {
+    "milk": ["coconut milk", "almond milk", "oat milk", "soy milk", "rice milk"],
+    "butter": ["peanut butter", "almond butter", "cocoa butter"],
+    "cream": ["cream of tartar", "coconut cream"],
+    "nut": ["nut-free", "nut free"],
+    "nuts": ["nut-free", "nut free"],
+}
 
 
-def _clean(text: str, nuts: bool) -> str:
-    t = text.lower()
-    for p in SAFE_PHRASES:
-        if nuts and p not in NUT_SAFE_EXEMPT:
-            continue  # keep 'almond milk' visible to the nut check
-        t = t.replace(p, " ")
-    return t
-
-
-def _hits(text: str, terms: Iterable[str], nuts: bool = False) -> List[str]:
-    t = _clean(text, nuts)
-    return sorted({w for w in terms if re.search(r"\b" + re.escape(w) + r"\b", t)})
+def _hits(text: str, terms: Iterable[str]) -> List[str]:
+    hits = []
+    for word in terms:
+        t = text.lower()
+        for phrase in WORD_EXCEPTIONS.get(word, []):
+            t = re.sub(r"\b" + re.escape(phrase) + r"\b", " ", t)
+        if word in GLUTEN:
+            # A labelled substitute exempts this food, not other ingredients.
+            t = re.sub(r"\bgluten[- ]free\s+" + re.escape(word) + r"\b", " ", t)
+        if re.search(r"\b" + re.escape(word) + r"\b", t):
+            hits.append(word)
+    return sorted(set(hits))
 
 
 def term_hits(text: str, term: str) -> List[str]:
@@ -61,9 +62,9 @@ def term_hits(text: str, term: str) -> List[str]:
     term = term.lower().strip()
     if term in RESTRICTION_TERMS:
         words = RESTRICTION_TERMS[term]
-        return _hits(text, words, nuts=term == "nut_allergy")
+        return _hits(text, words)
     if term in GROUPS:
-        return _hits(text, GROUPS[term], nuts=term in ("nuts", "nut"))
+        return _hits(text, GROUPS[term])
     # literal ingredient: match singular/plural
     base = term[:-1] if term.endswith("s") and len(term) > 3 else term
     t = text.lower()
