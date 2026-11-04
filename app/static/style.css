@@ -26,3 +26,10 @@ ul.plain { list-style:none; padding:0; margin:0; }
 table.plan { border-collapse:collapse; width:100%; margin:1rem 0; }
 table.plan th, table.plan td { border:1px solid var(--line); padding:.4rem .6rem; vertical-align:top; text-align:left; }
 .cost { color:var(--muted); font-size:.85rem; }
+.calendar { display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:.6rem; margin:1rem 0; }
+.day { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:.6rem; display:flex; flex-direction:column; gap:.5rem; }
+.day h2 { font-size:1rem; margin:0; color:var(--accent); }
+.meal { border-top:1px solid var(--line); padding-top:.4rem; }
+.mname { font-weight:600; line-height:1.25; }
+@media (max-width: 900px) { .calendar { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+@media (max-width: 520px) { .calendar { grid-template-columns:1fr; } }

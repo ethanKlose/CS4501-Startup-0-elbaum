@@ -10,15 +10,22 @@
 {% if plan and plan.status == 'ok' %}
 <p class="totals">Estimated total: <strong>${{ '%.2f' % plan.total_cost }}</strong> of your <strong>${{ '%.2f' % plan.budget }}</strong> budget
   <span class="{% if plan.total_cost <= plan.budget %}ok{% else %}error{% endif %}">(${{ '%.2f' % (plan.budget - plan.total_cost) }} left)</span></p>
-<table class="plan">
+<div class="calendar" aria-label="Weekly meal calendar">
   {% for day in range(7) %}
-  <tr><th>{{ weekdays[day] }}</th>
+  <section class="day" aria-labelledby="day-{{ day }}">
+    <h2 id="day-{{ day }}">{{ weekdays[day] }}</h2>
     {% for slot in slots %}
-      {% for m in plan.meals if m.day == day and m.slot == slot %}<td><small class="muted">{{ slot }}</small><br>{{ m.name }}<br><span class="cost">${{ '%.2f' % m.cost }}</span></td>{% endfor %}
+      {% for m in plan.meals if m.day == day and m.slot == slot %}
+      <div class="meal">
+        <small class="muted">{{ slot }}</small>
+        <div class="mname">{{ m.name }}</div>
+        <div class="cost">${{ '%.2f' % m.cost }} · {{ m.cook_minutes }} min</div>
+      </div>
+      {% endfor %}
     {% endfor %}
-  </tr>
+  </section>
   {% endfor %}
-</table>
+</div>
 {% if sharing %}<p class="muted">{{ sharing.shared|length }} ingredients are reused across meals this week, so you buy less and waste less.</p>{% endif %}
 {% endif %}
 {% endblock %}
