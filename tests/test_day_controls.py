@@ -213,3 +213,12 @@ def test_swap_preserves_completed_and_rated_history(planned, status, rating):
     after = newest_meals(planned)[(0, 'dinner')]
     assert (after.name, after.status, after.rating) == (target.name, status, rating)
     assert f'action="/meals/{target.id}/swap"' not in planned.get(f'/meals/{target.id}').text
+
+
+def test_swap_saves_the_budget_and_schedule_that_were_validated(planned):
+    target = newest_meals(planned)[(0, 'dinner')]
+    planned.post('/survey', data={'budget': '200'})
+    planned.post(f'/meals/{target.id}/swap')
+    after = db_plan(planned)
+    assert after.budget == 200
+    assert after.total_cost <= after.budget

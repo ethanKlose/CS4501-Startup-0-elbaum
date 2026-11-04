@@ -51,3 +51,11 @@ def test_next_week_advances_dates_and_clears_one_week_skips(client):
     following, ms = latest(client)
     assert plan_week_start(following) == plan_week_start(first) + dt.timedelta(days=7)
     assert len(ms) == 21 and not any(d['skipped'] for d in following.days)
+
+
+def test_future_plan_checkin_banner_waits_for_its_own_weekend():
+    from app.routers.checkin import checkin_due
+    plan = Plan(status='ok', created_at=dt.datetime(2026, 11, 4), settings={'week_start': '2026-11-09'})
+    assert not checkin_due(plan, False, dt.datetime(2026, 11, 7))
+    assert not checkin_due(plan, False, dt.datetime(2026, 11, 13))
+    assert checkin_due(plan, False, dt.datetime(2026, 11, 14))

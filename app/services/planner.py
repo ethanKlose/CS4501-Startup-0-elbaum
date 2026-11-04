@@ -188,6 +188,9 @@ def swap_meal(db: Session, user: User, llm, meal: Meal) -> Meal:
     meal.name, meal.cook_minutes, meal.calories, meal.protein = new["name"], new["cook_minutes"], new["calories"], new["protein"]
     meal.steps, meal.ingredients, meal.pinned = new["steps"], new["ingredients"], False
     meal.cost = round(sum(i["cost"] for i in new["ingredients"]), 2)
+    plan.budget = ctx.budget
+    plan.days = [asdict(d) for d in ctx.days]
+    plan.settings = dict(plan.settings or {}, **plan_settings(ctx))
     recompute_totals(plan)
     reschedule(plan)
     db.commit()

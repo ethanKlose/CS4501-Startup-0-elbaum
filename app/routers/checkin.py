@@ -10,6 +10,7 @@ from app.db import get_db
 from app.deps import current_user, render
 from app.models import CheckIn, Plan, User
 from app.services import planner, inventory
+from app.services.weeks import plan_week_start
 
 router = APIRouter()
 
@@ -23,6 +24,8 @@ def checkin_due(plan: Optional[Plan], done: bool, now: Optional[dt.datetime] = N
     if not plan or plan.status != "ok" or done:
         return False
     now = now or dt.datetime.utcnow()
+    if (plan.settings or {}).get("week_start"):
+        return now.date() >= plan_week_start(plan) + dt.timedelta(days=5)
     return now.weekday() >= 5 or (now - plan.created_at).days >= 6
 
 
