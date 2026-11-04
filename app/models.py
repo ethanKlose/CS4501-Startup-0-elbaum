@@ -32,6 +32,7 @@ class Profile(Base):
     prep_days: Mapped[list] = mapped_column(JSON, default=list)  # preferred cook days, 0=Mon..6=Sun
     prep_minutes: Mapped[int] = mapped_column(default=120)  # length of a prep session on preferred days
     free_text: Mapped[str] = mapped_column(String(1000), default="")
+    interpreted: Mapped[dict] = mapped_column(JSON, default=dict)  # how free_text was understood: excluded / day_minutes_cap
 
 
 class DaySetting(Base):

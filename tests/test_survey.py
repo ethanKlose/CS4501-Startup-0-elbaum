@@ -229,3 +229,22 @@ def test_prep_defaults_and_other_posts_leave_it_alone(client):
     client.post("/survey", data={"budget": "60"})
     assert profile(client).prep_style == "sessions"
     assert "Cooking style" in client.get("/survey").text
+
+
+def test_what_we_understood_panel(client):
+    signup(client)
+    client.post("/survey", data=full_payload(free_text="no fish, I can't cook on Wednesdays", prep_present="1", prep_style="sessions",
+                                              prep_days=["6"], prep_minutes="150"))
+    assert profile(client).interpreted["excluded"] == ["fish"]
+    page = client.get("/survey").text
+    assert 'data-testid="understood"' in page
+    assert "Never serving (from your note): fish" in page
+    assert "Wednesday: cooking limited to 0 min" in page
+    assert "No cooking on Wed" in page and "cooked on another day and reheated" in page
+    assert "Cooking style: A couple of cooking sessions a week, preferring Sun (150 min sessions)" in page
+    assert "Diet: Vegan" in page and "about 2000 calories" in page
+
+
+def test_panel_hidden_until_onboarded(client):
+    signup(client)
+    assert 'data-testid="understood"' not in client.get("/survey").text

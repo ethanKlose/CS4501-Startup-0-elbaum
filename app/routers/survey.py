@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.deps import current_user, render
+from app.services.llm import get_llm
 from app.services.schedule import PREP_STYLES
 from app.models import DaySetting, PantryItem, Profile, User
 
@@ -167,13 +168,41 @@ def survey_form(request: Request, user: User = Depends(current_user), db: Sessio
     return render(request, "survey.html", user, errors={}, saved=request.query_params.get("saved"), pantry_error=request.query_params.get("pantry_error"), **ctx)
 
 
+def understood(profile: Profile, days) -> List[str]:
+    """Plain-English readback of how we interpreted the answers, so surprises are visible before generating."""
+    out = []
+    if profile.restrictions:
+        out.append("Diet: " + ", ".join(RESTRICTIONS[r] for r in profile.restrictions if r in RESTRICTIONS))
+    interp = profile.interpreted or {}
+    if interp.get("excluded"):
+        out.append("Never serving (from your note): " + ", ".join(interp["excluded"]))
+    caps = {int(k): v for k, v in (interp.get("day_minutes_cap") or {}).items()}
+    effective = {}
+    for d in days:
+        effective[d.weekday] = min(d.minutes, caps[d.weekday]) if d.weekday in caps else d.minutes
+    for wd, cap in sorted(caps.items()):
+        out.append(f"{WEEKDAYS[wd]}: cooking limited to {cap} min (from your note)")
+    none = [WEEKDAYS[w][:3] for w, m in sorted(effective.items()) if m == 0]
+    if none:
+        out.append("No cooking on " + ", ".join(none) + ". Those days' meals will be cooked on another day and reheated.")
+    style = PREP_STYLES.get(profile.prep_style or "auto", "")
+    extra = f", preferring {', '.join(WEEKDAYS[d][:3] for d in profile.prep_days)} ({profile.prep_minutes} min sessions)" if profile.prep_days else ""
+    out.append(f"Cooking style: {style}{extra}")
+    if profile.goal == "high_protein":
+        out.append("Goal: high protein")
+    elif profile.goal == "calorie_target" and profile.calorie_target:
+        out.append(f"Goal: about {profile.calorie_target} calories a day")
+    return out
+
+
 def survey_context(db, user):
     pantry = list(db.scalars(select(PantryItem).where(PantryItem.user_id == user.id).order_by(PantryItem.name)))
-    return dict(pantry=pantry, profile=get_profile(db, user), days=get_days(db, user), weekdays=WEEKDAYS, restriction_options=RESTRICTIONS, goal_options=GOALS, prep_styles=PREP_STYLES)
+    profile, days = get_profile(db, user), get_days(db, user)
+    return dict(pantry=pantry, profile=profile, days=days, understood=understood(profile, days), weekdays=WEEKDAYS, restriction_options=RESTRICTIONS, goal_options=GOALS, prep_styles=PREP_STYLES)
 
 
 @router.post("/survey")
-async def survey_submit(request: Request, user: User = Depends(current_user), db: Session = Depends(get_db)):
+async def survey_submit(request: Request, user: User = Depends(current_user), db: Session = Depends(get_db), llm=Depends(get_llm)):
     form = await request.form()
     profile = get_profile(db, user)
     errors: Dict[str, str] = {}
@@ -184,6 +213,11 @@ async def survey_submit(request: Request, user: User = Depends(current_user), db
         ctx = survey_context(db, user)
         db.rollback()
         return render(request, "survey.html", user, 400, errors=errors, form=dict(form), form_restrictions=form.getlist("restrictions"), form_prep_days=form.getlist("prep_days"), **ctx)
+    if "free_text" in form:  # remember how the note was understood, to show it back to the user
+        try:
+            profile.interpreted = llm.interpret_preferences(profile.free_text) if profile.free_text else {}
+        except Exception:
+            profile.interpreted = {}
     first_time = not profile.onboarded
     if profile.budget is not None:
         profile.onboarded = True

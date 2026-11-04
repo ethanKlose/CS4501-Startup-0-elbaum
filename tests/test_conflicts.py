@@ -14,30 +14,38 @@ def test_feasible_has_no_conflicts():
     assert find_conflicts(ctx()) == []
 
 
+def test_time_and_calories_are_never_hard_conflicts():
+    # A no-cook week with a huge calorie target is a *warning* on the plan, not a reason to refuse one.
+    c = ctx(days=[DayCtx(i, 0) for i in range(7)], goal="calorie_target", calorie_target=4500)
+    assert find_conflicts(c) == []
+
+
 def test_budget_too_low_names_the_number():
     out = find_conflicts(ctx(budget=10))
     assert len(out) == 1 and "budget" in out[0].lower() and "Raise your budget to at least $" in out[0]
 
 
-def test_time_conflict_names_day():
-    # vegan + gluten-free leaves no zero-minute options, so a 1-minute Monday is impossible
-    out = find_conflicts(ctx(restrictions=["vegan", "gluten_free"], days=[DayCtx(0, 1)] + [DayCtx(i, 45) for i in range(1, 7)]))
-    assert any(o.startswith("Monday") for o in out)
-
-
-def test_goal_conflict():
-    out = find_conflicts(ctx(goal="calorie_target", calorie_target=5000))
-    assert any("5000" in o for o in out)
-
-
 def test_restrictions_leave_nothing():
-    out = find_conflicts(ctx(restrictions=["vegan", "gluten_free", "nut_allergy"], excluded=["rice", "beans", "tofu", "oats", "banana", "spinach", "chickpea", "lentil", "tomato", "potato", "avocado", "broccoli"]))
+    out = find_conflicts(ctx(restrictions=["vegan", "gluten_free", "nut_allergy"], excluded=["rice", "beans", "tofu", "oats", "banana", "spinach", "chickpea", "lentil", "tomato", "potato", "avocado", "broccoli", "seeds", "tempeh", "syrup", "soy"]))
     assert out and "leave no" in out[0]
 
 
-def test_multiple_conflicts_reported_together():
-    out = find_conflicts(ctx(budget=10, restrictions=["vegan", "gluten_free"], days=[DayCtx(0, 1)] + [DayCtx(i, 45) for i in range(1, 7)]))
-    assert len(out) >= 2
+def test_rated_down_meals_can_leave_nothing():
+    from app.services.catalog import RECIPES
+
+    out = find_conflicts(ctx(disliked=[r["name"] for r in RECIPES if "breakfast" in r["slots"]]))
+    assert out and "leave no breakfast" in out[0]
+
+
+def test_pinned_meals_over_budget():
+    from app.services.catalog import RECIPES
+    from app.services.llm import _recipe_to_meal
+
+    pins = [_recipe_to_meal(RECIPES[0], 0, "breakfast") for _ in range(3)]
+    for p in pins:
+        p["cost"] = 50
+    out = find_conflicts(ctx(pinned=pins))
+    assert any("pinned meals alone cost" in o for o in out)
 
 
 def test_ui_shows_conflicts_and_no_plan(client):

@@ -21,6 +21,11 @@
 <h1>{% if profile.onboarded %}Your survey{% else %}Let's get you set up{% endif %}</h1>
 {% if not profile.onboarded %}<p class="muted">About 3 minutes. Only your <strong>budget</strong> is required — everything marked optional can be skipped and edited later.</p>{% endif %}
 {% if saved %}<p class="ok" role="status">Saved.</p>{% endif %}
+{% if profile.onboarded %}<section class="card understood" data-testid="understood" style="max-width:640px">
+  <strong>What we understood</strong>
+  <ul>{% for line in understood %}<li>{{ line }}</li>{% endfor %}</ul>
+  <small class="muted">Not right? Edit the answers below.</small>
+</section>{% endif %}
 <form method="post" class="card" style="max-width:640px">
   <fieldset>
     <legend>Budget</legend>

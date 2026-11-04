@@ -219,7 +219,8 @@ def build_sessions(meals: Iterable[dict]) -> List[dict]:
 
 
 def overbook_messages(sched: Schedule) -> List[str]:
-    return [f"{day_label(c)} needs {used} cooking minutes but only {cap} are available."
+    return [f"{day_label(c)} needs {used} cooking minutes but only {cap} are available. "
+            f"Add time that day or use a longer prep session."
             for c, (used, cap) in sorted(sched.overbooked.items())]
 
 
