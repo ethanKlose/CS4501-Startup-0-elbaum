@@ -160,3 +160,67 @@ def test_checkin_responses_shape_next_plan(planned):
 def test_banner_hidden_when_not_due_and_link_exists(planned):
     assert 'data-testid="checkin-banner"' not in planned.get("/").text or dt.datetime.utcnow().weekday() >= 5
     assert 'href="/checkin"' in planned.get("/").text
+
+
+def pantry_names(client):
+    from app.models import PantryItem
+
+    with client.app.state.session_factory() as s:
+        return {p.name: p for p in s.query(PantryItem).all()}
+
+
+def test_unused_ingredients_added_to_pantry_on_checkin(planned):
+    ms = meals(planned)
+    cooked_only = [m for m in ms if m.day == 0]
+    for m in cooked_only:
+        planned.post(f"/meals/{m.id}/status", data={"status": "cooked"})
+    r = planned.post("/checkin", data={})
+    assert 'data-testid="leftovers"' in r.text
+    pantry = pantry_names(planned)
+    uncooked_ings = {i["name"].lower() for m in ms if m.day != 0 for i in m.ingredients}
+    assert pantry and set(pantry) <= uncooked_ings
+    assert set(last_checkin(planned).leftovers) == set(pantry)
+
+
+def test_only_checked_off_items_count_as_bought(planned):
+    ms = meals(planned)
+    from app.services.grocery import build_list
+
+    items = build_list(m.as_dict() for m in ms)
+    bought = items[0]
+    planned.post("/grocery/toggle", data={"key": bought["key"], "checked": "true"})
+    planned.post("/checkin", data={})
+    assert set(pantry_names(planned)) == {bought["name"]}
+
+
+def test_nothing_unused_if_everything_cooked(planned):
+    for m in meals(planned):
+        planned.post(f"/meals/{m.id}/status", data={"status": "cooked"})
+    r = planned.post("/checkin", data={})
+    assert 'data-testid="leftovers"' not in r.text and pantry_names(planned) == {}
+
+
+def test_leftovers_added_once_and_merge_quantities(planned):
+    planned.post("/checkin", data={})
+    first = {k: v.quantity for k, v in pantry_names(planned).items()}
+    planned.post("/checkin", data={"overall": "great"})  # re-submit must not double-add
+    assert {k: v.quantity for k, v in pantry_names(planned).items()} == first
+
+
+def test_next_plan_prefers_leftovers(planned):
+    from app.services.llm import FakeLLM
+    from tests.test_plan import ctx
+
+    base = FakeLLM().generate_plan(ctx())
+    count = lambda p: sum(1 for m in p["meals"] for i in m["ingredients"] if i["name"] == "salmon fillet")
+    left = FakeLLM().generate_plan(ctx(leftovers=["salmon fillet"]))
+    assert count(left) > count(base)
+    # and the planner wires the latest check-in's leftovers into the context
+    planned.post("/checkin", data={})
+    with planned.app.state.session_factory() as s:
+        from app.models import User
+        from app.services import planner
+
+        user = s.query(User).first()
+        c = planner.build_context(s, user, FakeLLM(), seed=1)
+    assert set(c.leftovers) == set(last_checkin(planned).leftovers) and c.leftovers

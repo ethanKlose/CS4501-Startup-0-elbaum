@@ -78,7 +78,7 @@ def build_context(db: Session, user: User, llm, seed: int = 0) -> PlanContext:
     return PlanContext(
         budget=profile.budget, days=day_ctx, restrictions=list(profile.restrictions or []),
         excluded=list(interp.get("excluded", [])), goal=profile.goal, calorie_target=profile.calorie_target,
-        free_text=profile.free_text, pantry=pantry, pinned=pinned, liked=liked, disliked=disliked, avoid=avoid, seed=seed,
+        free_text=profile.free_text, pantry=pantry, pinned=pinned, liked=liked, disliked=disliked, avoid=avoid, leftovers=list(checkin.leftovers or []) if checkin else [], seed=seed,
     )
 
 

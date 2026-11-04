@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.deps import current_user, render
-from app.models import CheckIn, Meal, Plan, User
-from app.services import planner
+from app.models import CheckIn, GroceryCheck, PantryItem, Plan, User
+from app.services import grocery, planner
 
 router = APIRouter()
 
@@ -38,7 +38,7 @@ def checkin_form(request: Request, user: User = Depends(current_user), db: Sessi
     plan = planner.latest_plan(db, user)
     existing = db.scalar(select(CheckIn).where(CheckIn.plan_id == plan.id)) if plan else None
     return render(request, "checkin.html", user, plan=plan, existing=existing, summary=week_summary(plan.meals) if plan and plan.status == "ok" else None,
-                  overall=OVERALL, cook_time=COOK_TIME, variety=VARIETY, saved=request.query_params.get("saved"))
+                  overall=OVERALL, cook_time=COOK_TIME, variety=VARIETY, saved=request.query_params.get("saved"), leftovers=existing.leftovers if existing else [])
 
 
 @router.post("/checkin")
@@ -50,7 +50,8 @@ def checkin_submit(
     if not plan or plan.status != "ok":
         return RedirectResponse("/", 303)
     row = db.scalar(select(CheckIn).where(CheckIn.plan_id == plan.id))
-    if row is None:
+    first_time = row is None
+    if first_time:
         row = CheckIn(user_id=user.id, plan_id=plan.id)
         db.add(row)
     row.overall = overall if overall in OVERALL else "ok"
@@ -58,5 +59,20 @@ def checkin_submit(
     row.variety = variety if variety in VARIETY else "right"
     row.notes = notes.strip()[:500]
     row.created_at = dt.datetime.utcnow()
+    if first_time:  # leftovers move to the pantry exactly once per week
+        checked = [c.key for c in db.scalars(select(GroceryCheck).where(GroceryCheck.plan_id == plan.id))]
+        left = grocery.leftovers_from(plan.meals, checked)
+        row.leftovers = [l["name"] for l in left]
+        add_to_pantry(db, user, left)
     db.commit()
     return RedirectResponse("/checkin?saved=1", 303)
+
+
+def add_to_pantry(db: Session, user: User, leftovers) -> None:
+    for l in leftovers:
+        item = db.scalar(select(PantryItem).where(PantryItem.user_id == user.id, PantryItem.name == l["name"]))
+        if item is None:
+            db.add(PantryItem(user_id=user.id, name=l["name"], quantity=l["quantity"], unit=l["unit"]))
+        elif item.quantity is not None and (item.unit or "") == l["unit"]:
+            item.quantity = round(item.quantity + l["quantity"], 2)
+        # quantity-less ("I have plenty") or different-unit entries are left as the user wrote them

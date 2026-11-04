@@ -79,3 +79,17 @@ def group_by_section(items: List[Dict]) -> List[Dict]:
     for it in items:
         buckets[it["section"] if it["section"] in buckets else "other"].append(it)
     return [dict(section=s, label=SECTION_LABEL[s], entries=buckets[s]) for s in SECTION_ORDER if buckets[s]]
+
+
+def leftovers_from(meals: Iterable, checked_keys: Iterable[str]) -> List[Dict]:
+    """Ingredients bought for meals that were never cooked.
+
+    If the user checked items off while shopping, only those (actually bought) count; otherwise we assume
+    everything on the list was bought. Returns [{name, unit, quantity}].
+    """
+    unused = [m.as_dict() for m in meals if m.status != "cooked"]
+    checked = set(checked_keys)
+    items = build_list(unused)
+    if checked:
+        items = [i for i in items if i["key"] in checked]
+    return [dict(name=i["name"], unit=i["unit"], quantity=i["quantity"]) for i in items]

@@ -6,6 +6,7 @@
   <p class="muted">Generate a plan first — then check in at the end of the week.</p>
 {% else %}
   {% if saved %}<p class="ok" role="status">Thanks! Your next plan will take this into account.</p>{% endif %}
+  {% if saved and leftovers %}<p data-testid="leftovers">Added {{ leftovers|length }} unused ingredients to your <a href="/survey#pantry">pantry</a> so next week's plan can use them up: {{ leftovers|join(', ') }}.</p>{% endif %}
   <p>This week: you cooked <strong>{{ summary.cooked }}</strong> of {{ summary.total }} meals{% if summary.skipped %}, skipped {{ summary.skipped }}{% endif %}{% if summary.avg_rating %}; average rating {{ summary.avg_rating }}/5{% endif %}.</p>
   <form method="post" class="card">
     <fieldset><legend>How did the week go?</legend>
