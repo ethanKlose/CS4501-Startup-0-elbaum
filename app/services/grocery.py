@@ -80,4 +80,3 @@ def group_by_section(items: List[Dict]) -> List[Dict]:
     for it in items:
         buckets[it["section"] if it["section"] in buckets else "other"].append(it)
     return [dict(section=s, label=SECTION_LABEL[s], entries=buckets[s]) for s in SECTION_ORDER if buckets[s]]
-

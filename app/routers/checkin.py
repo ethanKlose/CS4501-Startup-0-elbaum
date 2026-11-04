@@ -72,4 +72,3 @@ def checkin_submit(
         row.leftovers = [l["name"] for l in left]
     db.commit()
     return RedirectResponse("/checkin?saved=1", 303)
-
