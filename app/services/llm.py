@@ -20,7 +20,7 @@ from app.services.catalog import RECIPES
 from app.services.diet import meal_violations
 from app.services.schedule import capacities, storage_days
 from app.services.types import SLOTS, WEEKDAYS, PlanContext
-from app.services.validators import HIGH_PROTEIN_DAILY_G, schedule_for
+from app.services.validators import HIGH_PROTEIN_DAILY_G, SOFT_CHECKS, schedule_for
 
 # ----------------------------------------------------------------------------- fake
 
@@ -63,21 +63,29 @@ class FakeLLM:
 
     # -- plan generation ----------------------------------------------------------------
     def generate_plan(self, ctx: PlanContext, feedback=()) -> Dict:
-        """Pick meals ignoring *when* they are cooked, schedule the cooking, and if it does not fit the
-        available time, weigh cooking time more heavily and pick again."""
+        """Pick meals ignoring *when* they are cooked, schedule the cooking, and judge the result by every soft goal
+        (cooking time, calories, protein). If it isn't clean, weigh cooking time differently or re-roll the dice,
+        and keep the best candidate seen."""
         best = None
-        for lam in (0.0, 0.03, 0.08, 0.2, 0.5):
-            plan = self._pick(ctx, lam)
-            sched = schedule_for(plan, ctx)
-            over = sum(u - cap for u, cap in sched.overbooked.values())
-            if best is None or over < best[0]:
-                best = (over, plan)
-            if over == 0:
-                break
+        for reroll in range(3):
+            for lam in (0.0, 0.03, 0.08, 0.2, 0.5):
+                plan = self._pick(ctx, lam, ctx.seed + reroll * 7919)
+                issues = [w for check in SOFT_CHECKS for w in check(plan, ctx)]
+                sched = schedule_for(plan, ctx)
+                over = sum(u - cap for u, cap in sched.overbooked.values())
+                days = {}
+                for m in plan["meals"]:
+                    days[m["day"]] = days.get(m["day"], 0) + m["calories"]
+                dev = abs(sum(days.values()) / max(len(days), 1) - ctx.calorie_target) if ctx.calorie_target else 0
+                key = (len(issues), over, dev)
+                if best is None or key < best[0]:
+                    best = (key, plan)
+                if not issues:
+                    return plan
         return best[1]
 
-    def _pick(self, ctx: PlanContext, lam: float) -> Dict:
-        rng = random.Random(ctx.seed)
+    def _pick(self, ctx: PlanContext, lam: float, seed: int = 0) -> Dict:
+        rng = random.Random(seed)
         caps = capacities(ctx.days, ctx.prep_style, ctx.prep_days, ctx.prep_minutes)
         pinned = {(m["day"], m["slot"]): m for m in ctx.pinned}
         pantry = {p["name"].lower() for p in ctx.pantry}
@@ -176,16 +184,32 @@ def _day(ctx: PlanContext, weekday: int):
 
 # ----------------------------------------------------------------------------- real
 
-SYSTEM = f"""You are the planning engine of PlateJoy, a weekly meal planner for university students.
+SYSTEM = """You are the planning engine of PlateJoy, a weekly meal planner for university students.
 Return ONLY a JSON object (no prose, no markdown fences) of the form:
-{{"meals": [{{"day": 0-6 (0=Monday), "slot": "breakfast"|"lunch"|"dinner", "name": str, "cook_minutes": int,
+{"meals": [{"day": 0-6 (0=Monday), "slot": "breakfast"|"lunch"|"dinner", "name": str, "cook_minutes": int,
   "calories": int, "protein": number (grams), "cost": number (USD, must equal the sum of ingredient costs),
-  "steps": [str], "ingredients": [{{"name": str, "quantity": number, "unit": str,
-  "section": "produce"|"dairy"|"meat"|"seafood"|"bakery"|"pantry"|"frozen"|"other", "cost": number}}]}}]}}
-Hard rules: exactly one meal per slot per active day; skipped days get no meals; the sum of all meal costs must not
-exceed the budget; the sum of cook_minutes per day must not exceed that day's minutes; never use an ingredient that
-violates a restriction or excluded ingredient; keep pinned meals exactly as given. Prefer meals that share
-ingredients, use the pantry/leftovers first, and fit the goal. If feedback lists errors from a previous attempt, fix all of them."""
+  "steps": [str], "ingredients": [{"name": str, "quantity": number, "unit": str,
+  "section": "produce"|"dairy"|"meat"|"seafood"|"bakery"|"pantry"|"frozen"|"other", "cost": number}]}]}
+
+HARD rules (a plan breaking any of these is thrown away):
+- exactly one meal per slot per active day; skipped days get no meals;
+- the sum of all ingredient costs must not exceed the weekly budget;
+- never use an ingredient that violates a restriction or an excluded ingredient;
+- keep pinned meals exactly as given; do not use the disliked meal names.
+
+BEST-EFFORT goals (misses are shown to the user as warnings, so try hard):
+- hit the calorie target (weekly average within 10%, each day within 30%) or the protein goal;
+- prefer meals that share ingredients and use pantry items and leftovers first.
+
+You choose WHAT to eat, not WHEN to cook. A separate scheduler decides the cook day for every meal, so a busy
+day does NOT mean fewer meals. Rules of thumb that make the schedule work:
+- cook_minutes is the active time to cook ONE batch of the dish; reheating is free and not counted.
+- Repeating a dish 2-4 times a week is encouraged: the scheduler cooks it once in a batch and reheats it.
+- Fresh foods (salads, sandwiches, wraps, toast, smoothies, scrambles) are made close to eating; do not rely on
+  batching them. Fish keeps 2 days in the fridge, other proteins 4, then the freezer.
+- cook_capacity_minutes shows how many minutes of cooking fit on each day (-1 = the Sunday before the week).
+  Keep the total cooking within it, favouring no-cook (cook_minutes 0) meals when capacity is very low.
+If feedback from a previous attempt is given, fix every item in it."""
 
 
 def _extract_json(text: str):
@@ -211,7 +235,9 @@ class AnthropicLLM:
         return _extract_json("".join(b.text for b in resp.content if getattr(b, "type", "") == "text"))
 
     def generate_plan(self, ctx: PlanContext, feedback=()) -> Dict:
-        payload = {"context": asdict(ctx), "feedback_from_previous_attempt": list(feedback)}
+        caps = capacities(ctx.days, ctx.prep_style, ctx.prep_days, ctx.prep_minutes)
+        payload = {"context": asdict(ctx), "cook_capacity_minutes": {str(k): v for k, v in sorted(caps.items())},
+                   "feedback_from_previous_attempt": list(feedback)}
         return self._ask(SYSTEM, json.dumps(payload), 12000)
 
     def interpret_preferences(self, text: str) -> Dict:
