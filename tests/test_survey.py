@@ -92,3 +92,29 @@ def test_other_posts_leave_restrictions_alone(client):
     client.post("/survey", data={"restrictions_present": "1", "restrictions": ["vegan"]})
     client.post("/survey", data={"budget": "40"})
     assert profile(client).restrictions == ["vegan"]
+
+
+def test_goal_high_protein(client):
+    signup(client)
+    client.post("/survey", data={"goal": "high_protein", "calorie_target": "1800"})
+    p = profile(client)
+    assert p.goal == "high_protein" and p.calorie_target is None
+
+
+def test_goal_calorie_target(client):
+    signup(client)
+    client.post("/survey", data={"goal": "calorie_target", "calorie_target": "2200"})
+    p = profile(client)
+    assert p.goal == "calorie_target" and p.calorie_target == 2200
+
+
+@pytest.mark.parametrize("cal", ["", "100", "99999", "abc"])
+def test_calorie_target_validated(client, cal):
+    signup(client)
+    r = client.post("/survey", data={"goal": "calorie_target", "calorie_target": cal})
+    assert r.status_code == 400 and "calorie" in r.text.lower()
+
+
+def test_unknown_goal_rejected(client):
+    signup(client)
+    assert client.post("/survey", data={"goal": "bulk_up_fast"}).status_code == 400

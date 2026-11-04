@@ -25,6 +25,8 @@ class Profile(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
     budget: Mapped[Optional[float]] = mapped_column(default=None)
     restrictions: Mapped[list] = mapped_column(JSON, default=list)
+    goal: Mapped[str] = mapped_column(String(32), default="none")  # none | high_protein | calorie_target
+    calorie_target: Mapped[Optional[int]] = mapped_column(default=None)
 
 
 class DaySetting(Base):

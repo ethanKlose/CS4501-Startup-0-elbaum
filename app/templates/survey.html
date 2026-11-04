@@ -21,6 +21,20 @@
     {% endfor %}
   </fieldset>
   <fieldset>
+    <legend>Nutrition or fitness goal <span class="muted">(optional)</span></legend>
+    {% set cur_goal = form.get('goal') if form is defined else profile.goal %}
+    <label>Goal
+      <select name="goal">
+        {% for key, label in goal_options.items() %}<option value="{{ key }}" {% if cur_goal == key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Daily calories (only for "Daily calorie target")
+      <input type="number" name="calorie_target" min="800" max="6000"
+        value="{{ form.get('calorie_target') if form is defined else (profile.calorie_target or '') }}">
+    </label>
+    {% if errors.goal %}<p class="error" role="alert">{{ errors.goal }}</p>{% endif %}
+  </fieldset>
+  <fieldset>
     <legend>Your week</legend>
     <p class="muted">Tick busy days and set how many minutes you can spend cooking that day (0 = no cooking).</p>
     {% for d in days %}
