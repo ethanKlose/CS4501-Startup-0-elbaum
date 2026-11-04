@@ -186,3 +186,25 @@ def test_survey_without_budget_does_not_finish_setup(client):
     signup(client)
     client.post("/survey", data={"free_text": "hi"})
     assert client.get("/", follow_redirects=False).status_code == 303
+
+
+def full_payload(**over):
+    d = days_payload(busy_1="on")
+    d.update({"budget": "80", "restrictions_present": "1", "restrictions": ["vegan"], "goal": "calorie_target",
+              "calorie_target": "2000", "free_text": "no fish"})
+    d.update(over)
+    return d
+
+
+def test_all_answers_viewable_and_editable_later(client):
+    signup(client)
+    client.post("/survey", data=full_payload())
+    page = client.get("/survey").text
+    assert 'value="80.0"' in page and "no fish" in page and 'value="2000"' in page
+    assert "Your survey" in page  # no longer the first-run heading
+    # edit every section
+    client.post("/survey", data=days_payload(budget="45", restrictions_present="1", goal="high_protein",
+                                             free_text="no nuts", minutes_3="90"))
+    p = profile(client)
+    assert (p.budget, p.restrictions, p.goal, p.free_text) == (45.0, [], "high_protein", "no nuts")
+    assert day_rows(client)[3].minutes == 90 and not day_rows(client)[1].busy
