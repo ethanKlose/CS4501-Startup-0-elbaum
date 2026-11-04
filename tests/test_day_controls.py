@@ -199,3 +199,17 @@ def test_skipping_and_swapping_reschedule_cooking(planned):
     planned.post(f"/meals/{target.id}/swap")
     for m in newest_meals(planned).values():
         assert -1 <= m.cook_day <= m.day
+
+
+@pytest.mark.parametrize('status,rating', [('cooked', None), ('cooked', 5), ('skipped', None), ('planned', 5)])
+def test_swap_preserves_completed_and_rated_history(planned, status, rating):
+    target = newest_meals(planned)[(0, 'dinner')]
+    with planned.app.state.session_factory() as s:
+        m = s.get(Meal, target.id)
+        m.status, m.rating = status, rating
+        s.commit()
+    response = planned.post(f'/meals/{target.id}/swap')
+    assert 'Only planned, unrated meals can be swapped' in response.text
+    after = newest_meals(planned)[(0, 'dinner')]
+    assert (after.name, after.status, after.rating) == (target.name, status, rating)
+    assert f'action="/meals/{target.id}/swap"' not in planned.get(f'/meals/{target.id}').text

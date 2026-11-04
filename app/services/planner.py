@@ -163,6 +163,8 @@ def generate(db: Session, user: User, llm, seed: Optional[int] = None) -> Plan:
 
 def swap_meal(db: Session, user: User, llm, meal: Meal) -> Meal:
     """Replace one meal. Every other meal is pinned, so only this slot changes; the WHOLE plan is re-verified."""
+    if meal.status != "planned" or meal.rating is not None:
+        raise PlanFailed("Only planned, unrated meals can be swapped. Completed meals keep their cooking and rating history.")
     plan = db.get(Plan, meal.plan_id)
     ctx = build_context(db, user, llm, random.randint(1, 10**6))
     ctx.days = [DayCtx(weekday=d["weekday"], minutes=next(c.minutes for c in ctx.days if c.weekday == d["weekday"]),

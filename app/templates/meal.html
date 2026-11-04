@@ -51,10 +51,13 @@
         <div class="row">
           <form method="post" action="/meals/{{ meal.id }}/pin" class="inline"><input type="hidden" name="next" value="/meals/{{ meal.id }}">
             <button class="btn sm line">{{ icon('pin', 15) }} {% if meal.pinned %}Unpin{% else %}Pin this meal{% endif %}</button></form>
+          {% if meal.status == 'planned' and meal.rating is none %}
           <form method="post" action="/meals/{{ meal.id }}/swap" class="inline" data-generate data-generate-title="Finding a replacement…">
             <button class="btn sm line">{{ icon('swap', 15) }} Swap meal</button></form>
+          {% endif %}
         </div>
         <p class="muted tiny" style="margin:10px 0 0">Pinned meals stay put when you regenerate the week.</p>
+        {% if meal.status != 'planned' or meal.rating is not none %}<p class="muted tiny">Only planned, unrated meals can be swapped. Completed meals keep their history.</p>{% endif %}
       </section>
     </aside>
   </div>
