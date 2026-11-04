@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Grocery list · PlateJoy{% endblock %}
+{% block content %}
+<h1>Grocery list</h1>
+{% if not items %}
+  <p class="muted">Generate a plan first, then your single shopping list shows up here.</p>
+{% else %}
+  <p class="totals">{{ items|length }} items · about <strong>${{ '%.2f' % total }}</strong></p>
+  <ul class="plain grocery">
+    {% for it in items %}
+    <li data-item="{{ it.name }}">
+      <span class="gname">{{ it.name }}</span>
+      <span class="muted">{{ '%g' % it.quantity }} {{ it.unit }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+{% endblock %}
