@@ -1,36 +1,62 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 {% block title %}{{ meal.name }} · PlateJoy{% endblock %}
 {% block content %}
-<p><a href="/" class="close" aria-label="Close and return to the calendar">← Back to calendar</a></p>
-<article class="card" style="max-width:720px">
-  <small class="muted">{{ weekday }} · {{ meal.slot }}</small>
-  <h1 style="margin:0">{{ meal.name }}</h1>
-  <p>⏱ {{ meal.cook_minutes }} min cook time · 🔥 {{ meal.calories }} cal · 💪 {{ '%g' % meal.protein }} g protein · 💲{{ '%.2f' % meal.cost }}</p>
-  <form method="post" action="/meals/{{ meal.id }}/pin" class="inline"><input type="hidden" name="next" value="/meals/{{ meal.id }}">
-    <button class="secondary">{% if meal.pinned %}📌 Pinned — unpin{% else %}Pin this meal{% endif %}</button></form>
-  {% if meal.cook_minutes > 0 %}<p data-testid="cook-when">{% if meal.cook_day == meal.day %}Cook this fresh on {{ weekday }}.{% else %}Cooked ahead on <strong>{{ cook_label }}</strong>{% if meal.frozen %}, frozen. Thaw it the night before{% else %} and kept in the fridge{% endif %}. Just reheat it.{% endif %}</p>{% endif %}
-  <div class="row" data-testid="status-controls">
-    <span>Status: <strong>{{ meal.status }}</strong></span>
-    {% for st, label in [('cooked','Mark cooked'),('skipped','Mark skipped'),('planned','Reset')] if st != meal.status %}
-    <form method="post" action="/meals/{{ meal.id }}/status" class="inline"><input type="hidden" name="status" value="{{ st }}">
-      <input type="hidden" name="next" value="/meals/{{ meal.id }}"><button class="secondary">{{ label }}</button></form>
-    {% endfor %}
+<a href="/" class="close backlink" aria-label="Close and return to the calendar">{{ icon('back', 16) }} Back to calendar</a>
+<article class="recipe">
+  <header class="rhero {{ meal.slot }} reveal">
+    <div class="row"><span class="chip">{{ weekday }} · {{ meal.slot }}</span>
+      {% if meal.pinned %}<span class="chip">{{ icon('pin', 13) }} Pinned</span>{% endif %}
+      {% if meal.status != 'planned' %}<span class="chip">{{ meal.status|capitalize }}</span>{% endif %}</div>
+    <h1>{{ meal.name }}</h1>
+    <div class="rstats">
+      <div>{{ icon('clock', 18) }}<b>{{ meal.cook_minutes }} min</b><span>cook time</span></div>
+      <div>{{ icon('flame', 18) }}<b>{{ meal.calories }}</b><span>calories</span></div>
+      <div>{{ icon('target', 18) }}<b>{{ '%g' % meal.protein }} g</b><span>protein</span></div>
+      <div>{{ icon('dollar', 18) }}<b>${{ '%.2f' % meal.cost }}</b><span>cost</span></div>
+    </div>
+  </header>
+
+  <div class="rgrid">
+    <div class="rmain">
+      {% if meal.cook_minutes > 0 %}<div class="md-note" data-testid="cook-when">{{ icon('chef', 18) }}<span>{% if meal.cook_day == meal.day %}Cook this fresh on {{ weekday }}.{% else %}Cooked ahead on <strong>{{ cook_label }}</strong>{% if meal.frozen %}, frozen. Thaw it the night before{% else %} and kept in the fridge{% endif %}. Just reheat it.{% endif %}</span></div>{% endif %}
+      <section class="card"><h2>Steps</h2>
+        <ol class="rsteps">{% for step in meal.steps %}<li>{{ step }}</li>{% endfor %}</ol></section>
+    </div>
+    <aside class="rside">
+      <section class="card"><h3>Ingredients</h3>
+        <ul class="plain ring">{% for i in meal.ingredients %}<li><span>{{ '%g' % i.quantity }} {{ i.unit }} {{ i.name }}</span><em>${{ '%.2f' % i.cost }}</em></li>{% endfor %}</ul></section>
+
+      <section class="card" data-testid="status-controls"><h3>How did it go?</h3>
+        <p class="muted tiny" style="margin:0 0 10px">Status: <strong>{{ meal.status }}</strong></p>
+        <div class="row">
+          {% for st, label in [('cooked','Mark cooked'),('skipped','Mark skipped'),('planned','Reset')] if st != meal.status %}
+          <form method="post" action="/meals/{{ meal.id }}/status" class="inline"><input type="hidden" name="status" value="{{ st }}"><input type="hidden" name="next" value="/meals/{{ meal.id }}">
+            <button class="btn sm {{ 'soft' if st == 'cooked' else 'line' }}">{{ label }}</button></form>
+          {% endfor %}
+        </div>
+        {% if meal.status == 'cooked' %}
+        <form method="post" action="/meals/{{ meal.id }}/rate" class="row" data-testid="rating" style="margin-top:12px">
+          <label style="flex:1">Rating
+            <select name="rating" aria-label="Rating">
+              {% for n in range(1, 6) %}<option value="{{ n }}" {% if meal.rating == n %}selected{% endif %}>{{ '★' * n }}{{ '☆' * (5 - n) }}</option>{% endfor %}
+            </select></label>
+          <button class="btn sm soft" style="align-self:flex-end">Save rating</button>
+          {% if meal.rating %}<span class="ok" style="width:100%">Rated {{ meal.rating }}/5</span>{% endif %}
+        </form>
+        {% endif %}
+      </section>
+
+      <section class="card"><h3>Change it up</h3>
+        <div class="row">
+          <form method="post" action="/meals/{{ meal.id }}/pin" class="inline"><input type="hidden" name="next" value="/meals/{{ meal.id }}">
+            <button class="btn sm line">{{ icon('pin', 15) }} {% if meal.pinned %}Unpin{% else %}Pin this meal{% endif %}</button></form>
+          <form method="post" action="/meals/{{ meal.id }}/swap" class="inline" data-generate data-generate-title="Finding a replacement…">
+            <button class="btn sm line">{{ icon('swap', 15) }} Swap meal</button></form>
+        </div>
+        <p class="muted tiny" style="margin:10px 0 0">Pinned meals stay put when you regenerate the week.</p>
+      </section>
+    </aside>
   </div>
-  {% if meal.status == 'cooked' %}
-  <form method="post" action="/meals/{{ meal.id }}/rate" class="row" data-testid="rating">
-    <label>How was it?
-      <select name="rating" aria-label="Rating">
-        {% for n in range(1, 6) %}<option value="{{ n }}" {% if meal.rating == n %}selected{% endif %}>{{ '★' * n }}{{ '☆' * (5 - n) }}</option>{% endfor %}
-      </select></label>
-    <button class="secondary">Save rating</button>
-    {% if meal.rating %}<span class="ok">Rated {{ meal.rating }}/5</span>{% endif %}
-  </form>
-  {% endif %}
-  <h2>Ingredients</h2>
-  <ul>
-    {% for i in meal.ingredients %}<li>{{ '%g' % i.quantity }} {{ i.unit }} {{ i.name }} <span class="muted">(${{ '%.2f' % i.cost }})</span></li>{% endfor %}
-  </ul>
-  <h2>Steps</h2>
-  <ol>{% for step in meal.steps %}<li>{{ step }}</li>{% endfor %}</ol>
 </article>
 {% endblock %}

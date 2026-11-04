@@ -1,22 +1,39 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 {% block title %}Weekly check-in · PlateJoy{% endblock %}
 {% block content %}
-<h1>Weekly check-in</h1>
+<div class="page-head reveal"><div><h1>Weekly check-in</h1><p class="muted" style="margin:0">One minute. Next week’s plan learns from how this one went.</p></div></div>
 {% if not plan or plan.status != 'ok' %}
-  <p class="muted">Generate a plan first — then check in at the end of the week.</p>
+  <section class="empty card"><div class="plate big" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
+    <h2>Nothing to check in on yet</h2><p class="muted">Generate a plan first, then check in at the end of the week.</p>
+    <a class="btn primary" href="/">{{ icon('sparkles') }} Go to my plan</a></section>
 {% else %}
-  {% if saved %}<p class="ok" role="status">Thanks! Your next plan will take this into account.</p>{% endif %}
-  {% if saved and leftovers %}<p data-testid="leftovers">Added {{ leftovers|length }} unused ingredients to your <a href="/survey#pantry">pantry</a> so next week's plan can use them up: {{ leftovers|join(', ') }}.</p>{% endif %}
-  <p>This week: you cooked <strong>{{ summary.cooked }}</strong> of {{ summary.total }} meals{% if summary.skipped %}, skipped {{ summary.skipped }}{% endif %}{% if summary.avg_rating %}; average rating {{ summary.avg_rating }}/5{% endif %}.</p>
-  <form method="post" class="card">
-    <fieldset><legend>How did the week go?</legend>
-      {% for k, label in overall.items() %}<label class="check"><input type="radio" name="overall" value="{{ k }}" {% if (existing.overall if existing else 'ok') == k %}checked{% endif %}> {{ label }}</label>{% endfor %}</fieldset>
-    <fieldset><legend>Cooking time</legend>
-      {% for k, label in cook_time.items() %}<label class="check"><input type="radio" name="cook_time" value="{{ k }}" {% if (existing.cook_time if existing else 'right') == k %}checked{% endif %}> {{ label }}</label>{% endfor %}</fieldset>
-    <fieldset><legend>Variety</legend>
-      {% for k, label in variety.items() %}<label class="check"><input type="radio" name="variety" value="{{ k }}" {% if (existing.variety if existing else 'right') == k %}checked{% endif %}> {{ label }}</label>{% endfor %}</fieldset>
-    <label>Anything else? <textarea name="notes" rows="3" maxlength="500" placeholder="e.g. too much chicken, no mushrooms">{{ existing.notes if existing else '' }}</textarea></label>
-    <button>Save check-in</button>
-  </form>
+<div class="ci-layout">
+  <div>
+    {% if saved %}<div class="alert info" role="status">{{ icon('check-circle') }}<span>Thanks! Your next plan will take this into account.</span></div>{% endif %}
+    {% if saved and leftovers %}<div class="alert info" data-testid="leftovers">{{ icon('leaf') }}<span>Added {{ leftovers|length }} unused ingredients to your <a href="/survey#pantry">pantry</a> so next week's plan can use them up: {{ leftovers|join(', ') }}.</span></div>{% endif %}
+    <form method="post" class="ci-form">
+      <section class="card pad-lg"><h2>How did the week go?</h2>
+        <div class="optcards">{% for k, label in overall.items() %}
+          <label class="optcard"><input type="radio" name="overall" value="{{ k }}" {% if (existing.overall if existing else 'ok') == k %}checked{% endif %}><span class="oc"><b>{{ {'great':'😄','ok':'🙂','poor':'😕'}[k] }} {{ label }}</b></span></label>{% endfor %}</div></section>
+      <section class="card pad-lg"><h2>Cooking time</h2>
+        <div class="optcards">{% for k, label in cook_time.items() %}
+          <label class="optcard"><input type="radio" name="cook_time" value="{{ k }}" {% if (existing.cook_time if existing else 'right') == k %}checked{% endif %}><span class="oc"><b>{{ label }}</b></span></label>{% endfor %}</div></section>
+      <section class="card pad-lg"><h2>Variety</h2>
+        <div class="optcards two">{% for k, label in variety.items() %}
+          <label class="optcard"><input type="radio" name="variety" value="{{ k }}" {% if (existing.variety if existing else 'right') == k %}checked{% endif %}><span class="oc"><b>{{ label }}</b></span></label>{% endfor %}</div></section>
+      <section class="card pad-lg"><label><span style="font-size:1.1rem">Anything else?</span>
+        <textarea name="notes" rows="3" maxlength="500" placeholder="e.g. too much chicken, no mushrooms">{{ existing.notes if existing else '' }}</textarea></label></section>
+      <button class="btn primary lg">Save check-in</button>
+    </form>
+  </div>
+  <aside class="wiz-side">
+    <section class="card">
+      <h3>{{ icon('check-circle', 18) }} This week</h3>
+      <p style="margin:0 0 10px">You cooked <strong>{{ summary.cooked }}</strong> of {{ summary.total }} meals{% if summary.skipped %}, skipped {{ summary.skipped }}{% endif %}{% if summary.avg_rating %}; average rating {{ summary.avg_rating }}/5{% endif %}.</p>
+      <div class="meter"><span style="width:{{ (summary.cooked / summary.total * 100)|round|int if summary.total else 0 }}%"></span></div>
+    </section>
+  </aside>
+</div>
 {% endif %}
 {% endblock %}

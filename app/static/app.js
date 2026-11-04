@@ -48,9 +48,9 @@
     steps.forEach(function (li) { li.className = ''; });
     function tick() {
       if (i > 0 && steps[i - 1]) steps[i - 1].className = 'done';
-      if (steps[i]) steps[i].className = 'active';
+      if (steps[i]) steps[i].className = 'active';   // the last step keeps spinning until the server answers
       i++;
-      if (i > steps.length) { clearInterval(genTimer); }
+      if (i >= steps.length) clearInterval(genTimer);
     }
     tick();
     genTimer = setInterval(tick, 1150);
