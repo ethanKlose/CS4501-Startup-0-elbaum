@@ -15,5 +15,6 @@
   </tr>
   {% endfor %}
 </table>
+{% if sharing %}<p class="muted">{{ sharing.shared|length }} ingredients are reused across meals this week, so you buy less and waste less.</p>{% endif %}
 {% endif %}
 {% endblock %}

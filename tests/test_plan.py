@@ -199,3 +199,33 @@ def test_goal_high_protein():
     base, _ = validate_plan(FakeLLM().generate_plan(ctx()), ctx())
     avg = lambda p: sum(m["protein"] for m in p["meals"]) / 7
     assert avg(plan) >= 90
+
+
+def test_ingredient_sharing_beats_random_selection():
+    import random
+
+    from app.services.analysis import sharing_stats
+    from app.services.catalog import RECIPES
+    from app.services.llm import _recipe_to_meal
+
+    planned = sharing_stats(FakeLLM().generate_plan(ctx())["meals"])
+    ratios = []
+    for seed in range(30):
+        rng = random.Random(seed)
+        meals = [_recipe_to_meal(rng.choice([r for r in RECIPES if s in r["slots"]]), d, s)
+                 for d in range(7) for s in ("breakfast", "lunch", "dinner")]
+        ratios.append(sharing_stats(meals)["ratio"])
+    assert planned["ratio"] < sum(ratios) / len(ratios)
+    assert len(planned["shared"]) >= 5
+
+
+def test_plan_prefers_pantry_items():
+    base = FakeLLM().generate_plan(ctx())
+    with_pantry = FakeLLM().generate_plan(ctx(pantry=[{"name": "salmon fillet", "quantity": 20, "unit": "oz"}]))
+    count = lambda p: sum(1 for m in p["meals"] for i in m["ingredients"] if i["name"] == "salmon fillet")
+    assert count(with_pantry) > count(base)
+
+
+def test_home_mentions_shared_ingredients(onboarded):
+    onboarded.post("/plan/generate")
+    assert "reused across meals" in onboarded.get("/").text
