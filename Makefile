@@ -1,7 +1,9 @@
 PY=.venv/bin/python
 .PHONY: setup run test seed reset
 setup:
-	python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt && cp -n .env.example .env || true
+	python3 -m venv .venv
+	.venv/bin/pip install -r requirements-dev.txt
+	@test -e .env || cp .env.example .env
 seed:
 	PYTHONPATH=. $(PY) scripts/seed.py
 run: seed
