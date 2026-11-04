@@ -16,5 +16,5 @@ def generate_plan(request: Request, user: User = Depends(current_user), db: Sess
     try:
         planner.generate(db, user, llm)
     except planner.PlanFailed as e:
-        request.session["flash_error"] = e.message
+        request.session["flash_error"] = {"message": e.message, "conflicts": e.conflicts}
     return RedirectResponse("/", 303)

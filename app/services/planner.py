@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import DaySetting, Meal, PantryItem, Plan, Profile, User
+from app.services.explain import summarize_failure
 from app.services.types import DayCtx, PlanContext
 from app.services.validators import validate_plan
 
@@ -14,10 +15,11 @@ MAX_ATTEMPTS = 3
 
 
 class PlanFailed(Exception):
-    def __init__(self, message: str, errors=None):
+    def __init__(self, message: str, errors=None, conflicts=None):
         super().__init__(message)
         self.message = message
         self.errors = errors or []
+        self.conflicts = conflicts or []
 
 
 def latest_plan(db: Session, user: User) -> Optional[Plan]:
@@ -78,4 +80,5 @@ def generate(db: Session, user: User, llm, seed: Optional[int] = None) -> Plan:
             db.commit()
             return plan
         feedback = errors  # self-correction: the validator's complaints go straight back to the LLM
-    raise PlanFailed("We couldn't build a valid plan: " + " ".join(errors[:3]), errors)
+    message, conflicts = summarize_failure(ctx, errors)
+    raise PlanFailed(message, errors, conflicts)

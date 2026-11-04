@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Your week</h1>
-{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+{% if error %}<div class="error" role="alert"><p>{{ error.message }}</p>
+  {% if error.conflicts %}<ul>{% for c in error.conflicts %}<li>{{ c }}</li>{% endfor %}</ul>{% endif %}
+  <p><a href="/survey">Edit your survey</a></p></div>{% endif %}
 <form method="post" action="/plan/generate" class="inline">
   <button>{% if plan and plan.status == 'ok' %}Regenerate week{% else %}Generate my week{% endif %}</button>
 </form>
