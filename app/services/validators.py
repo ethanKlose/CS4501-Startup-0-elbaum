@@ -57,7 +57,7 @@ def check_diet(plan: dict, ctx: PlanContext) -> List[str]:
 
 def schedule_for(plan: dict, ctx: PlanContext) -> Schedule:
     caps = capacities(ctx.days, ctx.prep_style, ctx.prep_days, ctx.prep_minutes, ctx.allow_pre_week)
-    return schedule(plan["meals"], caps, ctx.prep_style, ctx.prep_days, [d.weekday for d in ctx.days if d.busy], earliest_day=-1 if ctx.allow_pre_week else 0, allow_freezer=ctx.allow_freezer)
+    return schedule(plan["meals"], caps, ctx.prep_style, ctx.prep_days, [d.weekday for d in ctx.days if d.busy], earliest_day=max(ctx.earliest_day,-1 if ctx.allow_pre_week else 0), allow_freezer=ctx.allow_freezer, cooking_windows=ctx.cooking_windows, meal_times=ctx.meal_times, earliest_minute=ctx.earliest_minute)
 
 
 def check_schedule(plan: dict, ctx: PlanContext) -> List[str]:
@@ -66,7 +66,7 @@ def check_schedule(plan: dict, ctx: PlanContext) -> List[str]:
 
 
 def check_cooking_deadlines(plan: dict, ctx: PlanContext) -> List[str]:
-    return deadline_errors(schedule_for(plan, ctx).sessions)
+    return deadline_errors(schedule_for(plan, ctx).sessions,ctx.cooking_windows,ctx.meal_times,ctx.earliest_day,ctx.earliest_minute)
 
 
 WEEKLY_CAL_TOLERANCE = 0.10

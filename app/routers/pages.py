@@ -73,8 +73,10 @@ def home(request: Request, user=Depends(current_user_optional), db: Session = De
     start = plan_week_start(plan)
     cards = [dict(id=m.id, day=m.day, slot=m.slot, name=m.name, cost=m.cost, status=m.status, pinned=m.pinned, cook_day=m.cook_day,
                   frozen=m.frozen, cook_minutes=m.cook_minutes, note=cook_note(m)) for m in meals]
-    start_hour = min([HOUR_START] + [max(0, s["start"] // 60) for s in timed_sessions(sessions)])
-    columns = build_columns(cards, sessions, plan.days, start, hour_start=start_hour)
+    st=plan.settings or {}
+    timing=dict(cooking_windows=st.get('cooking_windows',{}),meal_times=st.get('meal_times',{}),earliest_day=st.get('earliest_day',-1),earliest_minute=st.get('earliest_minute',0))
+    start_hour = min([HOUR_START] + [max(0, s["start"] // 60) for s in timed_sessions(sessions,**timing)])
+    columns = build_columns(cards, sessions, plan.days, start, hour_start=start_hour,external_slots=st.get('external_slots',[]),**timing)
     active_days = {m.day for m in meals} or {0}
     n = len(active_days)
     stats = dict(calories=round(sum(m.calories for m in meals) / n), protein=round(sum(m.protein for m in meals) / n),

@@ -109,7 +109,7 @@ def _slot_idx(m: dict) -> Tuple[int, int]:
 
 
 def schedule(meals: Sequence[dict], caps: Dict[int, int], style: str = "auto", prep_days: Iterable[int] = (),
-             busy: Iterable[int] = (), earliest_day: int = PRE_WEEK, allow_freezer: bool = True) -> Schedule:
+             busy: Iterable[int] = (), earliest_day: int = PRE_WEEK, allow_freezer: bool = True, cooking_windows=None, meal_times=None, earliest_minute=0) -> Schedule:
     """Try a few deterministic strategies and keep the one with the least overbooking, then the fewest cook days."""
     prep_days, busy = list(prep_days), list(busy)
     best = None
@@ -117,7 +117,7 @@ def schedule(meals: Sequence[dict], caps: Dict[int, int], style: str = "auto", p
         for consolidate in (100.0, 20.0):
             cand = _build(meals, caps, style, prep_days, busy, order, consolidate, earliest_day, allow_freezer)
             over = sum(u - cand.caps.get(c, 0) for c, u in cand.used.items() if u > cand.caps.get(c, 0))
-            key = (len(deadline_errors(cand.sessions)), over, len(cand.used))
+            key = (len(deadline_errors(cand.sessions,cooking_windows,meal_times,earliest_day,earliest_minute)), over, len(cand.used))
             if best is None or key < best[0]:
                 best = (key, cand)
     return best[1]

@@ -59,12 +59,12 @@ def _place(e: dict, hour_start: int = HOUR_START) -> dict:
 
 
 def build_columns(meals: Sequence[dict], sessions: Sequence[dict], days: Sequence[dict], start: dt.date,
-                  today: Optional[dt.date] = None, hour_start: int = HOUR_START) -> List[dict]:
+                  today: Optional[dt.date] = None, hour_start: int = HOUR_START, cooking_windows=None, meal_times=None, external_slots=(), earliest_day=-1, earliest_minute=0) -> List[dict]:
     """meals: dicts with id/day/slot/name/cost/status/pinned/cook_day/frozen/cook_minutes.
     sessions: from schedule.build_sessions. days: plan.days (for skipped flags).
     Returns one column per visible day; the Sunday-before column only exists if something is cooked then."""
     today = today or dt.date.today()
-    by_cook_day = sessions_by_day(timed_sessions(sessions))
+    by_cook_day = sessions_by_day(timed_sessions(sessions,cooking_windows,meal_times,earliest_day,earliest_minute))
     skipped = {d["weekday"] for d in days if d.get("skipped")}
     cols: List[dict] = []
     for day in range(PRE_WEEK, 7):
@@ -76,7 +76,12 @@ def build_columns(meals: Sequence[dict], sessions: Sequence[dict], days: Sequenc
             if m["day"] != day:
                 continue
             t, dur = EAT[m["slot"]]
+            t=(meal_times or {}).get(m["slot"],t)
             events.append(_place(dict(kind="meal", start=t, dur=dur, **m), hour_start))
+        for external in external_slots:
+            if external['day']==day and not external.get('past'):
+                slot=external['slot'];t=(meal_times or {}).get(slot,EAT[slot][0])
+                events.append(_place(dict(kind='external',start=t,dur=EAT[slot][1],name=external['source'],slot=slot),hour_start))
         ses = by_cook_day.get(day, [])
         for s in ses:
             events.append(_place(dict(kind="cook", start=s["start"], dur=s["minutes"], name=s["name"], servings=s["servings"],
@@ -89,7 +94,7 @@ def build_columns(meals: Sequence[dict], sessions: Sequence[dict], days: Sequenc
     return cols
 
 
-def hour_labels(hour_start: int = HOUR_START) -> List[dict]:
+def hour_labels(hour_start: int = HOUR_START, cooking_windows=None, meal_times=None, external_slots=(), earliest_day=-1, earliest_minute=0) -> List[dict]:
     return [dict(label=fmt_time(h * 60).replace(":00 ", " "), top=round((h - hour_start) * HOUR_PX, 1)) for h in range(hour_start, HOUR_END)]
 
 
