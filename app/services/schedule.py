@@ -14,6 +14,7 @@ from typing import Dict, Iterable, List, Sequence, Tuple
 
 from app.services.diet import term_hits
 from app.services.types import SLOTS, WEEKDAYS, DayCtx
+from app.services.timing import deadline_errors
 
 PRE_WEEK = -1
 BATCH_FACTOR = 0.4  # each extra serving of the same dish costs 40% of the base cook time
@@ -116,7 +117,7 @@ def schedule(meals: Sequence[dict], caps: Dict[int, int], style: str = "auto", p
         for consolidate in (100.0, 20.0):
             cand = _build(meals, caps, style, prep_days, busy, order, consolidate)
             over = sum(u - cand.caps.get(c, 0) for c, u in cand.used.items() if u > cand.caps.get(c, 0))
-            key = (over, len(cand.used))
+            key = (len(deadline_errors(cand.sessions)), over, len(cand.used))
             if best is None or key < best[0]:
                 best = (key, cand)
     return best[1]

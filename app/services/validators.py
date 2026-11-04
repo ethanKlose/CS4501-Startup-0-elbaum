@@ -10,6 +10,7 @@ from app.services.diet import meal_violations
 from app.services.schedule import Schedule, capacities, overbook_messages, schedule
 from app.services.schema import MealIn, parse_plan
 from app.services.types import SLOTS, WEEKDAYS, PlanContext
+from app.services.timing import deadline_errors
 
 
 HIGH_PROTEIN_DAILY_G = 75
@@ -59,6 +60,10 @@ def schedule_for(plan: dict, ctx: PlanContext) -> Schedule:
 def check_schedule(plan: dict, ctx: PlanContext) -> List[str]:
     """SOFT: can the cooking be fit into the time available, counting batches cooked on other days?"""
     return overbook_messages(schedule_for(plan, ctx))
+
+
+def check_cooking_deadlines(plan: dict, ctx: PlanContext) -> List[str]:
+    return deadline_errors(schedule_for(plan, ctx).sessions)
 
 
 WEEKLY_CAL_TOLERANCE = 0.10
@@ -122,7 +127,7 @@ def check_disliked(plan: dict, ctx: PlanContext) -> List[str]:
 
 
 # HARD: safety, money, format. A plan breaking any of these is never shown.
-HARD_CHECKS = [check_coverage, check_cost_integrity, check_budget, check_diet, check_pinned, check_disliked]
+HARD_CHECKS = [check_coverage, check_cost_integrity, check_budget, check_diet, check_pinned, check_disliked, check_cooking_deadlines]
 # SOFT: preferences. The LLM is asked to fix them, but on the final attempt they become visible warnings.
 SOFT_CHECKS = [check_schedule, check_goal]
 

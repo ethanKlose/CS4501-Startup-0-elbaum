@@ -79,3 +79,22 @@ def test_short_back_to_back_cook_sessions_never_overlap():
     cooks = sorted((e for e in day1["events"] if e["kind"] == "cook"), key=lambda e: e["start"])
     assert len(cooks) == 2 and cooks[0]["start"] + cooks[0]["visual"] <= cooks[1]["start"]
     assert all(e["lanes"] == 1 for e in cooks)
+
+
+def test_cooking_finishes_before_breakfast_and_lunch():
+    ms = [meal(1, 0, 'breakfast', name='Oatmeal', minutes=8),
+          meal(2, 0, 'lunch', name='Rice bowl', minutes=25),
+          meal(3, 0, 'dinner', name='Soup', minutes=30)]
+    cols = build_columns(ms, build_sessions(ms), [], dt.date(2026, 11, 9))
+    cooks = [e for e in cols[0]['events'] if e['kind'] == 'cook']
+    for event in cooks:
+        supplied = [m for m in ms if m['name'] == event['name']]
+        assert event['start'] >= 0
+        assert event['start'] + event['dur'] <= min(EAT[m['slot']][0] for m in supplied)
+
+
+def test_long_breakfast_prep_is_visible_on_an_expanded_grid():
+    ms = [meal(1, 0, 'breakfast', name='Slow breakfast', minutes=120)]
+    cols = build_columns(ms, build_sessions(ms), [], dt.date(2026, 11, 9), hour_start=6)
+    cook = next(e for e in cols[0]['events'] if e['kind'] == 'cook')
+    assert cook['time'] == '6:00 AM' and cook['top'] == 0

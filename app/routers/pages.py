@@ -12,9 +12,10 @@ from app.routers.checkin import checkin_due
 from app.routers.survey import get_profile
 from app.services import planner
 from app.services.analysis import sharing_stats
-from app.services.calview import GRID_PX, HOUR_PX, build_columns, hour_labels, week_start_for, week_title
+from app.services.calview import GRID_PX, HOUR_PX, HOUR_START, HOUR_END, build_columns, hour_labels, week_start_for, week_title
 from app.services.schedule import build_sessions, day_label, sessions_by_day
 from app.services.types import WEEKDAYS
+from app.services.timing import timed_sessions
 
 router = APIRouter()
 
@@ -67,12 +68,13 @@ def home(request: Request, user=Depends(current_user_optional), db: Session = De
     start = week_start_for(plan.created_at.date())
     cards = [dict(id=m.id, day=m.day, slot=m.slot, name=m.name, cost=m.cost, status=m.status, pinned=m.pinned, cook_day=m.cook_day,
                   frozen=m.frozen, cook_minutes=m.cook_minutes, note=cook_note(m)) for m in meals]
-    columns = build_columns(cards, sessions, plan.days, start)
+    start_hour = min([HOUR_START] + [max(0, s["start"] // 60) for s in timed_sessions(sessions)])
+    columns = build_columns(cards, sessions, plan.days, start, hour_start=start_hour)
     active_days = {m.day for m in meals} or {0}
     n = len(active_days)
     stats = dict(calories=round(sum(m.calories for m in meals) / n), protein=round(sum(m.protein for m in meals) / n),
                  cooked=sum(m.status == "cooked" for m in meals), skipped=sum(m.status == "skipped" for m in meals), total=len(meals),
                  pct=min(100, round(plan.total_cost / plan.budget * 100)) if plan.budget else 0)
-    return render(request, "home.html", user, columns=columns, hours=hour_labels(), hour_px=HOUR_PX, grid_px=GRID_PX, week_title=week_title(start), stats=stats,
+    return render(request, "home.html", user, columns=columns, hours=hour_labels(start_hour), hour_px=HOUR_PX, grid_px=(HOUR_END - start_hour) * HOUR_PX, week_title=week_title(start), stats=stats,
                   cook_plan=cook_plan, sharing=sharing_stats(m.as_dict() for m in meals), checkin_due=checkin_due(plan, done),
                   short=[w[:3] for w in WEEKDAYS], meals_json=meals_json(meals), prep_col=bool(columns and columns[0]["prep"]), **ctx)
