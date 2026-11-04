@@ -28,7 +28,7 @@
 
     <section class="wstep card pad-lg" data-step="0" data-has-error="{{ '1' if errors.budget or errors.goal else '' }}">
       <h2>What’s your weekly grocery budget?</h2>
-      <p class="muted">Every plan stays under this. Minimum $30.</p>
+      <p class="muted">The estimated whole-package shopping total stays under this. Actual store prices can differ. Minimum $30.</p>
       <label class="money"><span class="sr">Weekly grocery budget in dollars</span>
         <span class="money-in"><i>$</i><input type="number" name="budget" step="0.01" min="30" required inputmode="decimal" placeholder="75" value="{{ '%g' % values.budget if values.budget is number else values.budget }}"></span>
       </label>

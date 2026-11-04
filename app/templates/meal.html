@@ -27,6 +27,7 @@
       <section class="card"><h3>Ingredients</h3>
         <ul class="plain ring">{% for i in meal.ingredients %}<li><span>{{ '%g' % i.quantity }} {{ i.unit }} {{ i.name }}</span><em>${{ '%.2f' % i.cost }}</em></li>{% endfor %}</ul></section>
 
+      <section class="card"><h3>Nutrition sources</h3>{% if nutrient_sources %}<p class="muted tiny">Calculated from USDA ingredients and the gram assumptions below. Brand and preparation change the estimate.</p><ul class="plain">{% for i in nutrient_sources %}<li><a href="{{ i.source_url }}" target="_blank" rel="noopener noreferrer">{{ i.name }}</a>: {{ i.grams }} g ({{ i.usda_description }})</li>{% endfor %}</ul>{% else %}<p class="muted tiny">Recorded recipe estimate. This historical recipe does not match the current USDA calculation.</p>{% endif %}</section>
       <section class="card" data-testid="status-controls"><h3>How did it go?</h3>
         <p class="muted tiny" style="margin:0 0 10px">Status: <strong>{{ meal.status }}</strong></p>
         <div class="row">

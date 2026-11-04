@@ -41,3 +41,11 @@ def catalog_plan(raw,ctx):
             meal.update(day=day,slot=slot)
         out.append(meal)
     return {'meals':out}
+
+
+def evidence(meal):
+    try:
+        calories,protein=calculate(meal['ingredients'])
+    except (ValueError,KeyError):return None
+    if calories!=meal.get('calories') or abs(protein-meal.get('protein',0))>0.1:return None
+    return [{'name':i['name'],'grams':round(i['quantity']*INGREDIENTS[i['name']]['grams_per_unit'][i['unit']],1),**INGREDIENTS[i['name']]} for i in meal['ingredients']]

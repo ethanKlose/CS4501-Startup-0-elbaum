@@ -35,8 +35,8 @@ def next_week(request: Request, user: User = Depends(current_user), db: Session 
     return RedirectResponse("/", 303)
 
 
-def owned_meal(db: Session, user: User, meal_id: int) -> Meal:
-    lock_user(db, user.id)
+def owned_meal(db: Session, user: User, meal_id: int, write=True) -> Meal:
+    if write:lock_user(db, user.id)
     meal = db.get(Meal, meal_id)
     plan = db.get(Plan, meal.plan_id) if meal else None
     if not meal or plan.user_id != user.id:
@@ -48,10 +48,11 @@ def owned_meal(db: Session, user: User, meal_id: int) -> Meal:
 def meal_detail(meal_id: int, request: Request, user: User = Depends(current_user), db: Session = Depends(get_db)):
     from app.services.types import WEEKDAYS
 
-    meal = owned_meal(db, user, meal_id)
+    meal = owned_meal(db, user, meal_id, write=False)
     from app.services.schedule import day_label
+    from app.services.nutrition import evidence
 
-    return render(request, "meal.html", user, meal=meal, weekday=WEEKDAYS[meal.day], closed=inventory.closed(db.get(Plan, meal.plan_id)), cook_label=day_label(meal.cook_day))
+    return render(request, "meal.html", user, meal=meal, nutrient_sources=evidence(meal.as_dict()), weekday=WEEKDAYS[meal.day], closed=inventory.closed(db.get(Plan, meal.plan_id)), cook_label=day_label(meal.cook_day))
 
 
 @router.post("/plan/days/{weekday}/skip")

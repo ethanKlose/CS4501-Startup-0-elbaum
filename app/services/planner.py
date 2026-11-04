@@ -96,6 +96,9 @@ def build_context(db: Session, user: User, llm, seed: int = 0, week_start=None) 
         for slot,(default,_) in EAT.items():
             if lifestyle.get('meal_times',{}).get(slot,default)<earliest_minute:
                 external_slots.append({'day':earliest_day,'slot':slot,'source':'Before planning start','past':True})
+    if lifestyle.get('equipment') is not None and 'fridge' not in lifestyle['equipment']:
+        profile_prep_style='daily'
+    else:profile_prep_style=profile.prep_style or 'auto'
     pantry = [dict(name=p.name, quantity=p.quantity, unit=p.unit)
               for p in db.scalars(select(PantryItem).where(PantryItem.user_id == user.id))]
     return PlanContext(
@@ -107,7 +110,7 @@ def build_context(db: Session, user: User, llm, seed: int = 0, week_start=None) 
         excluded=list(interp.get("excluded", [])), goal=profile.goal, calorie_target=profile.calorie_target,
         free_text=profile.free_text, pantry=pantry, pinned=pinned, liked=liked, disliked=disliked, avoid=avoid, leftovers=list(checkin.leftovers or []) if checkin else [],
         week_start=week_start.isoformat(), allow_pre_week=(week_start - dt.timedelta(days=1)) > planning_today(),
-        prep_style=profile.prep_style or "auto", prep_days=list(profile.prep_days or []), prep_minutes=profile.prep_minutes or 120, seed=seed,
+        prep_style=profile_prep_style, prep_days=list(profile.prep_days or []), prep_minutes=profile.prep_minutes or 120, seed=seed,
     )
 
 

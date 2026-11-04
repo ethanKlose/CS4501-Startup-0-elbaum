@@ -6,7 +6,7 @@
     {
       "scenario": "baseline",
       "repeat": 0,
-      "latency_seconds": 0.051,
+      "latency_seconds": 0.052,
       "input_tokens": null,
       "output_tokens": null,
       "estimated_usd": null,
@@ -18,7 +18,7 @@
     {
       "scenario": "vegan",
       "repeat": 0,
-      "latency_seconds": 0.06,
+      "latency_seconds": 0.059,
       "input_tokens": null,
       "output_tokens": null,
       "estimated_usd": null,
@@ -30,7 +30,7 @@
     {
       "scenario": "nut_allergy",
       "repeat": 0,
-      "latency_seconds": 0.064,
+      "latency_seconds": 0.061,
       "input_tokens": null,
       "output_tokens": null,
       "estimated_usd": null,
@@ -42,7 +42,7 @@
     {
       "scenario": "no_wednesday_cooking",
       "repeat": 0,
-      "latency_seconds": 0.05,
+      "latency_seconds": 0.051,
       "input_tokens": null,
       "output_tokens": null,
       "estimated_usd": null,
@@ -54,7 +54,7 @@
     {
       "scenario": "high_protein",
       "repeat": 0,
-      "latency_seconds": 0.098,
+      "latency_seconds": 0.099,
       "input_tokens": null,
       "output_tokens": null,
       "estimated_usd": null,
@@ -66,7 +66,7 @@
     {
       "scenario": "microwave_only",
       "repeat": 0,
-      "latency_seconds": 0.009,
+      "latency_seconds": 0.01,
       "input_tokens": null,
       "output_tokens": null,
       "estimated_usd": null,

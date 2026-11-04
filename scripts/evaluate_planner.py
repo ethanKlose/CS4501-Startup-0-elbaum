@@ -23,7 +23,7 @@ def evaluate(live=False,repeats=1):
     for name,overrides in SCENARIOS:
         for repeat in range(repeats):
             llm=AnthropicLLM(settings.anthropic_api_key,settings.anthropic_model) if live else FakeLLM()
-            context=PlanContext(budget=150,days=[DayCtx(i,45) for i in range(7)],seed=repeat+1,**{k:v for k,v in overrides.items() if k!='days'})
+            context=PlanContext(budget=150,checkout_budget=True,days=[DayCtx(i,45) for i in range(7)],seed=repeat+1,**{k:v for k,v in overrides.items() if k!='days'})
             if 'days' in overrides:context.days=overrides['days']
             start=time.perf_counter()
             try:
