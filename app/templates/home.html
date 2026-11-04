@@ -22,10 +22,11 @@
       <small>For {{ prep[day].meals|join(', ') }}</small></div>{% endif %}
     {% for slot in slots %}
       {% for m in plan.meals if m.day == day and m.slot == slot %}
-      <div class="meal">
+      <div class="meal {{ m.status }}" data-status="{{ m.status }}">
         <small class="muted">{{ slot }}</small>
         <a class="mname" href="/meals/{{ m.id }}">{{ m.name }}</a>
         <div class="cost">${{ '%.2f' % m.cost }} · {{ m.cook_minutes }} min</div>
+        {% if m.status != 'planned' %}<span class="badge {{ m.status }}">{{ '✓ Cooked' if m.status == 'cooked' else '✗ Skipped' }}</span>{% endif %}
         <form method="post" action="/meals/{{ m.id }}/pin" class="inline"><button class="link small" aria-pressed="{{ 'true' if m.pinned else 'false' }}">{% if m.pinned %}📌 Pinned (unpin){% else %}Pin{% endif %}</button></form>
         <form method="post" action="/meals/{{ m.id }}/swap" class="inline"><button class="link small">Swap</button></form>
       </div>

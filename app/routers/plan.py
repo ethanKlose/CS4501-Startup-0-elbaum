@@ -66,3 +66,13 @@ def swap(meal_id: int, request: Request, user: User = Depends(current_user), db:
         db.rollback()
         request.session["flash_error"] = {"message": "Couldn't swap that meal: " + e.message, "conflicts": e.conflicts}
     return RedirectResponse("/", 303)
+
+
+@router.post("/meals/{meal_id}/status")
+def set_status(meal_id: int, status: str = Form(...), next: str = Form("/"), user: User = Depends(current_user), db: Session = Depends(get_db)):
+    meal = owned_meal(db, user, meal_id)
+    if status not in ("planned", "cooked", "skipped"):
+        raise HTTPException(422, "status must be planned, cooked or skipped")
+    meal.status = status
+    db.commit()
+    return RedirectResponse(next if next.startswith("/") and not next.startswith("//") else "/", 303)

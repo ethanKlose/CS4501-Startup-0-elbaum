@@ -16,7 +16,7 @@ def test_calendar_shows_all_seven_days_and_their_meals(planned):
     page = planned.get("/").text
     for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]:
         assert f">{day}</h2>" in page
-    assert page.count('class="meal"') == 21
+    assert page.count('data-status="') == 21
     with planned.app.state.session_factory() as s:
         for m in s.query(Meal).all():
             assert m.name.replace("&", "&amp;") in page or m.name in page

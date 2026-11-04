@@ -85,6 +85,8 @@ class Meal(Base):
     steps: Mapped[list] = mapped_column(JSON, default=list)
     ingredients: Mapped[list] = mapped_column(JSON, default=list)
     pinned: Mapped[bool] = mapped_column(default=False)
+    status: Mapped[str] = mapped_column(String(10), default="planned")  # planned | cooked | skipped
+    rating: Mapped[Optional[int]] = mapped_column(default=None)  # 1-5, only after cooked
 
     plan = relationship("Plan", back_populates="meals")
 

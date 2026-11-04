@@ -8,6 +8,13 @@
   <p>⏱ {{ meal.cook_minutes }} min · 🔥 {{ meal.calories }} cal · 💪 {{ '%g' % meal.protein }} g protein · 💲{{ '%.2f' % meal.cost }}</p>
   <form method="post" action="/meals/{{ meal.id }}/pin" class="inline"><input type="hidden" name="next" value="/meals/{{ meal.id }}">
     <button class="secondary">{% if meal.pinned %}📌 Pinned — unpin{% else %}Pin this meal{% endif %}</button></form>
+  <div class="row" data-testid="status-controls">
+    <span>Status: <strong>{{ meal.status }}</strong></span>
+    {% for st, label in [('cooked','Mark cooked'),('skipped','Mark skipped'),('planned','Reset')] if st != meal.status %}
+    <form method="post" action="/meals/{{ meal.id }}/status" class="inline"><input type="hidden" name="status" value="{{ st }}">
+      <input type="hidden" name="next" value="/meals/{{ meal.id }}"><button class="secondary">{{ label }}</button></form>
+    {% endfor %}
+  </div>
   <h2>Ingredients</h2>
   <ul>
     {% for i in meal.ingredients %}<li>{{ '%g' % i.quantity }} {{ i.unit }} {{ i.name }} <span class="muted">(${{ '%.2f' % i.cost }})</span></li>{% endfor %}
