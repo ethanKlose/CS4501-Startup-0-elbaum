@@ -15,7 +15,7 @@ from app.services.types import DayCtx, PlanContext
 from app.services import inventory
 from app.services.locking import lock_user
 from app.services.preferences import get_preferences
-from app.services.weeks import plan_week_start, planning_today, target_week
+from app.services.weeks import plan_week_start, planning_today, planning_now, target_week
 from app.services.validators import SOFT_CHECKS, schedule_for, validate_full
 
 
@@ -82,13 +82,26 @@ def build_context(db: Session, user: User, llm, seed: int = 0, week_start=None) 
             if m.pinned and m.day not in prev_skipped and not meal_violations(d, profile.restrictions or [], interp.get("excluded", [])):
                 pinned.append(d)
     lifestyle = get_preferences(db,user.id)
+    now=planning_now()
+    earliest_day=-1
+    earliest_minute=0
+    external_slots=list(lifestyle.get('external_slots',[]))
+    if week_start<=planning_today()<week_start+dt.timedelta(days=7):
+        earliest_day=(planning_today()-week_start).days
+        earliest_minute=now.hour*60+now.minute+1
+        for day in day_ctx:
+            if day.weekday<earliest_day:day.skipped=True
+        from app.services.timing import EAT
+        for slot,(default,_) in EAT.items():
+            if lifestyle.get('meal_times',{}).get(slot,default)<earliest_minute:
+                external_slots.append({'day':earliest_day,'slot':slot,'source':'Before planning start','past':True})
     pantry = [dict(name=p.name, quantity=p.quantity, unit=p.unit)
               for p in db.scalars(select(PantryItem).where(PantryItem.user_id == user.id))]
     return PlanContext(
         budget=profile.budget, days=day_ctx,
         equipment=lifestyle.get('equipment'), cooking_skill=lifestyle.get('cooking_skill','any'),
         allow_freezer='freezer' in lifestyle.get('equipment',['freezer']),
-        external_slots=list(lifestyle.get('external_slots',[])), cooking_windows=dict(lifestyle.get('cooking_windows',{})),
+        external_slots=external_slots, earliest_day=earliest_day, earliest_minute=earliest_minute, cooking_windows=dict(lifestyle.get('cooking_windows',{})),
         meal_times=dict(lifestyle.get('meal_times',{})), restrictions=list(profile.restrictions or []),
         excluded=list(interp.get("excluded", [])), goal=profile.goal, calorie_target=profile.calorie_target,
         free_text=profile.free_text, pantry=pantry, pinned=pinned, liked=liked, disliked=disliked, avoid=avoid, leftovers=list(checkin.leftovers or []) if checkin else [],
@@ -100,7 +113,7 @@ def build_context(db: Session, user: User, llm, seed: int = 0, week_start=None) 
 def plan_settings(ctx: PlanContext) -> dict:
     return dict(prep_style=ctx.prep_style, prep_days=list(ctx.prep_days), prep_minutes=ctx.prep_minutes,
                 goal=ctx.goal, calorie_target=ctx.calorie_target, equipment=ctx.equipment, cooking_skill=ctx.cooking_skill,
-                allow_freezer=ctx.allow_freezer, external_slots=ctx.external_slots, cooking_windows=ctx.cooking_windows, meal_times=ctx.meal_times, week_start=ctx.week_start, allow_pre_week=ctx.allow_pre_week)
+                allow_freezer=ctx.allow_freezer, earliest_day=ctx.earliest_day, earliest_minute=ctx.earliest_minute, external_slots=ctx.external_slots, cooking_windows=ctx.cooking_windows, meal_times=ctx.meal_times, week_start=ctx.week_start, allow_pre_week=ctx.allow_pre_week)
 
 
 def save_plan(db: Session, user: User, ctx: PlanContext, plan_dict: dict, attempts: int, warnings=()) -> Plan:
@@ -130,7 +143,7 @@ def plan_ctx(plan: Plan) -> PlanContext:
                        goal=st.get("goal", "none"), calorie_target=st.get("calorie_target"), prep_style=st.get("prep_style", "auto"),
                        prep_days=st.get("prep_days", []), prep_minutes=st.get("prep_minutes", 120),
                        equipment=st.get('equipment'), cooking_skill=st.get('cooking_skill','any'), allow_freezer=st.get('allow_freezer',True),
-                       external_slots=st.get('external_slots',[]), cooking_windows=st.get('cooking_windows',{}), meal_times=st.get('meal_times',{}),
+                       earliest_day=st.get('earliest_day',-1), earliest_minute=st.get('earliest_minute',0), external_slots=st.get('external_slots',[]), cooking_windows=st.get('cooking_windows',{}), meal_times=st.get('meal_times',{}),
                        week_start=st.get("week_start"), allow_pre_week=st.get("allow_pre_week", True))
 
 
@@ -169,13 +182,18 @@ def run_with_retries(llm, ctx: PlanContext):
     raise PlanFailed(message, errors, conflicts)
 
 
-def generate(db: Session, user: User, llm, seed: Optional[int] = None, new_week: bool = False) -> Plan:
+def generate(db: Session, user: User, llm, seed: Optional[int] = None, new_week: bool = False, start_mode: str = "keep") -> Plan:
     lock_user(db, user.id)
     seed = random.randint(1, 10**6) if seed is None else seed
     previous = latest_plan(db, user)
     if previous:
         inventory.settle(db, previous)
-    ctx = build_context(db, user, llm, seed, week_start=target_week(latest_plan(db, user), new_week))
+    week=target_week(latest_plan(db,user),new_week)
+    if start_mode=='today':week=planning_today()-dt.timedelta(days=planning_today().weekday())
+    elif start_mode=='next_week':
+        from app.services.weeks import next_monday
+        week=next_monday(planning_today())
+    ctx = build_context(db, user, llm, seed, week_start=week)
     plan_dict, attempts, warnings = run_with_retries(llm, ctx)
     plan = save_plan(db, user, ctx, plan_dict, attempts, warnings)
     db.commit()

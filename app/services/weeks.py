@@ -4,8 +4,12 @@ from zoneinfo import ZoneInfo
 from app.config import settings
 
 
+def planning_now():
+    return dt.datetime.now(ZoneInfo(settings.timezone))
+
+
 def planning_today():
-    return dt.datetime.now(ZoneInfo(settings.timezone)).date()
+    return planning_now().date()
 
 
 def next_monday(today):
@@ -27,6 +31,6 @@ def target_week(previous, new_week=False):
         previous_start = plan_week_start(previous)
         if new_week:
             return max(upcoming, previous_start + dt.timedelta(days=7))
-        if previous_start > today:
+        if previous_start + dt.timedelta(days=7) > today:
             return previous_start
     return upcoming

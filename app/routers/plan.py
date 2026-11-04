@@ -14,9 +14,11 @@ router = APIRouter()
 
 @router.post("/plan/regenerate")
 @router.post("/plan/generate")
-def generate_plan(request: Request, user: User = Depends(current_user), db: Session = Depends(get_db), llm=Depends(get_llm)):
+def generate_plan(request: Request, start_mode: str = Form("keep"), user: User = Depends(current_user), db: Session = Depends(get_db), llm=Depends(get_llm)):
     try:
-        planner.generate(db, user, llm)
+        if start_mode not in {"keep","today","next_week"}:
+            raise HTTPException(422,"Invalid plan start")
+        planner.generate(db, user, llm, start_mode=start_mode)
     except planner.PlanFailed as e:
         db.rollback()
         request.session["flash_error"] = {"message": e.message, "conflicts": e.conflicts}
