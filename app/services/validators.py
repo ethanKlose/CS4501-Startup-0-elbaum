@@ -8,7 +8,7 @@ from typing import List
 
 from app.services.diet import meal_violations
 from app.services.schedule import Schedule, capacities, overbook_messages, schedule
-from app.services.schema import parse_plan
+from app.services.schema import MealIn, parse_plan
 from app.services.types import SLOTS, WEEKDAYS, PlanContext
 
 
@@ -106,7 +106,9 @@ def check_pinned(plan: dict, ctx: PlanContext) -> List[str]:
     at = {(m["day"], m["slot"]): m for m in plan["meals"]}
     for p in ctx.pinned:
         got = at.get((p["day"], p["slot"]))
-        same = got and got["name"] == p["name"] and [i["name"] for i in got["ingredients"]] == [i["name"] for i in p["ingredients"]]
+        # Compare the normalized recipe, including amounts, nutrition and steps.
+        # Coercion/defaults must match parse_plan's treatment of generated meals.
+        same = got == MealIn.model_validate(p).model_dump()
         if not same:
             errors.append(f"Pinned meal '{p['name']}' ({WEEKDAYS[p['day']]} {p['slot']}) must be kept exactly as it was.")
     return errors
