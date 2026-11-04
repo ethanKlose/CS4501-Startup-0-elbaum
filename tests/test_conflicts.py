@@ -42,7 +42,10 @@ def test_multiple_conflicts_reported_together():
 
 def test_ui_shows_conflicts_and_no_plan(client):
     signup(client)
-    client.post("/survey", data={"budget": "10"})
+    from tests.helpers import set_budget
+
+    client.post("/survey", data={"budget": "50"})
+    set_budget(client, 10)
     r = client.post("/plan/generate")
     assert "too low" in r.text and "Edit your survey" in r.text
     with client.app.state.session_factory() as s:

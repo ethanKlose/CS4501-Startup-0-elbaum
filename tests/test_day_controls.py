@@ -131,7 +131,9 @@ def test_saved_survey_edits_apply_to_next_regeneration(planned):
 
 def test_failed_regeneration_keeps_previous_valid_plan(planned):
     old = db_plan(planned).id
-    planned.post("/survey", data={"budget": "5"})
+    from tests.helpers import set_budget
+
+    set_budget(planned, 5)
     r = planned.post("/plan/regenerate")
     assert "too low" in r.text
     assert db_plan(planned).id == old

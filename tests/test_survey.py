@@ -21,7 +21,7 @@ def test_budget_saved(client):
     assert "75.5" in client.get("/survey").text
 
 
-@pytest.mark.parametrize("bad", ["", "0", "-5", "abc", "nan", "1e9"])
+@pytest.mark.parametrize("bad", ["", "0", "-5", "abc", "nan", "1e9", "29.99"])
 def test_budget_rejects_invalid(client, bad):
     signup(client)
     r = client.post("/survey", data={"budget": bad})
@@ -108,7 +108,7 @@ def test_goal_calorie_target(client):
     assert p.goal == "calorie_target" and p.calorie_target == 2200
 
 
-@pytest.mark.parametrize("cal", ["", "100", "99999", "abc"])
+@pytest.mark.parametrize("cal", ["", "100", "1199", "99999", "abc"])
 def test_calorie_target_validated(client, cal):
     signup(client)
     r = client.post("/survey", data={"goal": "calorie_target", "calorie_target": cal})
@@ -208,3 +208,24 @@ def test_all_answers_viewable_and_editable_later(client):
     p = profile(client)
     assert (p.budget, p.restrictions, p.goal, p.free_text) == (45.0, [], "high_protein", "no nuts")
     assert day_rows(client)[3].minutes == 90 and not day_rows(client)[1].busy
+
+
+def test_prep_preferences_saved_and_validated(client):
+    signup(client)
+    client.post("/survey", data={"prep_present": "1", "prep_style": "one_session", "prep_days": ["6", "9", "x"], "prep_minutes": "180"})
+    p = profile(client)
+    assert (p.prep_style, p.prep_days, p.prep_minutes) == ("one_session", [6], 180)
+    assert client.post("/survey", data={"prep_present": "1", "prep_style": "nope", "prep_minutes": "60"}).status_code == 400
+    assert client.post("/survey", data={"prep_present": "1", "prep_style": "auto", "prep_minutes": "5"}).status_code == 400
+    assert profile(client).prep_style == "one_session"  # failed edits change nothing
+
+
+def test_prep_defaults_and_other_posts_leave_it_alone(client):
+    signup(client)
+    client.post("/survey", data={"budget": "50"})
+    p = profile(client)
+    assert (p.prep_style, p.prep_days, p.prep_minutes) == ("auto", [], 120)
+    client.post("/survey", data={"prep_present": "1", "prep_style": "sessions", "prep_days": ["6"], "prep_minutes": "90"})
+    client.post("/survey", data={"budget": "60"})
+    assert profile(client).prep_style == "sessions"
+    assert "Cooking style" in client.get("/survey").text

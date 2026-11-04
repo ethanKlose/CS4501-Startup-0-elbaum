@@ -28,6 +28,9 @@ class Profile(Base):
     goal: Mapped[str] = mapped_column(String(32), default="none")  # none | high_protein | calorie_target
     calorie_target: Mapped[Optional[int]] = mapped_column(default=None)
     onboarded: Mapped[bool] = mapped_column(default=False)
+    prep_style: Mapped[str] = mapped_column(String(16), default="auto")  # auto | daily | sessions | one_session
+    prep_days: Mapped[list] = mapped_column(JSON, default=list)  # preferred cook days, 0=Mon..6=Sun
+    prep_minutes: Mapped[int] = mapped_column(default=120)  # length of a prep session on preferred days
     free_text: Mapped[str] = mapped_column(String(1000), default="")
 
 

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.deps import current_user, render
+from app.services.schedule import PREP_STYLES
 from app.models import DaySetting, PantryItem, Profile, User
 
 router = APIRouter()
@@ -23,6 +24,8 @@ RESTRICTIONS = {
     "halal": "Halal",
 }
 GOALS = {"none": "No specific goal", "high_protein": "High protein", "calorie_target": "Daily calorie target"}
+MIN_BUDGET = 30
+MIN_CALORIES, MAX_CALORIES = 1200, 4500
 DEFAULT_MINUTES = 45
 MAX_MINUTES = 480
 
@@ -55,6 +58,8 @@ def parse_budget(raw: str):
         return None, "Enter your weekly grocery budget as a number."
     if v != v or v <= 0:
         return None, "Budget must be greater than zero."
+    if v < MIN_BUDGET:
+        return None, f"Budget must be at least ${MIN_BUDGET} a week to cover three meals a day."
     if v > 10000:
         return None, "Budget looks too large — enter a weekly amount."
     return round(v, 2), None
@@ -114,8 +119,8 @@ def apply_goal(form, profile, errors, **_):
             cal = int(float(form.get("calorie_target", "")))
         except ValueError:
             cal = 0
-        if not 800 <= cal <= 6000:
-            errors["goal"] = "Enter a daily calorie target between 800 and 6000."
+        if not MIN_CALORIES <= cal <= MAX_CALORIES:
+            errors["goal"] = f"Enter a daily calorie target between {MIN_CALORIES} and {MAX_CALORIES}."
             return
         profile.calorie_target = cal
 
@@ -133,7 +138,26 @@ def apply_free_text(form, profile, errors, **_):
     profile.free_text = text
 
 
-APPLIERS = [apply_budget, apply_days, apply_restrictions, apply_goal, apply_free_text]
+def apply_prep(form, profile, errors, **_):
+    if "prep_present" not in form:
+        return
+    style = form.get("prep_style", "auto")
+    if style not in PREP_STYLES:
+        errors["prep"] = "Pick a cooking style from the list."
+        return
+    try:
+        minutes = int(float(form.get("prep_minutes", "120")))
+    except ValueError:
+        minutes = 0
+    if not 30 <= minutes <= MAX_MINUTES:
+        errors["prep"] = f"A cooking session should be between 30 and {MAX_MINUTES} minutes."
+        return
+    profile.prep_style = style
+    profile.prep_minutes = minutes
+    profile.prep_days = sorted({int(d) for d in form.getlist("prep_days") if d.isdigit() and 0 <= int(d) <= 6})
+
+
+APPLIERS = [apply_budget, apply_days, apply_restrictions, apply_goal, apply_free_text, apply_prep]
 
 
 @router.get("/survey")
@@ -145,7 +169,7 @@ def survey_form(request: Request, user: User = Depends(current_user), db: Sessio
 
 def survey_context(db, user):
     pantry = list(db.scalars(select(PantryItem).where(PantryItem.user_id == user.id).order_by(PantryItem.name)))
-    return dict(pantry=pantry, profile=get_profile(db, user), days=get_days(db, user), weekdays=WEEKDAYS, restriction_options=RESTRICTIONS, goal_options=GOALS)
+    return dict(pantry=pantry, profile=get_profile(db, user), days=get_days(db, user), weekdays=WEEKDAYS, restriction_options=RESTRICTIONS, goal_options=GOALS, prep_styles=PREP_STYLES)
 
 
 @router.post("/survey")
@@ -159,7 +183,7 @@ async def survey_submit(request: Request, user: User = Depends(current_user), db
         db.rollback()
         ctx = survey_context(db, user)
         db.rollback()
-        return render(request, "survey.html", user, 400, errors=errors, form=dict(form), form_restrictions=form.getlist("restrictions"), **ctx)
+        return render(request, "survey.html", user, 400, errors=errors, form=dict(form), form_restrictions=form.getlist("restrictions"), form_prep_days=form.getlist("prep_days"), **ctx)
     first_time = not profile.onboarded
     if profile.budget is not None:
         profile.onboarded = True

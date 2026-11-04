@@ -24,8 +24,8 @@
 <form method="post" class="card" style="max-width:640px">
   <fieldset>
     <legend>Budget</legend>
-    <label>Weekly grocery budget ($)
-      <input type="number" name="budget" step="0.01" min="0.01" required
+    <label>Weekly grocery budget ($, minimum 30)
+      <input type="number" name="budget" step="0.01" min="30" required
              value="{{ form.budget if form is defined else (profile.budget if profile.budget is not none else '') }}">
     </label>
     {% if errors.budget %}<p class="error" role="alert">{{ errors.budget }}</p>{% endif %}
@@ -47,7 +47,7 @@
       </select>
     </label>
     <label>Daily calories (only for "Daily calorie target")
-      <input type="number" name="calorie_target" min="800" max="6000"
+      <input type="number" name="calorie_target" min="1200" max="4500"
         value="{{ form.get('calorie_target') if form is defined else (profile.calorie_target or '') }}">
     </label>
     {% if errors.goal %}<p class="error" role="alert">{{ errors.goal }}</p>{% endif %}
@@ -71,6 +71,24 @@
     </div>
     {% if errors.get('minutes_' ~ d.weekday) %}<p class="error" role="alert">{{ errors.get('minutes_' ~ d.weekday) }}</p>{% endif %}
     {% endfor %}
+  </fieldset>
+  <fieldset>
+    <legend>How do you like to cook? <span class="muted">(optional)</span></legend>
+    <input type="hidden" name="prep_present" value="1">
+    <p class="muted">Busy days don't mean skipped meals. We can have you cook a bigger batch on a freer day and reheat it later.</p>
+    {% set cur_style = form.get('prep_style') if form is defined else profile.prep_style %}
+    <label>Cooking style
+      <select name="prep_style">{% for key, label in prep_styles.items() %}<option value="{{ key }}" {% if cur_style == key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+    </label>
+    <div>Preferred cooking days (e.g. Sunday for a big prep session)</div>
+    <div class="row">
+      {% for i in range(7) %}<label class="check"><input type="checkbox" name="prep_days" value="{{ i }}"
+        {% if (form is defined and i|string in form_prep_days) or (form is not defined and i in (profile.prep_days or [])) %}checked{% endif %}> {{ weekdays[i][:3] }}</label>{% endfor %}
+    </div>
+    <label>Length of a prep session (minutes)
+      <input type="number" name="prep_minutes" min="30" max="480" value="{{ form.get('prep_minutes') if form is defined else profile.prep_minutes }}">
+    </label>
+    {% if errors.prep %}<p class="error" role="alert">{{ errors.prep }}</p>{% endif %}
   </fieldset>
   <button>Save</button>
 </form>

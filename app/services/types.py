@@ -31,6 +31,9 @@ class PlanContext:
     disliked: List[str] = field(default_factory=list)
     leftovers: List[str] = field(default_factory=list)  # ingredient names to use up
     avoid: List[str] = field(default_factory=list)  # meal names that felt repetitive last week
+    prep_style: str = "auto"
+    prep_days: List[int] = field(default_factory=list)
+    prep_minutes: int = 120
     seed: int = 0
 
     def active_days(self) -> List[DayCtx]:
