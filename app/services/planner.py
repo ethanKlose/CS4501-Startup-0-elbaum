@@ -28,6 +28,19 @@ def latest_plan(db: Session, user: User) -> Optional[Plan]:
     return db.scalar(select(Plan).where(Plan.user_id == user.id).order_by(Plan.id.desc()).limit(1))
 
 
+def rating_preferences(db: Session, user: User):
+    """Meal names the user rated highly (avg >= 4) / poorly (avg <= 2) across all their past plans."""
+    rows = db.execute(
+        select(Meal.name, Meal.rating).join(Plan, Meal.plan_id == Plan.id)
+        .where(Plan.user_id == user.id, Meal.rating.is_not(None))
+    ).all()
+    by_name: dict = {}
+    for name, r in rows:
+        by_name.setdefault(name, []).append(r)
+    avg = {n: sum(v) / len(v) for n, v in by_name.items()}
+    return sorted(n for n, a in avg.items() if a >= 4), sorted(n for n, a in avg.items() if a <= 2)
+
+
 def build_context(db: Session, user: User, llm, seed: int = 0) -> PlanContext:
     profile = db.scalar(select(Profile).where(Profile.user_id == user.id))
     if profile is None or profile.budget is None:
@@ -44,6 +57,7 @@ def build_context(db: Session, user: User, llm, seed: int = 0) -> PlanContext:
         if str(i) in caps:
             minutes = min(minutes, int(caps[str(i)]))
         day_ctx.append(DayCtx(weekday=i, minutes=minutes, busy=bool(d and d.busy), skipped=i in prev_skipped))
+    liked, disliked = rating_preferences(db, user)
     pinned = []
     if prev and prev.status == "ok":
         for m in prev.meals:
@@ -56,7 +70,7 @@ def build_context(db: Session, user: User, llm, seed: int = 0) -> PlanContext:
     return PlanContext(
         budget=profile.budget, days=day_ctx, restrictions=list(profile.restrictions or []),
         excluded=list(interp.get("excluded", [])), goal=profile.goal, calorie_target=profile.calorie_target,
-        free_text=profile.free_text, pantry=pantry, pinned=pinned, seed=seed,
+        free_text=profile.free_text, pantry=pantry, pinned=pinned, liked=liked, disliked=disliked, seed=seed,
     )
 
 

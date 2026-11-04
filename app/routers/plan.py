@@ -76,3 +76,15 @@ def set_status(meal_id: int, status: str = Form(...), next: str = Form("/"), use
     meal.status = status
     db.commit()
     return RedirectResponse(next if next.startswith("/") and not next.startswith("//") else "/", 303)
+
+
+@router.post("/meals/{meal_id}/rate")
+def rate(meal_id: int, rating: int = Form(...), user: User = Depends(current_user), db: Session = Depends(get_db)):
+    meal = owned_meal(db, user, meal_id)
+    if meal.status != "cooked":
+        raise HTTPException(409, "Mark the meal as cooked before rating it")
+    if not 1 <= rating <= 5:
+        raise HTTPException(422, "rating must be 1-5")
+    meal.rating = rating
+    db.commit()
+    return RedirectResponse(f"/meals/{meal.id}", 303)

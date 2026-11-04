@@ -104,7 +104,14 @@ def check_pinned(plan: dict, ctx: PlanContext) -> List[str]:
     return errors
 
 
-CHECKS = [check_coverage, check_time, check_cost_integrity, check_budget, check_diet, check_goal, check_pinned]
+def check_disliked(plan: dict, ctx: PlanContext) -> List[str]:
+    """Meals the user rated poorly (or just swapped away) must not come back, unless explicitly pinned."""
+    pinned = {(p["day"], p["slot"]) for p in ctx.pinned}
+    return [f"'{m['name']}' was rated poorly or rejected earlier; choose something else."
+            for m in plan["meals"] if m["name"] in ctx.disliked and (m["day"], m["slot"]) not in pinned][:5]
+
+
+CHECKS = [check_coverage, check_time, check_cost_integrity, check_budget, check_diet, check_goal, check_pinned, check_disliked]
 
 
 def validate_plan(raw, ctx: PlanContext):

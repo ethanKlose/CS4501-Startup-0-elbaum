@@ -15,6 +15,16 @@
       <input type="hidden" name="next" value="/meals/{{ meal.id }}"><button class="secondary">{{ label }}</button></form>
     {% endfor %}
   </div>
+  {% if meal.status == 'cooked' %}
+  <form method="post" action="/meals/{{ meal.id }}/rate" class="row" data-testid="rating">
+    <label>How was it?
+      <select name="rating" aria-label="Rating">
+        {% for n in range(1, 6) %}<option value="{{ n }}" {% if meal.rating == n %}selected{% endif %}>{{ '★' * n }}{{ '☆' * (5 - n) }}</option>{% endfor %}
+      </select></label>
+    <button class="secondary">Save rating</button>
+    {% if meal.rating %}<span class="ok">Rated {{ meal.rating }}/5</span>{% endif %}
+  </form>
+  {% endif %}
   <h2>Ingredients</h2>
   <ul>
     {% for i in meal.ingredients %}<li>{{ '%g' % i.quantity }} {{ i.unit }} {{ i.name }} <span class="muted">(${{ '%.2f' % i.cost }})</span></li>{% endfor %}
