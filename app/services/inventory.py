@@ -58,6 +58,10 @@ def record_purchase(db, plan, item, checked=True):
         ledger['opening_stock'] = stock_dicts(pantry(db, plan.user_id))
     bought = purchases(plan)
     if checked:
+        from app.services.pricing import checkout
+        from app.services.preferences import get_preferences
+        package=checkout([item],get_preferences(db,plan.user_id).get('price_offers',{}))[0]
+        item=dict(item,quantity=package['packages']*package['package_quantity'],cost=package['checkout_cost'])
         # Capture the quantity at purchase time, not whatever a later swap needs.
         previous = bought.get(item['key'])
         if not previous or previous['quantity'] < item['quantity']:

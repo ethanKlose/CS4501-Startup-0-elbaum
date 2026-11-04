@@ -1,6 +1,7 @@
 import pytest
 from app.models import Meal, PantryItem, Plan, Profile
 from app.services import grocery, inventory
+from app.services.pricing import checkout
 from tests.helpers import signup
 
 
@@ -62,7 +63,7 @@ def test_purchase_quantity_is_a_snapshot_not_current_recipe_amount(planned):
             m.ingredients = [dict(i, quantity=i['quantity'] * 2) for i in m.ingredients]
         s.commit()
     planned.post('/checkin', data={})
-    assert quantities(planned)[(item['name'], item['unit'])] == item['quantity']
+    assert quantities(planned)[(item['name'], item['unit'])] == checkout([item])[0]['packages']*checkout([item])[0]['package_quantity']
 
 
 def test_failed_regeneration_rolls_back_inventory_settlement(planned):
@@ -105,7 +106,8 @@ def test_partial_stock_plus_purchases_minus_consumption_balances(planned):
     for m in ms:
         planned.post(f'/meals/{m.id}/status', data={'status': 'cooked'})
     planned.post('/checkin', data={})
-    assert quantities(planned)[(item['name'], item['unit'])] == 0
+    bought=checkout([dict(item,quantity=round(item['quantity']-stock,2))])[0]
+    assert quantities(planned)[(item['name'], item['unit'])] == round(stock+bought['packages']*bought['package_quantity']-item['quantity'],2)
 
 
 def test_regenerations_settle_purchases_only_once(planned):
@@ -114,7 +116,7 @@ def test_regenerations_settle_purchases_only_once(planned):
     planned.post('/grocery/toggle', data={'key': item['key'], 'checked': 'true'})
     planned.post('/plan/regenerate')
     once = quantities(planned)
-    assert once[(item['name'], item['unit'])] == item['quantity']
+    assert once[(item['name'], item['unit'])] == checkout([item])[0]['packages']*checkout([item])[0]['package_quantity']
     planned.post('/plan/regenerate')
     assert quantities(planned) == once
 
