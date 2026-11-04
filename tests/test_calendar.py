@@ -25,3 +25,26 @@ def test_calendar_shows_all_seven_days_and_their_meals(planned):
 def test_calendar_is_responsive(planned):
     css = planned.get("/static/style.css").text
     assert "@media (max-width: 520px)" in css and 'name="viewport"' in planned.get("/").text
+
+
+def first_meal(client):
+    with client.app.state.session_factory() as s:
+        return s.query(Meal).first()
+
+
+def test_meal_detail_shows_recipe_time_ingredients(planned):
+    m = first_meal(planned)
+    assert f'href="/meals/{m.id}"' in planned.get("/").text
+    page = planned.get(f"/meals/{m.id}").text
+    assert f"{m.cook_minutes} min" in page
+    assert m.ingredients[0]["name"] in page
+    assert m.steps[0].replace("&", "&amp;") in page or m.steps[0] in page
+    assert 'href="/"' in page  # close/back link returns to the calendar
+
+
+def test_meal_detail_is_private(planned):
+    m = first_meal(planned)
+    planned.post("/logout")
+    signup(planned, "other@x.co")
+    assert planned.get(f"/meals/{m.id}").status_code == 404
+    assert planned.get("/meals/99999").status_code == 404

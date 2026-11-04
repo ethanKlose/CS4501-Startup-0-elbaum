@@ -20,7 +20,7 @@
       {% for m in plan.meals if m.day == day and m.slot == slot %}
       <div class="meal">
         <small class="muted">{{ slot }}</small>
-        <div class="mname">{{ m.name }}</div>
+        <a class="mname" href="/meals/{{ m.id }}">{{ m.name }}</a>
         <div class="cost">${{ '%.2f' % m.cost }} · {{ m.cook_minutes }} min</div>
       </div>
       {% endfor %}

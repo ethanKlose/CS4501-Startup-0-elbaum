@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ meal.name }} · PlateJoy{% endblock %}
+{% block content %}
+<p><a href="/" class="close" aria-label="Close and return to the calendar">← Back to calendar</a></p>
+<article class="card" style="max-width:720px">
+  <small class="muted">{{ weekday }} · {{ meal.slot }}</small>
+  <h1 style="margin:0">{{ meal.name }}</h1>
+  <p>⏱ {{ meal.cook_minutes }} min · 🔥 {{ meal.calories }} cal · 💪 {{ '%g' % meal.protein }} g protein · 💲{{ '%.2f' % meal.cost }}</p>
+  <h2>Ingredients</h2>
+  <ul>
+    {% for i in meal.ingredients %}<li>{{ '%g' % i.quantity }} {{ i.unit }} {{ i.name }} <span class="muted">(${{ '%.2f' % i.cost }})</span></li>{% endfor %}
+  </ul>
+  <h2>Steps</h2>
+  <ol>{% for step in meal.steps %}<li>{{ step }}</li>{% endfor %}</ol>
+</article>
+{% endblock %}
