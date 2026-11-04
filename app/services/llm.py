@@ -1,7 +1,7 @@
 """LLM access. Two interchangeable clients:
 
 * FakeLLM      - deterministic, offline, catalog-based. Used when no API key is set and in tests.
-* AnthropicLLM - the real thing. Only needs ANTHROPIC_API_KEY in .env.
+* AnthropicLLM / OpenAILLM - the real thing. Need ANTHROPIC_API_KEY or OPENAI_API_KEY in .env.
 
 Both implement:
     generate_plan(ctx: PlanContext, feedback: list[str]) -> dict   (raw, UNVALIDATED plan)
@@ -257,10 +257,31 @@ class AnthropicLLM:
             return FakeLLM().interpret_preferences(text)
 
 
+class OpenAILLM(AnthropicLLM):
+    """Same prompts and parsing as AnthropicLLM, served by the OpenAI chat API."""
+
+    name = "openai"
+
+    def __init__(self, api_key: str, model: str):
+        import openai
+
+        self.client = openai.OpenAI(api_key=api_key)
+        self.model = model
+
+    def _ask(self, system: str, user: str, max_tokens: int):
+        resp = self.client.chat.completions.create(
+            model=self.model, max_tokens=max_tokens, response_format={"type": "json_object"},
+            messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
+        )
+        return _extract_json(resp.choices[0].message.content or "")
+
+
 # ----------------------------------------------------------------------------- selection
 
 def get_llm():
     """FastAPI dependency. Override in tests via app.dependency_overrides[get_llm]."""
+    if settings.openai_api_key.strip():
+        return OpenAILLM(settings.openai_api_key, settings.openai_model)
     if settings.anthropic_api_key.strip():
         return AnthropicLLM(settings.anthropic_api_key, settings.anthropic_model)
     return FakeLLM()

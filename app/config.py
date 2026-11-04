@@ -21,6 +21,14 @@ class Settings:
         return os.environ.get("DATABASE_URL", "sqlite:///./platejoy.db")
 
     @property
+    def openai_api_key(self) -> str:
+        return os.environ.get("OPENAI_API_KEY", "")
+
+    @property
+    def openai_model(self) -> str:
+        return os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+
+    @property
     def anthropic_api_key(self) -> str:
         return os.environ.get("ANTHROPIC_API_KEY", "")
 
