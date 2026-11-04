@@ -14,3 +14,13 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(255))
     created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.utcnow)
+
+
+class Profile(Base):
+    """One row per user: the survey answers."""
+
+    __tablename__ = "profiles"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
+    budget: Mapped[Optional[float]] = mapped_column(default=None)
