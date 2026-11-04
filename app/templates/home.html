@@ -17,6 +17,7 @@
   <form method="post" action="/plan/generate" data-generate data-generate-title="Building your week…" {% if welcome %}data-autosubmit{% endif %}>
     <button class="btn primary lg">{{ icon('sparkles') }} Generate my week</button>
   </form>
+  <p class="muted tiny">Your first plan starts next Monday. Sunday prep is included only when that date is still ahead.</p>
   <a href="/survey" class="muted">Edit preferences</a>
 </section>
 {% else %}
@@ -25,8 +26,10 @@
   <div><h1>{{ week_title }}</h1><div class="row"><span class="chip brand">{{ icon('shield', 14) }} Verified plan</span><span class="muted tiny">Tap a meal for the recipe</span></div></div>
   <div class="row">
     <a class="btn line" href="/grocery">{{ icon('cart') }} Grocery list</a>
-    <form method="post" action="/plan/regenerate" class="inline" data-generate data-generate-title="Regenerating your week…">
+    <form method="post" action="/plan/regenerate" class="inline" data-confirm="Replace the displayed plan? Pinned recipes stay. Cooking history is archived, confirmed purchases update your pantry, and the new plan starts with fresh check-offs." data-generate data-generate-title="Regenerating your week…">
       <button class="btn primary">{{ icon('refresh') }} Regenerate week</button></form>
+    <form method="post" action="/plan/next-week" class="inline" data-confirm="Start the following week? The current plan is archived and confirmed purchases update your pantry. The new week starts with all days active." data-generate data-generate-title="Planning next week…">
+      <button class="btn line">Plan next week</button></form>
   </div>
 </div>
 
@@ -34,6 +37,10 @@
 
 <div class="cal-layout">
   <section class="gcal-card card" aria-label="Weekly meal calendar">
+    <div class="view-switch" role="group" aria-label="Plan view">
+      <button type="button" class="btn sm line" data-plan-view="calendar" aria-pressed="true">Calendar</button>
+      <button type="button" class="btn sm line" data-plan-view="agenda" aria-pressed="false">Agenda</button>
+    </div>
     <div class="legend"><span class="lg b">Breakfast</span><span class="lg l">Lunch</span><span class="lg d">Dinner</span><span class="lg c">Cooking</span></div>
     <div class="gcal" data-testid="calendar" style="--tpl:{{ '52px .72fr repeat(7,minmax(0,1fr))' if prep_col else '52px repeat(7,minmax(0,1fr))' }};--hour:{{ hour_px }}px;--grid:{{ grid_px }}px">
       <div class="gcal-head">
@@ -42,7 +49,7 @@
         <div class="gh {{ 'today' if c.today }} {{ 'prep' if c.prep }}">
           <h2 class="dow"><span class="d-full">{{ c.name }}</span><span class="d-short">{{ c.short }}</span></h2>
           <span class="dnum">{{ c.daynum }}</span>{% if c.prep %}<em class="prepnote">prep</em>{% endif %}
-          {% if not c.prep %}<form method="post" action="/plan/days/{{ c.day }}/skip" class="skipform"><button class="daybtn" title="{{ 'Restore this day' if c.skipped else 'Mark as eating out' }}">{{ 'Restore' if c.skipped else 'Eating out' }}</button></form>{% endif %}
+          {% if not c.prep and not closed %}<form method="post" action="/plan/days/{{ c.day }}/skip" class="skipform"><button class="daybtn" title="{{ 'Restore this day' if c.skipped else 'Mark as eating out' }}">{{ 'Restore' if c.skipped else 'Eating out' }}</button></form>{% endif %}
         </div>
         {% endfor %}
       </div>
@@ -51,7 +58,7 @@
         {% for c in columns %}
         <div class="gcol {{ 'today' if c.today }} {{ 'prep' if c.prep }} {{ 'is-skipped' if c.skipped }}" data-day="{{ c.day }}">
           <div class="m-dayhead">{{ c.name }}{% if c.prep %} · before the week{% endif %} <span class="muted">{{ c.date.strftime('%b') }} {{ c.daynum }}</span>
-            {% if not c.prep %}<form method="post" action="/plan/days/{{ c.day }}/skip" class="m-skip"><button class="daybtn">{{ 'Restore day' if c.skipped else 'Eating out' }}</button></form>{% endif %}</div>
+            {% if not c.prep and not closed %}<form method="post" action="/plan/days/{{ c.day }}/skip" class="m-skip"><button class="daybtn">{{ 'Restore day' if c.skipped else 'Eating out' }}</button></form>{% endif %}</div>
           {% if c.skipped %}<div class="gskipped" data-testid="skipped">No meals planned (eating out)</div>{% endif %}
           {% for e in c.events %}
           {% if e.kind == 'meal' %}

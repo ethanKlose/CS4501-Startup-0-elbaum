@@ -250,3 +250,26 @@ def test_what_we_understood_panel(client):
 def test_panel_hidden_until_onboarded(client):
     signup(client)
     assert 'data-testid="understood"' not in client.get("/survey").text
+
+
+@pytest.mark.parametrize('raw', ['1e999', '-1e999', 'inf', 'nan'])
+@pytest.mark.parametrize('payload', [
+    {'minutes_0': ''},
+    {'goal': 'calorie_target', 'calorie_target': ''},
+    {'prep_present': '1', 'prep_minutes': ''},
+])
+def test_nonfinite_survey_values_return_field_errors(client, raw, payload):
+    signup(client)
+    client.post('/survey', data={'budget': '80'})
+    data = {k: raw if v == '' else v for k, v in payload.items()}
+    response = client.post('/survey', data=data)
+    assert response.status_code == 400
+    assert 'Please fix this first' in response.text
+    assert profile(client).budget == 80
+
+
+@pytest.mark.parametrize('raw', ['inf', '-inf', 'nan', '1e999'])
+def test_pantry_rejects_nonfinite_quantity(client, raw):
+    signup(client)
+    client.post('/pantry/add', data={'name': 'rice', 'quantity': raw})
+    assert pantry(client) == []

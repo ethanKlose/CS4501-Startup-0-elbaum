@@ -9,6 +9,10 @@ class Settings:
     """Read lazily from env so tests can override before create_app()."""
 
     @property
+    def timezone(self) -> str:
+        return os.environ.get("TIMEZONE", "America/New_York")
+
+    @property
     def secret_key(self) -> str:
         return os.environ.get("SECRET_KEY", "dev-insecure-secret")
 

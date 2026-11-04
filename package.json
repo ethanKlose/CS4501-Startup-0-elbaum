@@ -1,0 +1,6 @@
+{
+  "name": "platejoy-browser-checks",
+  "private": true,
+  "scripts": {"test:e2e": "node tests/e2e/smoke.cjs"},
+  "devDependencies": {"playwright": "1.62.1"}
+}

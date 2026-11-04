@@ -1,3 +1,4 @@
+import math
 from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, Form, Request
@@ -55,7 +56,7 @@ def parse_budget(raw: str):
     """Return (value, error). Rejects empty, non-numeric, zero, negative."""
     try:
         v = float(raw)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return None, "Enter your weekly grocery budget as a number."
     if v != v or v <= 0:
         return None, "Budget must be greater than zero."
@@ -69,7 +70,7 @@ def parse_budget(raw: str):
 def parse_minutes(raw: str):
     try:
         v = int(float(raw))
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return None
     return v if 0 <= v <= MAX_MINUTES else None
 
@@ -118,7 +119,7 @@ def apply_goal(form, profile, errors, **_):
     if goal == "calorie_target":
         try:
             cal = int(float(form.get("calorie_target", "")))
-        except ValueError:
+        except (TypeError, ValueError, OverflowError):
             cal = 0
         if not MIN_CALORIES <= cal <= MAX_CALORIES:
             errors["goal"] = f"Enter a daily calorie target between {MIN_CALORIES} and {MAX_CALORIES}."
@@ -148,14 +149,14 @@ def apply_prep(form, profile, errors, **_):
         return
     try:
         minutes = int(float(form.get("prep_minutes", "120")))
-    except ValueError:
+    except (TypeError, ValueError, OverflowError):
         minutes = 0
     if not 30 <= minutes <= MAX_MINUTES:
         errors["prep"] = f"A cooking session should be between 30 and {MAX_MINUTES} minutes."
         return
     profile.prep_style = style
     profile.prep_minutes = minutes
-    profile.prep_days = sorted({int(d) for d in form.getlist("prep_days") if d.isdigit() and 0 <= int(d) <= 6})
+    profile.prep_days = sorted({int(d) for d in form.getlist("prep_days") if d in {str(i) for i in range(7)}})
 
 
 APPLIERS = [apply_budget, apply_days, apply_restrictions, apply_goal, apply_free_text, apply_prep]
@@ -264,9 +265,10 @@ def pantry_add(
             qty = float(quantity)
         except ValueError:
             qty = -1
-        if qty < 0 or qty != qty:
+        if qty < 0 or not math.isfinite(qty):
             return RedirectResponse("/survey?pantry_error=Quantity+must+be+a+positive+number", 303)
-    existing = db.scalar(select(PantryItem).where(PantryItem.user_id == user.id, PantryItem.name == name))
+    unit = unit.lower().strip()[:20]
+    existing = db.scalar(select(PantryItem).where(PantryItem.user_id == user.id, PantryItem.name == name, PantryItem.unit == unit))
     if existing:
         existing.quantity, existing.unit = qty, unit.strip()[:20]
     else:

@@ -125,3 +125,12 @@ def test_overbooking_is_reported_not_hidden():
     ms = [meal("Baked salmon with sweet potato", 0), meal("Beef and broccoli stir-fry", 0, "lunch")]
     s = schedule(ms, capacities(days(10)))
     assert s.overbooked and any("cooking minutes but only" in m for m in overbook_messages(s))
+
+
+def test_impossible_same_day_breakfast_is_a_hard_failure():
+    from app.services.validators import check_cooking_deadlines
+    from app.services.types import PlanContext
+    m = meal('Peanut butter banana oatmeal', 0, 'breakfast')
+    m['cook_minutes'] = 600
+    ctx = PlanContext(budget=200, days=days(480), prep_style='daily')
+    assert check_cooking_deadlines({'meals': [m]}, ctx)

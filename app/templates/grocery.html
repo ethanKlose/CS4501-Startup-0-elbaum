@@ -6,15 +6,16 @@
   <div><h1>Grocery list</h1><p class="muted" style="margin:0">One trip for the whole week. Pantry items are already removed.</p></div>
   {% if items %}<a class="btn line" href="/">{{ icon('calendar') }} Back to plan</a>{% endif %}
 </div>
+{% if closed %}<div class="alert info">This plan is closed and its pantry quantities have been updated. Generate a new week to shop again.</div>{% endif %}
 {% if not items %}
   <section class="empty card">
     <div class="plate big" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
-    <h2>Nothing to shop for yet</h2>
-    <p class="muted">Generate a plan first, then your single shopping list shows up here.</p>
+    <h2>{{ 'All ingredients are covered' if plan else 'Nothing to shop for yet' }}</h2>
+    <p class="muted">{{ 'Your pantry covers this plan. There is nothing extra to buy.' if plan else 'Generate a plan first, then your single shopping list shows up here.' }}</p>
     <a class="btn primary" href="/">{{ icon('sparkles') }} Go to my plan</a>
   </section>
 {% else %}
-  <section class="card gprogress reveal" style="--i:1">
+  <section class="card gprogress reveal" data-plan-id="{{ plan.id }}" style="--i:1">
     <div class="gp-stats">
       <div><b>{{ items|length }}</b><span>items</span></div>
       <div><b>${{ '%.2f' % total }}</b><span>estimated</span></div>
@@ -30,7 +31,7 @@
       {% for it in g.entries %}
       <li data-item="{{ it.name }}" class="{{ 'done' if it.key in checked else '' }}">
         <label class="gitem">
-          <input type="checkbox" aria-label="Got {{ it.name }}" data-key="{{ it.key }}" {{ 'checked' if it.key in checked }}>
+          <input type="checkbox" aria-label="Got {{ it.name }}" data-key="{{ it.key }}" {{ 'checked' if it.key in checked }} {{ 'disabled' if closed }}>
           <span class="box">{{ icon('check', 14) }}</span>
           <span class="gname">{{ it.name }}</span>
           <span class="gqty">{{ '%g' % it.quantity }} {{ it.unit }}</span>
@@ -43,19 +44,6 @@
   {% endfor %}
   </div>
 {% endif %}
-<script>
-document.querySelectorAll('ul.grocery input[type=checkbox]').forEach(function (box) {
-  box.addEventListener('change', function () {
-    var li = box.closest('li');
-    li.classList.toggle('done', box.checked);
-    var all = document.querySelectorAll('ul.grocery input').length;
-    var left = document.querySelectorAll('ul.grocery input:not(:checked)').length;
-    document.getElementById('remaining').textContent = left;
-    var bar = document.getElementById('gbar'); if (bar) bar.style.width = ((all - left) / all * 100) + '%';
-    fetch('/grocery/toggle', {method: 'POST', body: new URLSearchParams({key: box.dataset.key, checked: box.checked})})
-      .then(function (r) { if (!r.ok) throw new Error(); })
-      .catch(function () { box.checked = !box.checked; li.classList.toggle('done', box.checked); alert('Could not save — check your connection.'); });
-  });
-});
-</script>
+<p id="grocery-error" class="alert error" role="alert" hidden>Could not save. Check your connection and try again.</p>
+<script src="/static/grocery.js" defer></script>
 {% endblock %}

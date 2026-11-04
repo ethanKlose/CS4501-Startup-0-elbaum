@@ -66,3 +66,34 @@ def test_regenerate_respects_new_diet_restriction(planned):
     planned.app.dependency_overrides[get_llm] = lambda: llm
     planned.post("/plan/regenerate")
     assert len(plan_ids(planned)) == 1 and any("vegetarian" in e for e in llm.calls[1])
+
+
+@pytest.mark.parametrize('field', ['quantity', 'calories', 'steps', 'cook_minutes', 'unit', 'protein'])
+def test_regenerate_cannot_mutate_pinned_recipe(planned, field):
+    with planned.app.state.session_factory() as s:
+        old = s.query(Plan).first()
+        meal = s.query(Meal).filter_by(plan_id=old.id, day=0, slot='breakfast').first()
+        mid, old_plan_id = meal.id, old.id
+    planned.post(f'/meals/{mid}/pin')
+
+    class Tampered:
+        calls = 0
+        def interpret_preferences(self, text):
+            return {'excluded': [], 'day_minutes_cap': {}}
+        def generate_plan(self, context, feedback=()):
+            self.calls += 1
+            raw = copy.deepcopy(FakeLLM().generate_plan(context))
+            pinned = context.pinned[0]
+            target = next(m for m in raw['meals'] if (m['day'], m['slot']) == (pinned['day'], pinned['slot']))
+            if field == 'quantity': target['ingredients'][0]['quantity'] *= 10
+            elif field == 'unit': target['ingredients'][0]['unit'] = 'lb'
+            elif field == 'steps': target['steps'] = ['Changed instructions.']
+            else: target[field] += 1
+            return raw
+
+    llm = Tampered()
+    planned.app.dependency_overrides[get_llm] = lambda: llm
+    result = planned.post('/plan/regenerate')
+    assert llm.calls == 3
+    assert plan_ids(planned) == [old_plan_id]
+    assert 'Pinned meal' in result.text

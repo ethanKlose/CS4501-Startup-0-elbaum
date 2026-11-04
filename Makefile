@@ -1,7 +1,9 @@
 PY=.venv/bin/python
-.PHONY: setup run test seed reset
+.PHONY: setup run test test-e2e seed reset
 setup:
-	python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt && cp -n .env.example .env || true
+	python3 -m venv .venv
+	.venv/bin/pip install -r requirements-dev.txt
+	@test -e .env || cp .env.example .env
 seed:
 	PYTHONPATH=. $(PY) scripts/seed.py
 run: seed
@@ -10,3 +12,6 @@ test:
 	.venv/bin/pytest -q
 reset:
 	rm -f platejoy.db && $(MAKE) seed
+
+test-e2e:
+	npm run test:e2e

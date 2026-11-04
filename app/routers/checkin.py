@@ -1,15 +1,16 @@
 import datetime as dt
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, Form, Request, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.deps import current_user, render
-from app.models import CheckIn, GroceryCheck, PantryItem, Plan, User
-from app.services import grocery, planner
+from app.models import CheckIn, Plan, User
+from app.services import planner, inventory
+from app.services.weeks import plan_week_start
 
 router = APIRouter()
 
@@ -23,6 +24,8 @@ def checkin_due(plan: Optional[Plan], done: bool, now: Optional[dt.datetime] = N
     if not plan or plan.status != "ok" or done:
         return False
     now = now or dt.datetime.utcnow()
+    if (plan.settings or {}).get("week_start"):
+        return now.date() >= plan_week_start(plan) + dt.timedelta(days=5)
     return now.weekday() >= 5 or (now - plan.created_at).days >= 6
 
 
@@ -38,17 +41,20 @@ def checkin_form(request: Request, user: User = Depends(current_user), db: Sessi
     plan = planner.latest_plan(db, user)
     existing = db.scalar(select(CheckIn).where(CheckIn.plan_id == plan.id)) if plan else None
     return render(request, "checkin.html", user, plan=plan, existing=existing, summary=week_summary(plan.meals) if plan and plan.status == "ok" else None,
-                  overall=OVERALL, cook_time=COOK_TIME, variety=VARIETY, saved=request.query_params.get("saved"), leftovers=existing.leftovers if existing else [])
+                  closed=inventory.closed(plan), overall=OVERALL, cook_time=COOK_TIME, variety=VARIETY, saved=request.query_params.get("saved"), leftovers=existing.leftovers if existing else [])
 
 
 @router.post("/checkin")
 def checkin_submit(
     overall: str = Form("ok"), cook_time: str = Form("right"), variety: str = Form("right"), notes: str = Form(""),
+    bought_all: bool = Form(False), plan_id: int = Form(None),
     user: User = Depends(current_user), db: Session = Depends(get_db),
 ):
     plan = planner.latest_plan(db, user)
     if not plan or plan.status != "ok":
         return RedirectResponse("/", 303)
+    if plan_id is not None and plan_id != plan.id:
+        raise HTTPException(409, "This check-in is for an older plan. Reload before saving.")
     row = db.scalar(select(CheckIn).where(CheckIn.plan_id == plan.id))
     first_time = row is None
     if first_time:
@@ -59,20 +65,10 @@ def checkin_submit(
     row.variety = variety if variety in VARIETY else "right"
     row.notes = notes.strip()[:500]
     row.created_at = dt.datetime.utcnow()
-    if first_time:  # leftovers move to the pantry exactly once per week
-        checked = [c.key for c in db.scalars(select(GroceryCheck).where(GroceryCheck.plan_id == plan.id))]
-        left = grocery.leftovers_from(plan.meals, checked)
+    if first_time:
+        if bought_all and not inventory.closed(plan):
+            inventory.confirm_all_purchases(db, plan)
+        left = inventory.settle(db, plan)
         row.leftovers = [l["name"] for l in left]
-        add_to_pantry(db, user, left)
     db.commit()
     return RedirectResponse("/checkin?saved=1", 303)
-
-
-def add_to_pantry(db: Session, user: User, leftovers) -> None:
-    for l in leftovers:
-        item = db.scalar(select(PantryItem).where(PantryItem.user_id == user.id, PantryItem.name == l["name"]))
-        if item is None:
-            db.add(PantryItem(user_id=user.id, name=l["name"], quantity=l["quantity"], unit=l["unit"]))
-        elif item.quantity is not None and (item.unit or "") == l["unit"]:
-            item.quantity = round(item.quantity + l["quantity"], 2)
-        # quantity-less ("I have plenty") or different-unit entries are left as the user wrote them

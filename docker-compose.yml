@@ -3,6 +3,9 @@ services:
     build: .
     ports: ["8000:8000"]
     env_file: [.env]
+    environment:
+      # Override the host's relative SQLite URL from .env inside the container.
+      DATABASE_URL: sqlite:////data/platejoy.db
     volumes: ["platejoy-data:/data"]
 volumes:
   platejoy-data:

@@ -50,20 +50,21 @@ def apply_pantry(items: List[Dict], pantry: Iterable[dict]) -> List[Dict]:
     out = []
     for it in items:
         it = dict(it)
-        match = next((p for p in pantry if _same_food(p["name"], it["name"])), None)
-        if match:
-            pq, pu = match.get("quantity"), (match.get("unit") or "").lower().strip()
-            if pq is None:
+        matches = [p for p in pantry if _same_food(p["name"], it["name"])]
+        if matches:
+            if any(p.get("quantity") is None for p in matches):
                 continue
-            if pu == it["unit"].lower():
-                need = round(it["quantity"] - pq, 2)
+            same_unit = [p for p in matches if (p.get("unit") or "").lower().strip() == it["unit"].lower()]
+            if same_unit:
+                available = sum(p["quantity"] for p in same_unit)
+                need = round(it["quantity"] - available, 2)
                 if need <= 0:
                     continue
                 it["cost"] = round(it["cost"] * need / it["quantity"], 2)
-                it["have"] = f"{pq:g} {pu}".strip()
+                it["have"] = f"{available:g} {it['unit']}".strip()
                 it["quantity"] = need
             else:
-                it["have"] = f"{pq:g} {pu}".strip() + " (different unit)"
+                it["have"] = ", ".join(f"{p['quantity']:g} {p.get('unit', '')}".strip() for p in matches) + " (different unit)"
         out.append(it)
     return out
 
@@ -79,17 +80,3 @@ def group_by_section(items: List[Dict]) -> List[Dict]:
     for it in items:
         buckets[it["section"] if it["section"] in buckets else "other"].append(it)
     return [dict(section=s, label=SECTION_LABEL[s], entries=buckets[s]) for s in SECTION_ORDER if buckets[s]]
-
-
-def leftovers_from(meals: Iterable, checked_keys: Iterable[str]) -> List[Dict]:
-    """Ingredients bought for meals that were never cooked.
-
-    If the user checked items off while shopping, only those (actually bought) count; otherwise we assume
-    everything on the list was bought. Returns [{name, unit, quantity}].
-    """
-    unused = [m.as_dict() for m in meals if m.status != "cooked"]
-    checked = set(checked_keys)
-    items = build_list(unused)
-    if checked:
-        items = [i for i in items if i["key"] in checked]
-    return [dict(name=i["name"], unit=i["unit"], quantity=i["quantity"]) for i in items]

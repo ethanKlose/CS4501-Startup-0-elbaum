@@ -5,15 +5,12 @@ from typing import Dict, List, Optional, Sequence
 
 from app.services.schedule import PRE_WEEK, sessions_by_day
 from app.services.types import WEEKDAYS
+from app.services.timing import EAT, MIN_VISUAL, timed_sessions
 
 HOUR_START, HOUR_END = 7, 21  # visible range of the grid
-EAT = {"breakfast": (8 * 60, 60), "lunch": (12 * 60 + 30, 60), "dinner": (18 * 60 + 30, 75)}  # start minute, duration
 PX = 1.25  # pixels per minute on the grid
 HOUR_PX = 60 * PX
 GRID_PX = (HOUR_END - HOUR_START) * HOUR_PX
-PREP_START = 10 * 60  # Sunday-before cooking starts at 10:00
-COOK_END = 18 * 60 + 15  # weekday cooking finishes by 6:15 PM, before dinner
-MIN_VISUAL = 36  # shortest event height in minutes, so titles stay readable
 
 
 def fmt_time(minutes: int) -> str:
@@ -51,9 +48,9 @@ def assign_lanes(events: List[dict]) -> None:
         c["lanes"] = len(lane_ends)
 
 
-def _place(e: dict) -> dict:
+def _place(e: dict, hour_start: int = HOUR_START) -> dict:
     e["visual"] = max(e["dur"], MIN_VISUAL)
-    e["top"] = round((e["start"] - HOUR_START * 60) * PX, 1)
+    e["top"] = round((e["start"] - hour_start * 60) * PX, 1)
     e["height"] = round(e["visual"] * PX, 1)
     e["time"] = fmt_time(e["start"])
     e.setdefault("lane", 0)
@@ -62,12 +59,12 @@ def _place(e: dict) -> dict:
 
 
 def build_columns(meals: Sequence[dict], sessions: Sequence[dict], days: Sequence[dict], start: dt.date,
-                  today: Optional[dt.date] = None) -> List[dict]:
+                  today: Optional[dt.date] = None, hour_start: int = HOUR_START) -> List[dict]:
     """meals: dicts with id/day/slot/name/cost/status/pinned/cook_day/frozen/cook_minutes.
     sessions: from schedule.build_sessions. days: plan.days (for skipped flags).
     Returns one column per visible day; the Sunday-before column only exists if something is cooked then."""
     today = today or dt.date.today()
-    by_cook_day = sessions_by_day(sessions)
+    by_cook_day = sessions_by_day(timed_sessions(sessions))
     skipped = {d["weekday"] for d in days if d.get("skipped")}
     cols: List[dict] = []
     for day in range(PRE_WEEK, 7):
@@ -79,16 +76,11 @@ def build_columns(meals: Sequence[dict], sessions: Sequence[dict], days: Sequenc
             if m["day"] != day:
                 continue
             t, dur = EAT[m["slot"]]
-            events.append(_place(dict(kind="meal", start=t, dur=dur, **m)))
+            events.append(_place(dict(kind="meal", start=t, dur=dur, **m), hour_start))
         ses = by_cook_day.get(day, [])
-        if ses:
-            # stack sessions back to back using their *visual* height so short ones never overlap
-            total = sum(max(s["minutes"], MIN_VISUAL) for s in ses)
-            cursor = PREP_START if day == PRE_WEEK else max(9 * 60, COOK_END - total)
-            for s in ses:
-                events.append(_place(dict(kind="cook", start=cursor, dur=s["minutes"], name=s["name"], servings=s["servings"],
-                                         minutes=s["minutes"], eats=s["eats"])))
-                cursor += max(s["minutes"], MIN_VISUAL)
+        for s in ses:
+            events.append(_place(dict(kind="cook", start=s["start"], dur=s["minutes"], name=s["name"], servings=s["servings"],
+                                     minutes=s["minutes"], eats=s["eats"]), hour_start))
         assign_lanes(events)
         events.sort(key=lambda e: (e["start"], e["kind"]))
         cols.append(dict(day=day, prep=day == PRE_WEEK, name="Sunday" if day == PRE_WEEK else WEEKDAYS[day],
@@ -97,8 +89,8 @@ def build_columns(meals: Sequence[dict], sessions: Sequence[dict], days: Sequenc
     return cols
 
 
-def hour_labels() -> List[dict]:
-    return [dict(label=fmt_time(h * 60).replace(":00 ", " "), top=round((h - HOUR_START) * HOUR_PX, 1)) for h in range(HOUR_START, HOUR_END)]
+def hour_labels(hour_start: int = HOUR_START) -> List[dict]:
+    return [dict(label=fmt_time(h * 60).replace(":00 ", " "), top=round((h - hour_start) * HOUR_PX, 1)) for h in range(hour_start, HOUR_END)]
 
 
 def week_title(start: dt.date) -> str:

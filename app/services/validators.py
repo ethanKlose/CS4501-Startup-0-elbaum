@@ -8,8 +8,9 @@ from typing import List
 
 from app.services.diet import meal_violations
 from app.services.schedule import Schedule, capacities, overbook_messages, schedule
-from app.services.schema import parse_plan
+from app.services.schema import MealIn, parse_plan
 from app.services.types import SLOTS, WEEKDAYS, PlanContext
+from app.services.timing import deadline_errors
 
 
 HIGH_PROTEIN_DAILY_G = 75
@@ -52,13 +53,17 @@ def check_diet(plan: dict, ctx: PlanContext) -> List[str]:
 
 
 def schedule_for(plan: dict, ctx: PlanContext) -> Schedule:
-    caps = capacities(ctx.days, ctx.prep_style, ctx.prep_days, ctx.prep_minutes)
-    return schedule(plan["meals"], caps, ctx.prep_style, ctx.prep_days, [d.weekday for d in ctx.days if d.busy])
+    caps = capacities(ctx.days, ctx.prep_style, ctx.prep_days, ctx.prep_minutes, ctx.allow_pre_week)
+    return schedule(plan["meals"], caps, ctx.prep_style, ctx.prep_days, [d.weekday for d in ctx.days if d.busy], earliest_day=-1 if ctx.allow_pre_week else 0)
 
 
 def check_schedule(plan: dict, ctx: PlanContext) -> List[str]:
     """SOFT: can the cooking be fit into the time available, counting batches cooked on other days?"""
     return overbook_messages(schedule_for(plan, ctx))
+
+
+def check_cooking_deadlines(plan: dict, ctx: PlanContext) -> List[str]:
+    return deadline_errors(schedule_for(plan, ctx).sessions)
 
 
 WEEKLY_CAL_TOLERANCE = 0.10
@@ -106,7 +111,9 @@ def check_pinned(plan: dict, ctx: PlanContext) -> List[str]:
     at = {(m["day"], m["slot"]): m for m in plan["meals"]}
     for p in ctx.pinned:
         got = at.get((p["day"], p["slot"]))
-        same = got and got["name"] == p["name"] and [i["name"] for i in got["ingredients"]] == [i["name"] for i in p["ingredients"]]
+        # Compare the normalized recipe, including amounts, nutrition and steps.
+        # Coercion/defaults must match parse_plan's treatment of generated meals.
+        same = got == MealIn.model_validate(p).model_dump()
         if not same:
             errors.append(f"Pinned meal '{p['name']}' ({WEEKDAYS[p['day']]} {p['slot']}) must be kept exactly as it was.")
     return errors
@@ -120,7 +127,7 @@ def check_disliked(plan: dict, ctx: PlanContext) -> List[str]:
 
 
 # HARD: safety, money, format. A plan breaking any of these is never shown.
-HARD_CHECKS = [check_coverage, check_cost_integrity, check_budget, check_diet, check_pinned, check_disliked]
+HARD_CHECKS = [check_coverage, check_cost_integrity, check_budget, check_diet, check_pinned, check_disliked, check_cooking_deadlines]
 # SOFT: preferences. The LLM is asked to fix them, but on the final attempt they become visible warnings.
 SOFT_CHECKS = [check_schedule, check_goal]
 

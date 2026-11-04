@@ -8,10 +8,10 @@ from app.services.types import SECTIONS, SLOTS
 
 class IngredientIn(BaseModel):
     name: str = Field(min_length=1, max_length=100)
-    quantity: float = Field(gt=0)
+    quantity: float = Field(gt=0, allow_inf_nan=False)
     unit: str = Field(default="", max_length=20)
     section: str = "other"
-    cost: float = Field(ge=0)
+    cost: float = Field(ge=0, allow_inf_nan=False)
 
     @field_validator("section")
     @classmethod
@@ -26,8 +26,8 @@ class MealIn(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     cook_minutes: int = Field(ge=0, le=600)
     calories: int = Field(ge=0, le=5000)
-    protein: float = Field(ge=0, le=500)
-    cost: float = Field(ge=0)
+    protein: float = Field(ge=0, le=500, allow_inf_nan=False)
+    cost: float = Field(ge=0, allow_inf_nan=False)
     steps: List[str] = Field(min_length=1)
     ingredients: List[IngredientIn] = Field(min_length=1)
 

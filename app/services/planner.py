@@ -1,5 +1,6 @@
 """Builds the PlanContext from the user's saved answers, asks the LLM, validates, and saves."""
 import random
+import datetime as dt
 from dataclasses import asdict
 from typing import Optional
 
@@ -11,6 +12,8 @@ from app.services.diet import meal_violations
 from app.services.explain import summarize_failure
 from app.services.schedule import capacities, schedule
 from app.services.types import DayCtx, PlanContext
+from app.services import inventory
+from app.services.weeks import plan_week_start, planning_today, target_week
 from app.services.validators import SOFT_CHECKS, schedule_for, validate_full
 
 
@@ -42,7 +45,7 @@ def rating_preferences(db: Session, user: User):
     return sorted(n for n, a in avg.items() if a >= 4), sorted(n for n, a in avg.items() if a <= 2)
 
 
-def build_context(db: Session, user: User, llm, seed: int = 0) -> PlanContext:
+def build_context(db: Session, user: User, llm, seed: int = 0, week_start=None) -> PlanContext:
     profile = db.scalar(select(Profile).where(Profile.user_id == user.id))
     if profile is None or profile.budget is None:
         raise PlanFailed("Finish the survey (at least your weekly budget) before generating a plan.")
@@ -52,7 +55,9 @@ def build_context(db: Session, user: User, llm, seed: int = 0) -> PlanContext:
     interp = llm.interpret_preferences(prefs_text) if prefs_text else {"excluded": [], "day_minutes_cap": {}}
     caps = interp.get("day_minutes_cap", {})
     prev = latest_plan(db, user)
-    prev_skipped = {d["weekday"] for d in (prev.days if prev and prev.status == "ok" else []) if d.get("skipped")}
+    week_start = week_start or target_week(prev)
+    same_week = prev and plan_week_start(prev) == week_start
+    prev_skipped = {d["weekday"] for d in (prev.days if same_week and prev.status == "ok" else []) if d.get("skipped")}
     day_ctx = []
     for i in range(7):
         d = days.get(i)
@@ -68,7 +73,7 @@ def build_context(db: Session, user: User, llm, seed: int = 0) -> PlanContext:
         names = [m.name for m in db.scalars(select(Meal).where(Meal.plan_id == checkin.plan_id))]
         avoid = sorted({n for n in names if names.count(n) >= 2})
     pinned = []
-    if prev and prev.status == "ok":
+    if same_week and prev.status == "ok":
         for m in prev.meals:
             d = m.as_dict()
             # keep pins only if still valid for the current diet and day plan
@@ -80,13 +85,14 @@ def build_context(db: Session, user: User, llm, seed: int = 0) -> PlanContext:
         budget=profile.budget, days=day_ctx, restrictions=list(profile.restrictions or []),
         excluded=list(interp.get("excluded", [])), goal=profile.goal, calorie_target=profile.calorie_target,
         free_text=profile.free_text, pantry=pantry, pinned=pinned, liked=liked, disliked=disliked, avoid=avoid, leftovers=list(checkin.leftovers or []) if checkin else [],
+        week_start=week_start.isoformat(), allow_pre_week=(week_start - dt.timedelta(days=1)) > planning_today(),
         prep_style=profile.prep_style or "auto", prep_days=list(profile.prep_days or []), prep_minutes=profile.prep_minutes or 120, seed=seed,
     )
 
 
 def plan_settings(ctx: PlanContext) -> dict:
     return dict(prep_style=ctx.prep_style, prep_days=list(ctx.prep_days), prep_minutes=ctx.prep_minutes,
-                goal=ctx.goal, calorie_target=ctx.calorie_target)
+                goal=ctx.goal, calorie_target=ctx.calorie_target, week_start=ctx.week_start, allow_pre_week=ctx.allow_pre_week)
 
 
 def save_plan(db: Session, user: User, ctx: PlanContext, plan_dict: dict, attempts: int, warnings=()) -> Plan:
@@ -114,7 +120,8 @@ def plan_ctx(plan: Plan) -> PlanContext:
     st = plan.settings or {}
     return PlanContext(budget=plan.budget, days=[DayCtx(d["weekday"], d["minutes"], d.get("busy", False), d.get("skipped", False)) for d in plan.days],
                        goal=st.get("goal", "none"), calorie_target=st.get("calorie_target"), prep_style=st.get("prep_style", "auto"),
-                       prep_days=st.get("prep_days", []), prep_minutes=st.get("prep_minutes", 120))
+                       prep_days=st.get("prep_days", []), prep_minutes=st.get("prep_minutes", 120),
+                       week_start=st.get("week_start"), allow_pre_week=st.get("allow_pre_week", True))
 
 
 def reschedule(plan: Plan) -> None:
@@ -152,9 +159,12 @@ def run_with_retries(llm, ctx: PlanContext):
     raise PlanFailed(message, errors, conflicts)
 
 
-def generate(db: Session, user: User, llm, seed: Optional[int] = None) -> Plan:
+def generate(db: Session, user: User, llm, seed: Optional[int] = None, new_week: bool = False) -> Plan:
     seed = random.randint(1, 10**6) if seed is None else seed
-    ctx = build_context(db, user, llm, seed)
+    previous = latest_plan(db, user)
+    if previous:
+        inventory.settle(db, previous)
+    ctx = build_context(db, user, llm, seed, week_start=target_week(latest_plan(db, user), new_week))
     plan_dict, attempts, warnings = run_with_retries(llm, ctx)
     plan = save_plan(db, user, ctx, plan_dict, attempts, warnings)
     db.commit()
@@ -163,8 +173,12 @@ def generate(db: Session, user: User, llm, seed: Optional[int] = None) -> Plan:
 
 def swap_meal(db: Session, user: User, llm, meal: Meal) -> Meal:
     """Replace one meal. Every other meal is pinned, so only this slot changes; the WHOLE plan is re-verified."""
+    if inventory.closed(db.get(Plan, meal.plan_id)):
+        raise PlanFailed("This plan is closed. Generate a new week to make changes.")
+    if meal.status != "planned" or meal.rating is not None:
+        raise PlanFailed("Only planned, unrated meals can be swapped. Completed meals keep their cooking and rating history.")
     plan = db.get(Plan, meal.plan_id)
-    ctx = build_context(db, user, llm, random.randint(1, 10**6))
+    ctx = build_context(db, user, llm, random.randint(1, 10**6), week_start=plan_week_start(plan))
     ctx.days = [DayCtx(weekday=d["weekday"], minutes=next(c.minutes for c in ctx.days if c.weekday == d["weekday"]),
                        busy=d.get("busy", False), skipped=d.get("skipped", False)) for d in plan.days]
     ctx.pinned = [m.as_dict() for m in plan.meals if m.id != meal.id]
@@ -174,6 +188,9 @@ def swap_meal(db: Session, user: User, llm, meal: Meal) -> Meal:
     meal.name, meal.cook_minutes, meal.calories, meal.protein = new["name"], new["cook_minutes"], new["calories"], new["protein"]
     meal.steps, meal.ingredients, meal.pinned = new["steps"], new["ingredients"], False
     meal.cost = round(sum(i["cost"] for i in new["ingredients"]), 2)
+    plan.budget = ctx.budget
+    plan.days = [asdict(d) for d in ctx.days]
+    plan.settings = dict(plan.settings or {}, **plan_settings(ctx))
     recompute_totals(plan)
     reschedule(plan)
     db.commit()
@@ -186,6 +203,10 @@ def recompute_totals(plan: Plan) -> None:
 
 def set_day_skipped(db: Session, plan: Plan, weekday: int, skipped: bool) -> None:
     """Mark a day as changed (e.g. eating out). Its meals are removed, so cost and grocery list shrink."""
+    if inventory.closed(plan):
+        raise PlanFailed("This plan is closed. Generate a new week to make changes.")
+    if skipped and any(m.day == weekday and (m.status == "cooked" or m.rating is not None) for m in plan.meals):
+        raise PlanFailed("A day with completed meals cannot be removed. Its cooking and rating history is kept.")
     days = [dict(d) for d in plan.days]  # copy: JSON columns need reassignment to register the change
     for d in days:
         if d["weekday"] == weekday:

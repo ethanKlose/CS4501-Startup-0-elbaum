@@ -60,6 +60,7 @@
   document.addEventListener('submit', function (e) {
     var f = e.target;
     if (!f.matches || !f.matches('form[data-generate]')) return;
+    if (f.dataset.confirm && !window.confirm(f.dataset.confirm)) { e.preventDefault(); return; }
     if (f.dataset.busy) { e.preventDefault(); return; }
     f.dataset.busy = '1';
     showGenerating(f.getAttribute('data-generate-title') || '');
@@ -134,11 +135,12 @@
   }
   function render(m) {
     var slotCls = { breakfast: 'breakfast', lunch: 'lunch', dinner: 'dinner' }[m.slot];
-    var actions = form('/meals/' + m.id + '/pin', { next: '/' }, m.pinned ? 'Unpin' : '📌 Pin', 'line') +
+    var actions = form('/meals/' + m.id + '/pin', { next: '/' }, m.pinned ? 'Unpin' : '📌 Pin', 'line');
+    if (!m.closed && m.status === 'planned' && m.rating === null) actions +=
       form('/meals/' + m.id + '/swap', {}, '⇄ Swap meal', 'line', 'data-generate data-generate-title="Finding a replacement…"');
-    if (m.status !== 'cooked') actions += form('/meals/' + m.id + '/status', { status: 'cooked', next: '/' }, '✓ Mark cooked', 'soft');
-    if (m.status !== 'skipped') actions += form('/meals/' + m.id + '/status', { status: 'skipped', next: '/' }, 'Skip', 'ghost');
-    if (m.status !== 'planned') actions += form('/meals/' + m.id + '/status', { status: 'planned', next: '/' }, 'Reset', 'ghost');
+    if (!m.closed && m.status !== 'cooked') actions += form('/meals/' + m.id + '/status', { status: 'cooked', next: '/' }, '✓ Mark cooked', 'soft');
+    if (!m.closed && m.status !== 'skipped') actions += form('/meals/' + m.id + '/status', { status: 'skipped', next: '/' }, 'Skip', 'ghost');
+    if (!m.closed && m.status !== 'planned') actions += form('/meals/' + m.id + '/status', { status: 'planned', next: '/' }, 'Reset', 'ghost');
     actions += '<a class="btn sm primary" href="/meals/' + m.id + '" style="margin-left:auto">Full recipe →</a>';
     body.innerHTML =
       '<div class="md-head event ' + slotCls + '" style="position:static;height:auto;width:auto;animation:none;box-shadow:none;border-radius:0;border:0">' +
@@ -158,4 +160,21 @@
     if (a && !(e.metaKey || e.ctrlKey || e.shiftKey)) { var m = meals[a.getAttribute('data-meal')]; if (m) { e.preventDefault(); render(m); } return; }
     if (e.target.closest('[data-close]') || e.target === dlg) dlg.close();   // x button or backdrop
   });
+})();
+
+/* Desktop agenda shares the same meal cards and actions as the calendar. */
+(function () {
+  'use strict';
+  var calendar = document.querySelector('.gcal');
+  if (!calendar) return;
+  var buttons = Array.from(document.querySelectorAll('[data-plan-view]'));
+  function setView(view) {
+    calendar.classList.toggle('is-agenda', view === 'agenda');
+    buttons.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.planView === view)); });
+    try { localStorage.setItem('pj-plan-view', view); } catch (e) {}
+  }
+  var saved = 'calendar';
+  try { if (localStorage.getItem('pj-plan-view') === 'agenda') saved = 'agenda'; } catch (e) {}
+  setView(saved);
+  buttons.forEach(function (b) { b.addEventListener('click', function () { setView(b.dataset.planView); }); });
 })();
