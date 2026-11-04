@@ -10,6 +10,7 @@ from app.db import get_db
 from app.deps import current_user_optional, render
 from app.models import User
 from app.security import hash_password, verify_password
+from app.services.preferences import get_preferences
 
 router = APIRouter()
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -36,6 +37,7 @@ def register(request: Request, email: str = Form(""), password: str = Form(""), 
     db.add(user)
     db.commit()
     request.session["user_id"] = user.id
+    request.session["auth_version"] = get_preferences(db,user.id).get("auth_version",0)
     return RedirectResponse("/", 303)
 
 
@@ -50,6 +52,7 @@ def login(request: Request, email: str = Form(""), password: str = Form(""), db:
     if not user or not verify_password(password, user.password_hash):
         return render(request, "login.html", None, 401, error="Invalid email or password.", email=email)
     request.session["user_id"] = user.id
+    request.session["auth_version"] = get_preferences(db,user.id).get("auth_version",0)
     return RedirectResponse("/", 303)
 
 

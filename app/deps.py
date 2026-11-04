@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.config import settings
 from app.models import User
+from app.services.preferences import get_preferences
 
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
@@ -18,7 +19,11 @@ class LoginRequired(Exception):
 
 def current_user_optional(request: Request, db: Session = Depends(get_db)) -> Optional[User]:
     uid = request.session.get("user_id")
-    return db.get(User, uid) if uid else None
+    user = db.get(User, uid) if uid else None
+    if user and request.session.get("auth_version",0) != get_preferences(db,user.id).get("auth_version",0):
+        request.session.clear()
+        return None
+    return user
 
 
 def current_user(user: Optional[User] = Depends(current_user_optional)) -> User:
