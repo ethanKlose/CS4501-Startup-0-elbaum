@@ -21,6 +21,15 @@ def generate_plan(request: Request, user: User = Depends(current_user), db: Sess
     return RedirectResponse("/", 303)
 
 
+@router.post("/plan/next-week")
+def next_week(request: Request, user: User = Depends(current_user), db: Session = Depends(get_db), llm=Depends(get_llm)):
+    try:
+        planner.generate(db, user, llm, new_week=True)
+    except planner.PlanFailed as e:
+        request.session["flash_error"] = {"message": e.message, "conflicts": e.conflicts}
+    return RedirectResponse("/", 303)
+
+
 def owned_meal(db: Session, user: User, meal_id: int) -> Meal:
     meal = db.get(Meal, meal_id)
     plan = db.get(Plan, meal.plan_id) if meal else None

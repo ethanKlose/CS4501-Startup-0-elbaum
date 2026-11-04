@@ -86,7 +86,7 @@ class FakeLLM:
 
     def _pick(self, ctx: PlanContext, lam: float, seed: int = 0) -> Dict:
         rng = random.Random(seed)
-        caps = capacities(ctx.days, ctx.prep_style, ctx.prep_days, ctx.prep_minutes)
+        caps = capacities(ctx.days, ctx.prep_style, ctx.prep_days, ctx.prep_minutes, ctx.allow_pre_week)
         pinned = {(m["day"], m["slot"]): m for m in ctx.pinned}
         pantry = {p["name"].lower() for p in ctx.pantry}
         leftovers = {x.lower() for x in ctx.leftovers}
@@ -235,7 +235,7 @@ class AnthropicLLM:
         return _extract_json("".join(b.text for b in resp.content if getattr(b, "type", "") == "text"))
 
     def generate_plan(self, ctx: PlanContext, feedback=()) -> Dict:
-        caps = capacities(ctx.days, ctx.prep_style, ctx.prep_days, ctx.prep_minutes)
+        caps = capacities(ctx.days, ctx.prep_style, ctx.prep_days, ctx.prep_minutes, ctx.allow_pre_week)
         payload = {"context": asdict(ctx), "cook_capacity_minutes": {str(k): v for k, v in sorted(caps.items())},
                    "feedback_from_previous_attempt": list(feedback)}
         return self._ask(SYSTEM, json.dumps(payload), 12000)

@@ -16,6 +16,7 @@ from app.services.calview import GRID_PX, HOUR_PX, HOUR_START, HOUR_END, build_c
 from app.services.schedule import build_sessions, day_label, sessions_by_day
 from app.services.types import WEEKDAYS
 from app.services.timing import timed_sessions
+from app.services.weeks import plan_week_start
 
 router = APIRouter()
 
@@ -65,7 +66,7 @@ def home(request: Request, user=Depends(current_user_optional), db: Session = De
     sessions = build_sessions(saved)
     by_day = sessions_by_day(sessions)
     cook_plan = [dict(day=d, label=day_label(d), minutes=sum(x["minutes"] for x in by_day[d]), sessions=by_day[d]) for d in sorted(by_day)]
-    start = week_start_for(plan.created_at.date())
+    start = plan_week_start(plan)
     cards = [dict(id=m.id, day=m.day, slot=m.slot, name=m.name, cost=m.cost, status=m.status, pinned=m.pinned, cook_day=m.cook_day,
                   frozen=m.frozen, cook_minutes=m.cook_minutes, note=cook_note(m)) for m in meals]
     start_hour = min([HOUR_START] + [max(0, s["start"] // 60) for s in timed_sessions(sessions)])

@@ -17,6 +17,7 @@
   <form method="post" action="/plan/generate" data-generate data-generate-title="Building your week…" {% if welcome %}data-autosubmit{% endif %}>
     <button class="btn primary lg">{{ icon('sparkles') }} Generate my week</button>
   </form>
+  <p class="muted tiny">Your first plan starts next Monday. Sunday prep is included only when that date is still ahead.</p>
   <a href="/survey" class="muted">Edit preferences</a>
 </section>
 {% else %}
@@ -27,6 +28,8 @@
     <a class="btn line" href="/grocery">{{ icon('cart') }} Grocery list</a>
     <form method="post" action="/plan/regenerate" class="inline" data-generate data-generate-title="Regenerating your week…">
       <button class="btn primary">{{ icon('refresh') }} Regenerate week</button></form>
+    <form method="post" action="/plan/next-week" class="inline" data-generate data-generate-title="Planning next week…">
+      <button class="btn line">Plan next week</button></form>
   </div>
 </div>
 

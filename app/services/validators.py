@@ -53,8 +53,8 @@ def check_diet(plan: dict, ctx: PlanContext) -> List[str]:
 
 
 def schedule_for(plan: dict, ctx: PlanContext) -> Schedule:
-    caps = capacities(ctx.days, ctx.prep_style, ctx.prep_days, ctx.prep_minutes)
-    return schedule(plan["meals"], caps, ctx.prep_style, ctx.prep_days, [d.weekday for d in ctx.days if d.busy])
+    caps = capacities(ctx.days, ctx.prep_style, ctx.prep_days, ctx.prep_minutes, ctx.allow_pre_week)
+    return schedule(plan["meals"], caps, ctx.prep_style, ctx.prep_days, [d.weekday for d in ctx.days if d.busy], earliest_day=-1 if ctx.allow_pre_week else 0)
 
 
 def check_schedule(plan: dict, ctx: PlanContext) -> List[str]:

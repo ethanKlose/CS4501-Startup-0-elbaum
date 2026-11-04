@@ -34,6 +34,8 @@ class PlanContext:
     prep_style: str = "auto"
     prep_days: List[int] = field(default_factory=list)
     prep_minutes: int = 120
+    week_start: Optional[str] = None
+    allow_pre_week: bool = True
     seed: int = 0
 
     def active_days(self) -> List[DayCtx]:

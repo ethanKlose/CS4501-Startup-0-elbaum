@@ -71,7 +71,7 @@ def freezable(meal: dict) -> bool:
 # ----------------------------------------------------------------------------- capacity
 
 
-def capacities(days: Sequence[DayCtx], style: str = "auto", prep_days: Iterable[int] = (), prep_minutes: int = 120) -> Dict[int, int]:
+def capacities(days: Sequence[DayCtx], style: str = "auto", prep_days: Iterable[int] = (), prep_minutes: int = 120, allow_pre_week: bool = True) -> Dict[int, int]:
     """Cooking minutes available on each cook day, -1 (Sunday before the week) through 6."""
     caps = {d.weekday: (0 if d.skipped else d.minutes) for d in days}
     caps[PRE_WEEK] = next((d.minutes for d in days if d.weekday == 6), 0)
@@ -80,7 +80,7 @@ def capacities(days: Sequence[DayCtx], style: str = "auto", prep_days: Iterable[
             caps[p] = max(caps[p], prep_minutes)
         if p == 6:
             caps[PRE_WEEK] = max(caps[PRE_WEEK], prep_minutes)
-    if style == "daily":
+    if style == "daily" or not allow_pre_week:
         caps[PRE_WEEK] = 0
     return caps
 
@@ -109,13 +109,13 @@ def _slot_idx(m: dict) -> Tuple[int, int]:
 
 
 def schedule(meals: Sequence[dict], caps: Dict[int, int], style: str = "auto", prep_days: Iterable[int] = (),
-             busy: Iterable[int] = ()) -> Schedule:
+             busy: Iterable[int] = (), earliest_day: int = PRE_WEEK) -> Schedule:
     """Try a few deterministic strategies and keep the one with the least overbooking, then the fewest cook days."""
     prep_days, busy = list(prep_days), list(busy)
     best = None
     for order in ("tight", "early"):
         for consolidate in (100.0, 20.0):
-            cand = _build(meals, caps, style, prep_days, busy, order, consolidate)
+            cand = _build(meals, caps, style, prep_days, busy, order, consolidate, earliest_day)
             over = sum(u - cand.caps.get(c, 0) for c, u in cand.used.items() if u > cand.caps.get(c, 0))
             key = (len(deadline_errors(cand.sessions)), over, len(cand.used))
             if best is None or key < best[0]:
@@ -124,7 +124,7 @@ def schedule(meals: Sequence[dict], caps: Dict[int, int], style: str = "auto", p
 
 
 def _build(meals: Sequence[dict], caps: Dict[int, int], style: str, prep_days: Iterable[int], busy: Iterable[int],
-           order: str, consolidate: float) -> Schedule:
+           order: str, consolidate: float, earliest_day: int) -> Schedule:
     prefs = set(prep_days) | ({PRE_WEEK} if 6 in set(prep_days) else set())
     busy = set(busy)
     remaining = dict(caps)
@@ -159,7 +159,7 @@ def _build(meals: Sequence[dict], caps: Dict[int, int], style: str, prep_days: I
         while pending:
             e0 = pending[0]
             options = []
-            for c in range(max(PRE_WEEK, e0["day"] - reach), e0["day"] + 1):
+            for c in range(max(earliest_day, e0["day"] - reach), e0["day"] + 1):
                 batch = [m for m in pending if 0 <= m["day"] - c <= reach][:MAX_BATCH]
                 while batch and batch_minutes(base, len(batch)) > remaining[c]:
                     batch.pop()  # shrink the batch until it fits that day
@@ -183,7 +183,7 @@ def _build(meals: Sequence[dict], caps: Dict[int, int], style: str, prep_days: I
             if options:
                 _, c, batch, need = max(options, key=lambda o: (o[0], o[1]))
             else:  # nothing fits anywhere: book the roomiest legal day anyway and let the caller report it
-                legal = [c for c in range(max(PRE_WEEK, e0["day"] - reach), e0["day"] + 1)] or [e0["day"]]
+                legal = [c for c in range(max(earliest_day, e0["day"] - reach), e0["day"] + 1)] or [e0["day"]]
                 c = max(legal, key=lambda x: (remaining[x], x))
                 batch = [m for m in pending if 0 <= m["day"] - c <= reach][:MAX_BATCH] or [e0]
                 if batch[0] is not e0:
