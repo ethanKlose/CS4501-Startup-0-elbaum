@@ -23,6 +23,8 @@ def home(request: Request, user=Depends(current_user_optional), db: Session = De
         return RedirectResponse("/survey", 303)
     plan = planner.latest_plan(db, user)
     error = request.session.pop("flash_error", None)
+    info = request.session.pop("flash_info", None)
+    skipped = {d["weekday"] for d in plan.days if d.get("skipped")} if plan else set()
     prep = prep_blocks([m.as_dict() for m in plan.meals], plan.days) if plan and plan.status == "ok" else []
     sharing = sharing_stats(m.as_dict() for m in plan.meals) if plan and plan.status == "ok" else None
-    return render(request, "home.html", user, profile=profile, plan=plan, error=error, weekdays=WEEKDAYS, slots=SLOTS, sharing=sharing, prep={b["day"]: b for b in prep})
+    return render(request, "home.html", user, profile=profile, plan=plan, error=error, weekdays=WEEKDAYS, slots=SLOTS, sharing=sharing, info=info, skipped=skipped, prep={b["day"]: b for b in prep})

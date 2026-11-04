@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Your week</h1>
+{% if info %}<p class="ok" role="status">{{ info }}</p>{% endif %}
 {% if error %}<div class="error" role="alert"><p>{{ error.message }}</p>
   {% if error.conflicts %}<ul>{% for c in error.conflicts %}<li>{{ c }}</li>{% endfor %}</ul>{% endif %}
   <p><a href="/survey">Edit your survey</a></p></div>{% endif %}
@@ -14,6 +15,9 @@
   {% for day in range(7) %}
   <section class="day" aria-labelledby="day-{{ day }}">
     <h2 id="day-{{ day }}">{{ weekdays[day] }}</h2>
+    <form method="post" action="/plan/days/{{ day }}/skip" class="inline">
+      <button class="link small">{% if day in skipped %}Restore day{% else %}Eating out / skip{% endif %}</button></form>
+    {% if day in skipped %}<div class="muted" data-testid="skipped">No meals planned (eating out)</div>{% endif %}
     {% if prep.get(day) %}<div class="prep" data-testid="prep-block"><strong>Prep · {{ prep[day].minutes }} min</strong><br>
       <small>For {{ prep[day].meals|join(', ') }}</small></div>{% endif %}
     {% for slot in slots %}

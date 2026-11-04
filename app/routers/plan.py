@@ -34,3 +34,15 @@ def meal_detail(meal_id: int, request: Request, user: User = Depends(current_use
 
     meal = owned_meal(db, user, meal_id)
     return render(request, "meal.html", user, meal=meal, weekday=WEEKDAYS[meal.day])
+
+
+@router.post("/plan/days/{weekday}/skip")
+def toggle_day(weekday: int, request: Request, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    plan = planner.latest_plan(db, user)
+    if not plan or plan.status != "ok" or not 0 <= weekday <= 6:
+        raise HTTPException(404, "No plan or day")
+    currently = any(d["weekday"] == weekday and d.get("skipped") for d in plan.days)
+    planner.set_day_skipped(db, plan, weekday, not currently)
+    if currently:
+        request.session["flash_info"] = "Day restored. Regenerate to fill it (your pinned meals are kept)."
+    return RedirectResponse("/", 303)

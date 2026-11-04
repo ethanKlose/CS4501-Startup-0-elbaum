@@ -34,13 +34,15 @@ def build_context(db: Session, user: User, llm, seed: int = 0) -> PlanContext:
     days = {d.weekday: d for d in db.scalars(select(DaySetting).where(DaySetting.user_id == user.id))}
     interp = llm.interpret_preferences(profile.free_text) if profile.free_text else {"excluded": [], "day_minutes_cap": {}}
     caps = interp.get("day_minutes_cap", {})
+    prev = latest_plan(db, user)
+    prev_skipped = {d["weekday"] for d in (prev.days if prev and prev.status == "ok" else []) if d.get("skipped")}
     day_ctx = []
     for i in range(7):
         d = days.get(i)
         minutes = d.minutes if d else 45
         if str(i) in caps:
             minutes = min(minutes, int(caps[str(i)]))
-        day_ctx.append(DayCtx(weekday=i, minutes=minutes, busy=bool(d and d.busy)))
+        day_ctx.append(DayCtx(weekday=i, minutes=minutes, busy=bool(d and d.busy), skipped=i in prev_skipped))
     pantry = [dict(name=p.name, quantity=p.quantity, unit=p.unit)
               for p in db.scalars(select(PantryItem).where(PantryItem.user_id == user.id))]
     return PlanContext(
@@ -84,3 +86,21 @@ def generate(db: Session, user: User, llm, seed: Optional[int] = None) -> Plan:
         feedback = errors  # self-correction: the validator's complaints go straight back to the LLM
     message, conflicts = summarize_failure(ctx, errors)
     raise PlanFailed(message, errors, conflicts)
+
+
+def recompute_totals(plan: Plan) -> None:
+    plan.total_cost = round(sum(m.cost for m in plan.meals), 2)
+
+
+def set_day_skipped(db: Session, plan: Plan, weekday: int, skipped: bool) -> None:
+    """Mark a day as changed (e.g. eating out). Its meals are removed, so cost and grocery list shrink."""
+    days = [dict(d) for d in plan.days]  # copy: JSON columns need reassignment to register the change
+    for d in days:
+        if d["weekday"] == weekday:
+            d["skipped"] = skipped
+    plan.days = days
+    if skipped:
+        for m in [m for m in plan.meals if m.day == weekday]:
+            plan.meals.remove(m)
+    recompute_totals(plan)
+    db.commit()
