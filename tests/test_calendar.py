@@ -15,7 +15,7 @@ def planned(client):
 def test_calendar_shows_all_seven_days_and_their_meals(planned):
     page = planned.get("/").text
     for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]:
-        assert f">{day}</h2>" in page
+        assert f'<span class="d-full">{day}</span>' in page
     assert page.count('data-status="') == 21
     with planned.app.state.session_factory() as s:
         for m in s.query(Meal).all():
@@ -92,3 +92,54 @@ def test_batch_cooking_covers_a_no_cook_day(client):
     assert all(m.cook_day not in (2, 3) for m in ms if m.cook_minutes > 0)
     assert any(m.day in (2, 3) and m.cook_minutes > 0 and m.cook_day < m.day for m in ms) or all(
         m.cook_minutes == 0 for m in ms if m.day in (2, 3))
+
+
+def test_calendar_is_a_time_grid_with_events_and_a_week_title(planned):
+    import re
+
+    page = planned.get("/").text
+    assert 'data-testid="calendar"' in page and "gcal-head" in page and 'class="gutter"' in page
+    assert re.search(r"<h1>[A-Z][a-z]{2} \d+ – (?:[A-Z][a-z]{2} )?\d+, \d{4}</h1>", page)  # e.g. "Nov 2 – 8, 2026"
+    assert page.count("--top:") >= 21  # every meal is positioned on the grid
+    for time in ("8:00 AM", "12:30 PM", "6:30 PM"):
+        assert time in page
+    assert 'class="event cook"' in page or "Nothing to cook" in page
+
+
+def test_meal_dialog_data_is_embedded_and_safe(planned):
+    import json
+    import re
+
+    page = planned.get("/").text
+    raw = re.search(r'<script type="application/json" id="meals-data">(.*?)</script>', page, re.S).group(1)
+    assert "<" not in raw and ">" not in raw  # cannot break out of the script tag
+    data = json.loads(raw)
+    assert len(data) == 21
+    m = next(iter(data.values()))
+    assert {"id", "name", "steps", "ingredients", "calories", "protein", "cost", "when", "note"} <= set(m)
+    assert 'id="meal-dialog"' in page
+
+
+def test_first_plan_is_offered_automatically_after_onboarding(client):
+    signup(client)
+    r = client.post("/survey", data={"budget": "80"})  # finishing setup lands on "/"
+    assert "Generate my week" in r.text and "data-autosubmit" in r.text and "all set" in r.text
+    assert "data-autosubmit" not in client.get("/").text  # only shown once
+
+
+def test_empty_state_has_no_calendar(client):
+    signup(client)
+    client.post("/survey", data={"budget": "80"})
+    page = client.get("/").text
+    assert 'data-testid="calendar"' not in page and "Ready to plan your week?" in page
+
+
+def test_skip_controls_exist_for_desktop_and_mobile(planned):
+    page = planned.get("/").text
+    assert page.count('action="/plan/days/0/skip"') == 2  # header button + mobile day header
+
+
+def test_skipped_day_shows_placeholder_and_restore(planned):
+    planned.post("/plan/days/3/skip")
+    page = planned.get("/").text
+    assert 'data-testid="skipped"' in page and "Restore" in page

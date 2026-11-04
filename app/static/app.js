@@ -119,3 +119,43 @@
   go(start);
   if (!first) form.classList.add('last');
 })();
+
+/* ---- calendar: meal quick-view dialog ---- */
+(function () {
+  'use strict';
+  var dlg = document.getElementById('meal-dialog'), dataEl = document.getElementById('meals-data');
+  if (!dlg || !dataEl || typeof dlg.showModal !== 'function') return;   // no <dialog> support: links just open the full page
+  var meals = JSON.parse(dataEl.textContent), body = document.getElementById('md-body');
+  var SLOT = { breakfast: 'b', lunch: 'l', dinner: 'd' };
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function form(action, fields, label, cls, extra) {
+    return '<form method="post" action="' + action + '" ' + (extra || '') + '>' + Object.keys(fields).map(function (k) { return '<input type="hidden" name="' + k + '" value="' + esc(fields[k]) + '">'; }).join('') +
+      '<button class="btn sm ' + cls + '">' + label + '</button></form>';
+  }
+  function render(m) {
+    var slotCls = { breakfast: 'breakfast', lunch: 'lunch', dinner: 'dinner' }[m.slot];
+    var actions = form('/meals/' + m.id + '/pin', { next: '/' }, m.pinned ? 'Unpin' : '📌 Pin', 'line') +
+      form('/meals/' + m.id + '/swap', {}, '⇄ Swap meal', 'line', 'data-generate data-generate-title="Finding a replacement…"');
+    if (m.status !== 'cooked') actions += form('/meals/' + m.id + '/status', { status: 'cooked', next: '/' }, '✓ Mark cooked', 'soft');
+    if (m.status !== 'skipped') actions += form('/meals/' + m.id + '/status', { status: 'skipped', next: '/' }, 'Skip', 'ghost');
+    if (m.status !== 'planned') actions += form('/meals/' + m.id + '/status', { status: 'planned', next: '/' }, 'Reset', 'ghost');
+    actions += '<a class="btn sm primary" href="/meals/' + m.id + '" style="margin-left:auto">Full recipe →</a>';
+    body.innerHTML =
+      '<div class="md-head event ' + slotCls + '" style="position:static;height:auto;width:auto;animation:none;box-shadow:none;border-radius:0;border:0">' +
+        '<button type="button" class="iconbtn md-x" data-close aria-label="Close">✕</button>' +
+        '<span class="chip">' + esc(m.day) + ' · ' + esc(m.slot) + (m.pinned ? ' · 📌 pinned' : '') + (m.status !== 'planned' ? ' · ' + esc(m.status) : '') + '</span>' +
+        '<h2 id="md-title">' + esc(m.name) + '</h2></div>' +
+      '<div class="md-body">' +
+        '<div class="md-stats"><div><b>' + m.cook_minutes + ' min</b><span>cook time</span></div><div><b>' + m.calories + '</b><span>calories</span></div><div><b>' + m.protein + 'g</b><span>protein</span></div><div><b>$' + m.cost.toFixed(2) + '</b><span>cost</span></div></div>' +
+        '<div class="md-note">👩‍🍳 <span>' + esc(m.when) + '</span></div>' +
+        '<div><h3>Ingredients</h3><ul>' + m.ingredients.map(function (i) { return '<li>' + esc(i) + '</li>'; }).join('') + '</ul></div>' +
+        '<div><h3>Steps</h3><ol>' + m.steps.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol></div>' +
+        '<div class="md-actions">' + actions + '</div></div>';
+    dlg.showModal();
+  }
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest('a.event[data-meal]');
+    if (a && !(e.metaKey || e.ctrlKey || e.shiftKey)) { var m = meals[a.getAttribute('data-meal')]; if (m) { e.preventDefault(); render(m); } return; }
+    if (e.target.closest('[data-close]') || e.target === dlg) dlg.close();   // x button or backdrop
+  });
+})();

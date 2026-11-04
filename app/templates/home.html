@@ -1,56 +1,115 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block title %}Your week · PlateJoy{% endblock %}
+{% block body_class %}app-wide{% endblock %}
+{% block main_class %}page cal-page{% endblock %}
 {% block content %}
-<h1>Your week</h1>
-{% if info %}<p class="ok" role="status">{{ info }}</p>{% endif %}
-{% if error %}<div class="error" role="alert"><p>{{ error.message }}</p>
+{% if info %}<div class="alert info" role="status">{{ icon('check-circle') }}<span>{{ info }}</span></div>{% endif %}
+{% if error %}<div class="alert error" role="alert">{{ icon('alert') }}<div><div>{{ error.message }}</div>
   {% if error.conflicts %}<ul>{% for c in error.conflicts %}<li>{{ c }}</li>{% endfor %}</ul>{% endif %}
-  <p><a href="/survey">Edit your survey</a></p></div>{% endif %}
-{% if checkin_due %}<div class="card" data-testid="checkin-banner"><strong>It's almost the end of the week.</strong> <a href="/checkin">Take the 1-minute check-in</a> so next week's plan learns from this one.</div>{% endif %}
-<form method="post" action="/plan/{% if plan and plan.status == 'ok' %}regenerate{% else %}generate{% endif %}" class="inline">
-  <button>{% if plan and plan.status == 'ok' %}Regenerate week{% else %}Generate my week{% endif %}</button>
-</form>
-{% if plan and plan.status == 'ok' %}
-<p class="totals">Estimated total: <strong>${{ '%.2f' % plan.total_cost }}</strong> of your <strong>${{ '%.2f' % plan.budget }}</strong> budget
-  <span class="{% if plan.total_cost <= plan.budget %}ok{% else %}error{% endif %}">(${{ '%.2f' % (plan.budget - plan.total_cost) }} left)</span></p>
-{% if plan.warnings %}<div class="card warn" role="note" data-testid="plan-warnings"><strong>Heads up</strong>
-  <ul>{% for w in plan.warnings %}<li>{{ w }}</li>{% endfor %}</ul></div>{% endif %}
-<section class="card cookplan" data-testid="cook-plan" style="max-width:none">
-  <h2 style="margin:0">Cooking plan</h2>
-  <p class="muted" style="margin:0">Cook bigger batches when you have time, then just reheat. Reheating doesn't count as cooking.</p>
-  {% for d in cook_plan %}
-  <div class="cookday"><strong>{{ d.label }}</strong> <span class="muted">· {{ d.minutes }} min</span>
-    <ul>{% for x in d.sessions %}
-      <li>{{ x.name }}{% if x.servings > 1 %} ×{{ x.servings }}{% endif %} <span class="muted">({{ x.minutes }} min)</span> →
-        {% for e in x.eats %}{{ short[e.day] }} {{ e.slot }}{% if e.frozen %} ❄{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}</li>
-    {% endfor %}</ul></div>
-  {% else %}<p class="muted">Nothing to cook this week: every meal is no-cook.</p>{% endfor %}
-  <small class="muted">❄ = freeze after cooking and thaw the night before.</small>
+  <a href="/survey">Edit your survey</a></div></div>{% endif %}
+
+{% if not plan or plan.status != 'ok' %}
+<section class="empty card reveal">
+  <div class="plate big" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
+  <h1>{{ "You’re all set. Let’s build your first week" if welcome else "Ready to plan your week?" }}</h1>
+  <p class="muted">We’ll use your budget, diet and schedule, double-check the result, and lay it out on your calendar. It takes a few seconds.</p>
+  <form method="post" action="/plan/generate" data-generate data-generate-title="Building your week…" {% if welcome %}data-autosubmit{% endif %}>
+    <button class="btn primary lg">{{ icon('sparkles') }} Generate my week</button>
+  </form>
+  <a href="/survey" class="muted">Edit preferences</a>
 </section>
-<div class="calendar" aria-label="Weekly meal calendar">
-  {% for day in range(7) %}
-  <section class="day" aria-labelledby="day-{{ day }}">
-    <h2 id="day-{{ day }}">{{ weekdays[day] }}</h2>
-    <form method="post" action="/plan/days/{{ day }}/skip" class="inline">
-      <button class="link small">{% if day in skipped %}Restore day{% else %}Eating out / skip{% endif %}</button></form>
-    {% if day in skipped %}<div class="muted" data-testid="skipped">No meals planned (eating out)</div>{% endif %}
-    {% for slot in slots %}
-      {% for m in plan.meals if m.day == day and m.slot == slot %}
-      <div class="meal {{ m.status }}" data-status="{{ m.status }}">
-        <small class="muted">{{ slot }}</small>
-        <a class="mname" href="/meals/{{ m.id }}">{{ m.name }}</a>
-        <div class="cost">${{ '%.2f' % m.cost }}
-          {% if m.cook_minutes == 0 %}· no cooking
-          {% elif m.cook_day == m.day %}· cook today
-          {% else %}· from {{ day_label(m.cook_day) if m.cook_day >= 0 else 'Sunday' }}'s batch{% if m.frozen %} ❄ thaw{% endif %}{% endif %}</div>
-        {% if m.status != 'planned' %}<span class="badge {{ m.status }}">{{ '✓ Cooked' if m.status == 'cooked' else '✗ Skipped' }}</span>{% endif %}
-        <form method="post" action="/meals/{{ m.id }}/pin" class="inline"><button class="link small" aria-pressed="{{ 'true' if m.pinned else 'false' }}">{% if m.pinned %}📌 Pinned (unpin){% else %}Pin{% endif %}</button></form>
-        <form method="post" action="/meals/{{ m.id }}/swap" class="inline"><button class="link small">Swap</button></form>
-      </div>
-      {% endfor %}
-    {% endfor %}
-  </section>
-  {% endfor %}
+{% else %}
+
+<div class="cal-top reveal">
+  <div><h1>{{ week_title }}</h1><div class="row"><span class="chip brand">{{ icon('shield', 14) }} Verified plan</span><span class="muted tiny">Tap a meal for the recipe</span></div></div>
+  <div class="row">
+    <a class="btn line" href="/grocery">{{ icon('cart') }} Grocery list</a>
+    <form method="post" action="/plan/regenerate" class="inline" data-generate data-generate-title="Regenerating your week…">
+      <button class="btn primary">{{ icon('refresh') }} Regenerate week</button></form>
+  </div>
 </div>
-{% if sharing %}<p class="muted">{{ sharing.shared|length }} ingredients are reused across meals this week, so you buy less and waste less.</p>{% endif %}
+
+{% if checkin_due %}<div class="alert info banner" data-testid="checkin-banner">{{ icon('check-circle') }}<span><strong>It’s almost the end of the week.</strong> <a href="/checkin">Take the 1-minute check-in</a> so next week’s plan learns from this one.</span></div>{% endif %}
+
+<div class="cal-layout">
+  <section class="gcal-card card" aria-label="Weekly meal calendar">
+    <div class="legend"><span class="lg b">Breakfast</span><span class="lg l">Lunch</span><span class="lg d">Dinner</span><span class="lg c">Cooking</span></div>
+    <div class="gcal" data-testid="calendar" style="--tpl:{{ '52px .72fr repeat(7,minmax(0,1fr))' if prep_col else '52px repeat(7,minmax(0,1fr))' }};--hour:{{ hour_px }}px;--grid:{{ grid_px }}px">
+      <div class="gcal-head">
+        <div class="g-corner"></div>
+        {% for c in columns %}
+        <div class="gh {{ 'today' if c.today }} {{ 'prep' if c.prep }}">
+          <h2 class="dow"><span class="d-full">{{ c.name }}</span><span class="d-short">{{ c.short }}</span></h2>
+          <span class="dnum">{{ c.daynum }}</span>{% if c.prep %}<em class="prepnote">prep</em>{% endif %}
+          {% if not c.prep %}<form method="post" action="/plan/days/{{ c.day }}/skip" class="skipform"><button class="daybtn" title="{{ 'Restore this day' if c.skipped else 'Mark as eating out' }}">{{ 'Restore' if c.skipped else 'Eating out' }}</button></form>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      <div class="gcal-body">
+        <div class="gutter" aria-hidden="true">{% for h in hours %}<span style="top:{{ h.top }}px">{{ h.label }}</span>{% endfor %}</div>
+        {% for c in columns %}
+        <div class="gcol {{ 'today' if c.today }} {{ 'prep' if c.prep }} {{ 'is-skipped' if c.skipped }}" data-day="{{ c.day }}">
+          <div class="m-dayhead">{{ c.name }}{% if c.prep %} · before the week{% endif %} <span class="muted">{{ c.date.strftime('%b') }} {{ c.daynum }}</span>
+            {% if not c.prep %}<form method="post" action="/plan/days/{{ c.day }}/skip" class="m-skip"><button class="daybtn">{{ 'Restore day' if c.skipped else 'Eating out' }}</button></form>{% endif %}</div>
+          {% if c.skipped %}<div class="gskipped" data-testid="skipped">No meals planned (eating out)</div>{% endif %}
+          {% for e in c.events %}
+          {% if e.kind == 'meal' %}
+          <a class="event meal {{ e.slot }} {{ e.status }}" href="/meals/{{ e.id }}" data-meal="{{ e.id }}" data-status="{{ e.status }}"
+             style="--top:{{ e.top }}px;--h:{{ e.height }}px;--lane:{{ e.lane }};--lanes:{{ e.lanes }};--i:{{ loop.index0 }}" title="{{ e.name }} · {{ e.note }}">
+            <span class="e-time">{{ e.time }}{% if e.pinned %} <span class="e-pin">{{ icon('pin', 11) }}<span class="sr">Pinned</span></span>{% endif %}{% if e.status == 'cooked' %} <span class="e-ok">{{ icon('check', 12) }}</span>{% endif %}</span>
+            <span class="e-title">{{ e.name }}</span>
+            <span class="e-meta">${{ '%.2f' % e.cost }} · {{ e.note }}</span>
+          </a>
+          {% else %}
+          <div class="event cook" data-testid="cook-event" style="--top:{{ e.top }}px;--h:{{ e.height }}px;--lane:{{ e.lane }};--lanes:{{ e.lanes }};--i:{{ loop.index0 }}" title="Cook {{ e.name }} ×{{ e.servings }}">
+            <span class="e-time">{{ icon('chef', 12) }} {{ e.time }} · {{ e.minutes }} min</span>
+            <span class="e-title">Cook {{ e.name }}{% if e.servings > 1 %} ×{{ e.servings }}{% endif %}</span>
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <aside class="cal-side">
+    <section class="card side-card reveal" style="--i:1">
+      <div class="sc-head"><span>{{ icon('dollar', 16) }} Weekly budget</span><strong>${{ '%.2f' % plan.total_cost }} <small class="muted">of ${{ '%.2f' % plan.budget }}</small></strong></div>
+      <div class="meter" role="progressbar" aria-valuenow="{{ stats.pct }}" aria-valuemin="0" aria-valuemax="100"><span style="width:{{ stats.pct }}%"></span></div>
+      <p class="muted tiny" style="margin:8px 0 0">Estimated total · <span class="{% if plan.total_cost <= plan.budget %}ok{% else %}error{% endif %}">${{ '%.2f' % (plan.budget - plan.total_cost) }} left this week</span></p>
+      <div class="statgrid">
+        <div><b>{{ '{:,}'.format(stats.calories) }}</b><span>cal / day</span></div>
+        <div><b>{{ stats.protein }}g</b><span>protein / day</span></div>
+        <div><b>{{ stats.cooked }}/{{ stats.total }}</b><span>meals cooked</span></div>
+      </div>
+      {% if sharing %}<p class="muted tiny" style="margin:10px 0 0">{{ icon('leaf', 13) }} {{ sharing.shared|length }} ingredients are reused across meals this week, so you buy less and waste less.</p>{% endif %}
+    </section>
+
+    {% if plan.warnings %}
+    <section class="card side-card warn reveal" style="--i:2" data-testid="plan-warnings" role="note">
+      <div class="sc-head"><span>{{ icon('alert', 16) }} <strong>Heads up</strong></span></div>
+      <ul class="plain">{% for w in plan.warnings %}<li>{{ w }}</li>{% endfor %}</ul>
+    </section>
+    {% endif %}
+
+    <section class="card side-card reveal" style="--i:3" data-testid="cook-plan">
+      <div class="sc-head"><span>{{ icon('chef', 16) }} <strong>Cooking plan</strong></span></div>
+      <p class="muted tiny" style="margin:0 0 8px">Cook bigger batches when you have time, then just reheat. Reheating doesn't count as cooking.</p>
+      {% for d in cook_plan %}
+      <div class="cookday"><div class="cd-h"><b>{{ d.label }}</b><span class="chip">{{ d.minutes }} min</span></div>
+        <ul class="plain">{% for x in d.sessions %}
+          <li><span>{{ x.name }}{% if x.servings > 1 %} <b>×{{ x.servings }}</b>{% endif %} <span class="muted">({{ x.minutes }} min)</span></span>
+            <small class="muted">→ {% for e in x.eats %}{{ short[e.day] }} {{ e.slot }}{% if e.frozen %} ❄{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}</small></li>
+        {% endfor %}</ul></div>
+      {% else %}<p class="muted">Nothing to cook this week: every meal is no-cook.</p>{% endfor %}
+      <small class="muted">❄ = freeze after cooking and thaw the night before.</small>
+    </section>
+  </aside>
+</div>
+
+<dialog id="meal-dialog" aria-labelledby="md-title"><div id="md-body"></div></dialog>
+<script type="application/json" id="meals-data">{{ meals_json|safe }}</script>
 {% endif %}
 {% endblock %}
