@@ -135,3 +135,47 @@ def test_failed_regeneration_keeps_previous_valid_plan(planned):
     r = planned.post("/plan/regenerate")
     assert "too low" in r.text
     assert db_plan(planned).id == old
+
+
+def test_swap_changes_only_one_meal(planned):
+    before = newest_meals(planned)
+    target = before[(2, "dinner")]
+    planned.post(f"/meals/{target.id}/swap")
+    after = newest_meals(planned)
+    assert after[(2, "dinner")].name != target.name
+    for k, m in before.items():
+        if k != (2, "dinner"):
+            assert after[k].name == m.name and after[k].ingredients == m.ingredients
+    assert len(after) == 21
+
+
+def test_swap_updates_cost_and_stays_in_budget(planned):
+    target = newest_meals(planned)[(0, "dinner")]
+    planned.post(f"/meals/{target.id}/swap")
+    plan = db_plan(planned)
+    ms = list(newest_meals(planned).values())
+    assert abs(plan.total_cost - sum(m.cost for m in ms)) < 0.02
+    assert plan.total_cost <= 100
+
+
+def test_swap_is_verified_and_failure_leaves_meal_unchanged(planned):
+    from app.services.llm import FakeLLM, get_llm
+    from tests.test_plan import Scripted, ctx
+
+    target = newest_meals(planned)[(1, "lunch")]
+    bad = FakeLLM().generate_plan(ctx())
+    for m in bad["meals"]:
+        if (m["day"], m["slot"]) == (1, "lunch"):
+            m["ingredients"].append(dict(name="beef sirloin", quantity=50, unit="oz", section="meat", cost=500))
+            m["cost"] = round(sum(i["cost"] for i in m["ingredients"]), 2)
+    planned.app.dependency_overrides[get_llm] = lambda: Scripted(bad)
+    r = planned.post(f"/meals/{target.id}/swap")
+    assert "swap that meal" in r.text
+    assert newest_meals(planned)[(1, "lunch")].name == target.name
+
+
+def test_cannot_swap_other_users_meal(planned):
+    target = newest_meals(planned)[(1, "lunch")]
+    planned.post("/logout")
+    signup(planned, "q@q.co")
+    assert planned.post(f"/meals/{target.id}/swap").status_code == 404

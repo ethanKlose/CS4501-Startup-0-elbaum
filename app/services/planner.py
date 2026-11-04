@@ -78,9 +78,8 @@ def save_plan(db: Session, user: User, ctx: PlanContext, plan_dict: dict, attemp
     return plan
 
 
-def generate(db: Session, user: User, llm, seed: Optional[int] = None) -> Plan:
-    seed = random.randint(1, 10**6) if seed is None else seed
-    ctx = build_context(db, user, llm, seed)
+def run_with_retries(llm, ctx: PlanContext):
+    """generate -> validate -> feed errors back -> retry. Returns (valid_plan_dict, attempts) or raises PlanFailed."""
     feedback: list = []
     errors: list = []
     for attempt in range(1, MAX_ATTEMPTS + 1):
@@ -90,12 +89,37 @@ def generate(db: Session, user: User, llm, seed: Optional[int] = None) -> Plan:
         except Exception as e:  # network/JSON/API errors count as a failed attempt
             plan_dict, errors = {}, [f"The generator failed: {e}"]
         if not errors:
-            plan = save_plan(db, user, ctx, plan_dict, attempt)
-            db.commit()
-            return plan
+            return plan_dict, attempt
         feedback = errors  # self-correction: the validator's complaints go straight back to the LLM
     message, conflicts = summarize_failure(ctx, errors)
     raise PlanFailed(message, errors, conflicts)
+
+
+def generate(db: Session, user: User, llm, seed: Optional[int] = None) -> Plan:
+    seed = random.randint(1, 10**6) if seed is None else seed
+    ctx = build_context(db, user, llm, seed)
+    plan_dict, attempts = run_with_retries(llm, ctx)
+    plan = save_plan(db, user, ctx, plan_dict, attempts)
+    db.commit()
+    return plan
+
+
+def swap_meal(db: Session, user: User, llm, meal: Meal) -> Meal:
+    """Replace one meal. Every other meal is pinned, so only this slot changes; the WHOLE plan is re-verified."""
+    plan = db.get(Plan, meal.plan_id)
+    ctx = build_context(db, user, llm, random.randint(1, 10**6))
+    ctx.days = [DayCtx(weekday=d["weekday"], minutes=next(c.minutes for c in ctx.days if c.weekday == d["weekday"]),
+                       busy=d.get("busy", False), skipped=d.get("skipped", False)) for d in plan.days]
+    ctx.pinned = [m.as_dict() for m in plan.meals if m.id != meal.id]
+    ctx.disliked = list(ctx.disliked) + [meal.name]
+    plan_dict, _ = run_with_retries(llm, ctx)
+    new = next(m for m in plan_dict["meals"] if m["day"] == meal.day and m["slot"] == meal.slot)
+    meal.name, meal.cook_minutes, meal.calories, meal.protein = new["name"], new["cook_minutes"], new["calories"], new["protein"]
+    meal.steps, meal.ingredients, meal.pinned = new["steps"], new["ingredients"], False
+    meal.cost = round(sum(i["cost"] for i in new["ingredients"]), 2)
+    recompute_totals(plan)
+    db.commit()
+    return meal
 
 
 def recompute_totals(plan: Plan) -> None:

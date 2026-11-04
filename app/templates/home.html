@@ -27,6 +27,7 @@
         <a class="mname" href="/meals/{{ m.id }}">{{ m.name }}</a>
         <div class="cost">${{ '%.2f' % m.cost }} · {{ m.cook_minutes }} min</div>
         <form method="post" action="/meals/{{ m.id }}/pin" class="inline"><button class="link small" aria-pressed="{{ 'true' if m.pinned else 'false' }}">{% if m.pinned %}📌 Pinned (unpin){% else %}Pin{% endif %}</button></form>
+        <form method="post" action="/meals/{{ m.id }}/swap" class="inline"><button class="link small">Swap</button></form>
       </div>
       {% endfor %}
     {% endfor %}

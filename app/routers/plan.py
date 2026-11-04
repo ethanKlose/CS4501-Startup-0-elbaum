@@ -55,3 +55,14 @@ def toggle_pin(meal_id: int, request: Request, next: str = Form("/"), user: User
     meal.pinned = not meal.pinned
     db.commit()
     return RedirectResponse(next if next.startswith("/") and not next.startswith("//") else "/", 303)
+
+
+@router.post("/meals/{meal_id}/swap")
+def swap(meal_id: int, request: Request, user: User = Depends(current_user), db: Session = Depends(get_db), llm=Depends(get_llm)):
+    meal = owned_meal(db, user, meal_id)
+    try:
+        planner.swap_meal(db, user, llm, meal)
+    except planner.PlanFailed as e:
+        db.rollback()
+        request.session["flash_error"] = {"message": "Couldn't swap that meal: " + e.message, "conflicts": e.conflicts}
+    return RedirectResponse("/", 303)
