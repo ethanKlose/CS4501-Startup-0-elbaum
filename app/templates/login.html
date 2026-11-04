@@ -1,12 +1,25 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% import "_auth_shell.html" as shell %}
 {% block title %}Log in · PlateJoy{% endblock %}
+{% block header %}{{ shell.header() }}{% endblock %}
+{% block main_class %}wide{% endblock %}
 {% block content %}
-<h1>Log in</h1>
-{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
-<form method="post" class="card">
-  <label>Email <input type="email" name="email" value="{{ email or '' }}" required></label>
-  <label>Password <input type="password" name="password" required></label>
-  <button>Log in</button>
-</form>
-<p>No account? <a href="/register">Sign up</a></p>
+<div class="auth">
+  {{ shell.side("Welcome back to your week.") }}
+  <section class="auth-form"><div class="auth-box">
+    <h1>Log in</h1>
+    <p class="muted">Pick up where you left off.</p>
+    {% if error %}<div class="alert error" role="alert" style="margin-top:14px">{{ icon('alert') }}<span>{{ error }}</span></div>{% endif %}
+    <form method="post" class="stack">
+      <label>Email <input type="email" name="email" value="{{ email or '' }}" autocomplete="email" placeholder="you@virginia.edu" required autofocus></label>
+      <label>Password
+        <span class="pw"><input type="password" name="password" autocomplete="current-password" required>
+        <button class="iconbtn" type="button" data-pw-toggle aria-label="Show or hide password">{{ icon('eye') }}</button></span>
+      </label>
+      <button class="btn primary lg block">Log in</button>
+    </form>
+    <p class="auth-foot">New here? <a href="/register">Create an account</a></p>
+  </div></section>
+</div>
 {% endblock %}

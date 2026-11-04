@@ -1,11 +1,30 @@
 {% extends "base.html" %}
-{% block title %}Sign up · PlateJoy{% endblock %}
+{% from "_icons.html" import icon %}
+{% import "_auth_shell.html" as shell %}
+{% block title %}Create your account · PlateJoy{% endblock %}
+{% block header %}{{ shell.header() }}{% endblock %}
+{% block main_class %}wide{% endblock %}
 {% block content %}
-<h1>Create your account</h1>
-{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
-<form method="post" class="card">
-  <label>Email <input type="email" name="email" value="{{ email or '' }}" required></label>
-  <label>Password (8+ characters) <input type="password" name="password" minlength="8" required></label>
-  <button>Sign up</button>
-</form>
+<div class="auth">
+  {{ shell.side("Your first week is about a minute away.") }}
+  <section class="auth-form"><div class="auth-box">
+    <div class="auth-steps" aria-label="Sign-up progress">
+      <span class="on"><b>1</b> Account</span><span><b>2</b> Preferences</span><span><b>3</b> Your week</span>
+    </div>
+    <h1>Create your account</h1>
+    <p class="muted">Free during alpha. Next you’ll tell us about your budget and schedule.</p>
+    {% if error %}<div class="alert error" role="alert" style="margin-top:14px">{{ icon('alert') }}<span>{{ error }}</span></div>{% endif %}
+    <form method="post" class="stack">
+      <label>Email <input type="email" name="email" value="{{ email or '' }}" autocomplete="email" placeholder="you@virginia.edu" required autofocus></label>
+      <label>Password
+        <span class="pw"><input type="password" name="password" minlength="8" autocomplete="new-password" required data-strength="pw-strength">
+        <button class="iconbtn" type="button" data-pw-toggle aria-label="Show or hide password">{{ icon('eye') }}</button></span>
+        <span class="strength" id="pw-strength"><i></i></span>
+        <span class="hint muted tiny" style="font-weight:500">At least 8 characters.</span>
+      </label>
+      <button class="btn primary lg block">Continue {{ icon('arrow') }}</button>
+    </form>
+    <p class="auth-foot">Already have an account? <a href="/login">Log in</a></p>
+  </div></section>
+</div>
 {% endblock %}

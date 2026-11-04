@@ -2,9 +2,16 @@ def signup(client, email="a@b.co", password="password123"):
     return client.post("/register", data={"email": email, "password": password}, follow_redirects=False)
 
 
-def test_home_requires_login(client):
+def test_anonymous_home_is_the_landing_page(client):
     r = client.get("/", follow_redirects=False)
-    assert r.status_code == 303 and r.headers["location"] == "/login"
+    assert r.status_code == 200
+    assert "Build my week" in r.text and 'href="/register"' in r.text and 'href="/login"' in r.text
+
+
+def test_landing_page_shows_app_to_logged_in_users(client):
+    signup(client)
+    r = client.get("/", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/survey"  # new users go through setup first
 
 
 def test_register_logs_in(client):

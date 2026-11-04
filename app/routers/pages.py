@@ -19,7 +19,7 @@ router = APIRouter()
 @router.get("/")
 def home(request: Request, user=Depends(current_user_optional), db: Session = Depends(get_db)):
     if user is None:
-        return RedirectResponse("/login", 303)
+        return render(request, "landing.html", None)
     profile = get_profile(db, user)
     db.commit()
     if not profile.onboarded:

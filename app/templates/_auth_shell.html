@@ -1,0 +1,18 @@
+{% from "_icons.html" import icon %}
+{% macro header() %}
+<header class="topbar"><div class="topbar-in">
+  <a class="brand" href="/">{{ icon('utensils', 22) }}<span>PlateJoy</span><em>alpha</em></a>
+  <div class="topbar-end">
+    <button class="iconbtn theme-toggle" type="button" aria-label="Toggle dark mode" data-theme-toggle><span class="i-moon">{{ icon('moon') }}</span><span class="i-sun">{{ icon('sun') }}</span></button>
+    <a class="btn ghost sm" href="/">{{ icon('back', 16) }} Back to home</a>
+  </div>
+</div></header>
+{% endmacro %}
+{% macro side(title) %}
+<aside class="auth-side" aria-hidden="true">
+  <h2>{{ title }}</h2>
+  <div class="perk"><div class="pi">{{ icon('calendar', 20) }}</div><div><b>A full week, planned</b><span>Breakfast, lunch and dinner on a real calendar.</span></div></div>
+  <div class="perk"><div class="pi">{{ icon('chef', 20) }}</div><div><b>Cook once, eat all week</b><span>Batch cooking around your free days.</span></div></div>
+  <div class="perk"><div class="pi">{{ icon('shield', 20) }}</div><div><b>Verified for you</b><span>Budget, allergies and schedule always respected.</span></div></div>
+</aside>
+{% endmacro %}

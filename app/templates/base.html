@@ -1,28 +1,68 @@
+{% from "_icons.html" import icon %}
+{% set path = request.url.path if request is defined else '/' %}
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}PlateJoy{% endblock %}</title>
+  <title>{% block title %}PlateJoy · AI meal planning for students{% endblock %}</title>
+  <meta name="description" content="Weekly meal plans that fit your budget, schedule and diet. Verified, batch-cooked, and ready to shop.">
+  <meta name="theme-color" content="#0f9d74">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="/static/style.css">
+  <script>try{var t=localStorage.getItem('pj-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+  <script src="/static/app.js" defer></script>
 </head>
-<body>
-<header class="top">
-  <a class="brand" href="/">PlateJoy <small>alpha</small></a>
-  <nav>
+<body class="{% block body_class %}{% endblock %}">
+{% block header %}
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="/">{{ icon('utensils', 22) }}<span>PlateJoy</span><em>alpha</em></a>
     {% if user %}
-      <a href="/">Plan</a>
-      <a href="/grocery">Grocery</a>
-      <a href="/checkin">Check-in</a>
-      <a href="/survey">Survey</a>
-      <form method="post" action="/logout" class="inline"><button class="link">Log out ({{ user.email }})</button></form>
+    <nav class="mainnav" aria-label="Main">
+      <a href="/" class="{{ 'on' if path == '/' or path.startswith('/meals') }}">{{ icon('calendar') }}<span>Plan</span></a>
+      <a href="/grocery" class="{{ 'on' if path.startswith('/grocery') }}">{{ icon('cart') }}<span>Grocery</span></a>
+      <a href="/checkin" class="{{ 'on' if path.startswith('/checkin') }}">{{ icon('check-circle') }}<span>Check-in</span></a>
+      <a href="/survey" class="{{ 'on' if path.startswith('/survey') }}">{{ icon('sliders') }}<span>Preferences</span></a>
+    </nav>
+    <div class="topbar-end">
+      <button class="iconbtn theme-toggle" type="button" aria-label="Toggle dark mode" data-theme-toggle><span class="i-moon">{{ icon('moon') }}</span><span class="i-sun">{{ icon('sun') }}</span></button>
+      <details class="usermenu">
+        <summary aria-label="Account menu"><span class="avatar">{{ user.email[0]|upper }}</span></summary>
+        <div class="menu"><div class="menu-email">{{ user.email }}</div>
+          <form method="post" action="/logout"><button class="menu-item">{{ icon('logout') }} Log out</button></form></div>
+      </details>
+    </div>
     {% else %}
-      <a href="/login">Log in</a> <a href="/register">Sign up</a>
+    <nav class="pubnav"><a href="/#how">How it works</a><a href="/#features">Features</a></nav>
+    <div class="topbar-end">
+      <button class="iconbtn theme-toggle" type="button" aria-label="Toggle dark mode" data-theme-toggle><span class="i-moon">{{ icon('moon') }}</span><span class="i-sun">{{ icon('sun') }}</span></button>
+      <a class="btn ghost" href="/login">Log in</a>
+      <a class="btn primary" href="/register">Get started</a>
+    </div>
     {% endif %}
-  </nav>
+  </div>
 </header>
-<main>
+{% endblock %}
+<main class="{% block main_class %}page{% endblock %}">
   {% block content %}{% endblock %}
 </main>
+{% block footer %}{% endblock %}
+
+<div class="gen-overlay" id="gen-overlay" role="status" aria-live="polite" hidden>
+  <div class="gen-card">
+    <div class="plate" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
+    <h2 id="gen-title">Building your week…</h2>
+    <ul class="gen-steps" id="gen-steps">
+      <li>Reading your preferences</li>
+      <li>Choosing meals that fit your budget</li>
+      <li>Checking every meal against your allergies</li>
+      <li>Scheduling your cooking around your week</li>
+      <li>Building your grocery list</li>
+    </ul>
+    <div class="gen-bar"><span></span></div>
+  </div>
+</div>
 </body>
 </html>

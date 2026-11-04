@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block main_class %}wide{% endblock %}
+{% block content %}
+<section class="lp-hero">
+  <div class="lp-hero-in">
+    <div>
+      <div class="lp-badge reveal"><b>New</b> Meal plans that batch-cook around your week</div>
+      <h1 class="reveal" style="--i:1">Eat well all week.<br><span class="grad">Planned in a minute.</span></h1>
+      <p class="lp-sub reveal" style="--i:2">PlateJoy builds a full week of meals around your budget, diet and schedule, schedules the cooking on your free days, and hands you the grocery list. Every plan is double-checked before you see it.</p>
+      <div class="lp-cta reveal" style="--i:3">
+        <a class="btn primary lg" href="/register">Build my week {{ icon('arrow') }}</a>
+        <a class="btn line lg" href="#how">See how it works</a>
+      </div>
+      <div class="lp-trust reveal" style="--i:4">
+        <span>{{ icon('shield') }} Allergy-checked</span><span>{{ icon('dollar') }} Budget-safe</span><span>{{ icon('clock') }} Fits your schedule</span>
+      </div>
+    </div>
+    <div class="lp-visual reveal" style="--i:2" aria-hidden="true">
+      <div class="float-chip a">{{ icon('dollar') }} $58 of $75 budget</div>
+      <div class="float-chip b">{{ icon('flame') }} 2,000 cal/day on target</div>
+      <div class="float-chip c">{{ icon('snow') }} Cooked Sun · just reheat Wed</div>
+      <div class="mock">
+        <div class="mock-bar"><i></i><i></i><i></i><b>This week</b><span class="chip brand">{{ icon('check', 14) }} Verified</span></div>
+        <div class="mock-grid">
+          {% for day, evs in [
+            ('Mon', [('b','Overnight oats','8:00'),('l','Chicken rice bowl','12:30'),('d','Veggie chili','6:30')]),
+            ('Tue', [('b','PB banana toast','8:00'),('l','Hummus wrap','12:30'),('d','Lentil soup','6:30')]),
+            ('Wed', [('b','Greek parfait','8:00'),('l','Chicken rice bowl','12:30'),('d','Veggie chili','6:30')]),
+            ('Thu', [('b','Overnight oats','8:00'),('l','Tuna wrap','12:30'),('d','Lentil soup','6:30')]),
+            ('Fri', [('b','Veggie scramble','8:00'),('l','Quesadilla','12:30'),('d','Garlic pasta','6:30')]),
+            ('Sat', [('b','Oat bowl','9:00'),('l','Burrito bowl','1:00'),('d','Salmon + potato','7:00')]),
+            ('Sun', [('c','Batch cook','11:00'),('l','Chili ×3','1:00'),('d','Curry ×4','7:00')]),
+          ] %}
+          <div class="mock-day"><h6>{{ day }}</h6>
+            {% for kind, name, t in evs %}<div class="mock-ev {{ kind }}" style="--i:{{ loop.index }}">{{ name }}<small>{{ t }}</small></div>{% endfor %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="lp-stats">
+    <div class="lp-stat reveal" style="--i:1"><b>$0</b><span>over budget, ever</span></div>
+    <div class="lp-stat reveal" style="--i:2"><b>1 min</b><span>from survey to a full week</span></div>
+    <div class="lp-stat reveal" style="--i:3"><b>100%</b><span>of plans verified before you see them</span></div>
+  </div>
+</section>
+
+<section class="lp-section" id="how">
+  <header><span class="lp-eyebrow">How it works</span><h2>From “what do I eat?” to groceries in three steps</h2></header>
+  <div class="steps">
+    <div class="step reveal" style="--i:1"><div class="num">1</div><h3>Tell us your week</h3><p>Budget, allergies, goals, and how much time you really have each day. Busy Wednesday? Say so.</p></div>
+    <div class="step reveal" style="--i:2"><div class="num">2</div><h3>Get a verified plan</h3><p>An AI picks the meals, then our checks make sure budget, diet and schedule actually hold. Bad plans never reach you.</p></div>
+    <div class="step reveal" style="--i:3"><div class="num">3</div><h3>Cook smart, shop once</h3><p>Batch-cook on free days, reheat on busy ones, and shop from one list grouped by aisle.</p></div>
+  </div>
+</section>
+
+<section class="lp-section" id="features">
+  <header><span class="lp-eyebrow">Features</span><h2>Everything a student kitchen needs</h2></header>
+  <div class="features">
+    <div class="feat"><div class="fi">{{ icon('calendar', 22) }}</div><h3>A real weekly calendar</h3><p>Meals and cooking sessions laid out by day and time, like the calendar you already use.</p></div>
+    <div class="feat"><div class="fi">{{ icon('chef', 22) }}</div><h3>Batch cooking built in</h3><p>Cook Sunday for Wednesday. Storage times are safety-checked, with freezer notes where needed.</p></div>
+    <div class="feat"><div class="fi">{{ icon('dollar', 22) }}</div><h3>Hard budget limit</h3><p>Costs are recalculated from ingredients. If a plan goes over, it gets sent back and fixed.</p></div>
+    <div class="feat"><div class="fi">{{ icon('cart', 22) }}</div><h3>One smart grocery list</h3><p>Merged quantities, pantry items removed, grouped by store section, with check-offs.</p></div>
+    <div class="feat"><div class="fi">{{ icon('shield', 22) }}</div><h3>Allergy and diet safe</h3><p>Vegan, gluten-free, nut allergy and more, plus anything you write in your own words.</p></div>
+    <div class="feat"><div class="fi">{{ icon('sparkles', 22) }}</div><h3>Learns from you</h3><p>Rate meals, pin favorites, swap what you dislike. Weekly check-ins shape next week.</p></div>
+  </div>
+</section>
+
+<section class="lp-section">
+  <div class="spot">
+    <div>
+      <span class="lp-eyebrow">Built for busy weeks</span>
+      <h2>Busy Wednesday? <span class="grad">Cook on Sunday.</span></h2>
+      <p class="muted">Being busy doesn’t mean skipping dinner. PlateJoy moves the cooking to the days you’re free and leaves you with a ten-second reheat when you’re not.</p>
+      <ul class="checks">
+        <li>{{ icon('check-circle') }} Set minutes per day, or write “I can’t cook Wednesdays”</li>
+        <li>{{ icon('check-circle') }} Pick one big prep session or a couple of smaller ones</li>
+        <li>{{ icon('check-circle') }} Fish, chicken and veggies each get the right storage window</li>
+      </ul>
+    </div>
+    <div class="timeline" aria-hidden="true">
+      <div class="tl cook"><span class="when">Sun 11:00</span>{{ icon('chef') }} Batch cook · chili ×3, lentil soup ×4 <span class="chip">90 min</span></div>
+      <div class="tl eat"><span class="when">Mon 6:30</span>{{ icon('utensils') }} Veggie chili</div>
+      <div class="tl eat busy"><span class="when">Wed 7:00</span>{{ icon('utensils') }} Veggie chili · reheat <span class="chip">0 min cooking</span></div>
+      <div class="tl eat busy"><span class="when">Thu 7:00</span>{{ icon('utensils') }} Lentil soup · reheat <span class="chip">0 min cooking</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="lp-section">
+  <header><span class="lp-eyebrow">Trust, built in</span><h2>No plan reaches you unverified</h2><p class="muted">Every AI-generated plan runs through a gauntlet. If it fails, it’s fed back to be fixed, never shown.</p></header>
+  <div class="features">
+    <div class="feat"><div class="fi">{{ icon('shield', 22) }}</div><h3>Diet and allergens</h3><p>Every ingredient in every meal, checked against your restrictions.</p></div>
+    <div class="feat"><div class="fi">{{ icon('dollar', 22) }}</div><h3>Budget and math</h3><p>Totals recomputed from ingredients, never taken on trust.</p></div>
+    <div class="feat"><div class="fi">{{ icon('refresh', 22) }}</div><h3>Self-correcting</h3><p>Errors are sent back to the AI to retry. If constraints truly conflict, we tell you exactly what to change.</p></div>
+  </div>
+</section>
+
+<section class="lp-final"><div class="band">
+  <h2>Your week, planned before your coffee’s ready.</h2>
+  <p>Free while we’re in alpha. No card, no catch.</p>
+  <a class="btn primary lg" href="/register">Create my free account {{ icon('arrow') }}</a>
+</div></section>
+<footer class="footer"><span><strong>PlateJoy</strong> · alpha · made for UVA students</span><span>Plans are estimates. Always check labels if you have allergies.</span></footer>
+{% endblock %}
