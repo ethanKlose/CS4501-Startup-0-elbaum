@@ -26,3 +26,12 @@ def test_production_rejects_default_secrets(monkeypatch):
     monkeypatch.setenv('APP_ENV','production')
     monkeypatch.setenv('SECRET_KEY','change-me-in-prod')
     with pytest.raises(RuntimeError,match='SECRET_KEY'):settings.validate()
+
+
+def test_auth_rate_limit_is_enforced_on_http_routes(client,monkeypatch):
+    monkeypatch.setenv('RATE_LIMIT_ENABLED','1')
+    monkeypatch.setenv('AUTH_RATE_LIMIT','1')
+    response=client.post('/login',data={'email':'unknown@example.test','password':'bad'})
+    assert response.status_code==401
+    blocked=client.post('/login',data={'email':'unknown@example.test','password':'bad'})
+    assert blocked.status_code==429 and 'Retry-After' in blocked.headers

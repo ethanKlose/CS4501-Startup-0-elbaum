@@ -19,3 +19,15 @@ def test_external_meal_is_not_generated_or_shopped(client):
         p=s.query(Plan).first()
         assert p and len(p.meals)==20
         assert not any(m.day==2 and m.slot=='lunch' for m in p.meals)
+
+
+def test_microwave_only_student_gets_no_stove_or_oven_recipes(client):
+    from app.services.lifestyle import required_equipment
+    signup(client);client.post('/survey',data={'budget':'150'})
+    client.post('/preferences/lifestyle',data={'equipment':['microwave','fridge'],'cooking_skill':'beginner'})
+    client.post('/plan/generate')
+    with client.app.state.session_factory() as s:
+        p=s.query(Plan).first()
+        assert p and len(p.meals)==21
+        assert all(not m.frozen for m in p.meals)
+        assert all(required_equipment(m.as_dict())<={'microwave','fridge'} for m in p.meals)

@@ -18,3 +18,16 @@ def test_reset_links_are_single_use_and_invalidate_old_password(client,monkeypat
 def test_unknown_email_gets_the_same_public_message(client):
     response=client.post('/forgot-password',data={'email':'missing@example.test'})
     assert response.status_code==200 and 'If that account exists' in response.text
+
+
+def test_reset_invalidates_an_existing_session(client,monkeypatch):
+    from fastapi.testclient import TestClient
+    from app.services import mailer
+    signup(client,email='old-session@example.test')
+    old_session=client.cookies.get('session')
+    links=[];monkeypatch.setattr(mailer,'send_reset',lambda email,url:links.append(url))
+    client.post('/forgot-password',data={'email':'old-session@example.test'})
+    token=parse_qs(urlparse(links[0]).query)['token'][0]
+    client.post('/reset-password',data={'token':token,'password':'replacement-password'})
+    with TestClient(client.app,cookies={'session':old_session}) as old:
+        assert old.get('/grocery',follow_redirects=False).headers['location']=='/login'
