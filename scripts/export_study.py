@@ -2,6 +2,7 @@
 import hashlib
 import hmac
 import json
+import secrets
 from sqlalchemy import select
 from app.db import SessionLocal
 from app.models import UserPreference
@@ -11,7 +12,7 @@ from app.config import settings
 def export(db):
     rows=[]
     for profile in db.scalars(select(UserPreference)):
-        participant=hmac.new(settings.secret_key.encode(),str(profile.user_id).encode(),hashlib.sha256).hexdigest()[:16]
+        participant=hmac.new(settings.secret_key.encode(),str(profile.user_id).encode(),hashlib.sha256).hexdigest()[:16] if settings.production else secrets.token_hex(8)
         for entry in (profile.data or {}).get('study_entries',[]):
             if entry.get('consent'):
                 safe={k:entry.get(k) for k in ['actual_spend','actual_minutes','baseline_minutes','ease','planned_meals','cooked_meals','checkout_estimate']}
