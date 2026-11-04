@@ -60,6 +60,7 @@
   document.addEventListener('submit', function (e) {
     var f = e.target;
     if (!f.matches || !f.matches('form[data-generate]')) return;
+    if (f.dataset.confirm && !window.confirm(f.dataset.confirm)) { e.preventDefault(); return; }
     if (f.dataset.busy) { e.preventDefault(); return; }
     f.dataset.busy = '1';
     showGenerating(f.getAttribute('data-generate-title') || '');
@@ -159,4 +160,21 @@
     if (a && !(e.metaKey || e.ctrlKey || e.shiftKey)) { var m = meals[a.getAttribute('data-meal')]; if (m) { e.preventDefault(); render(m); } return; }
     if (e.target.closest('[data-close]') || e.target === dlg) dlg.close();   // x button or backdrop
   });
+})();
+
+/* Desktop agenda shares the same meal cards and actions as the calendar. */
+(function () {
+  'use strict';
+  var calendar = document.querySelector('.gcal');
+  if (!calendar) return;
+  var buttons = Array.from(document.querySelectorAll('[data-plan-view]'));
+  function setView(view) {
+    calendar.classList.toggle('is-agenda', view === 'agenda');
+    buttons.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.planView === view)); });
+    try { localStorage.setItem('pj-plan-view', view); } catch (e) {}
+  }
+  var saved = 'calendar';
+  try { if (localStorage.getItem('pj-plan-view') === 'agenda') saved = 'agenda'; } catch (e) {}
+  setView(saved);
+  buttons.forEach(function (b) { b.addEventListener('click', function () { setView(b.dataset.planView); }); });
 })();

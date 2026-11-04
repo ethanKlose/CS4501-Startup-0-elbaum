@@ -26,9 +26,9 @@
   <div><h1>{{ week_title }}</h1><div class="row"><span class="chip brand">{{ icon('shield', 14) }} Verified plan</span><span class="muted tiny">Tap a meal for the recipe</span></div></div>
   <div class="row">
     <a class="btn line" href="/grocery">{{ icon('cart') }} Grocery list</a>
-    <form method="post" action="/plan/regenerate" class="inline" data-generate data-generate-title="Regenerating your week…">
+    <form method="post" action="/plan/regenerate" class="inline" data-confirm="Replace the displayed plan? Pinned recipes stay. Cooking history is archived, confirmed purchases update your pantry, and the new plan starts with fresh check-offs." data-generate data-generate-title="Regenerating your week…">
       <button class="btn primary">{{ icon('refresh') }} Regenerate week</button></form>
-    <form method="post" action="/plan/next-week" class="inline" data-generate data-generate-title="Planning next week…">
+    <form method="post" action="/plan/next-week" class="inline" data-confirm="Start the following week? The current plan is archived and confirmed purchases update your pantry. The new week starts with all days active." data-generate data-generate-title="Planning next week…">
       <button class="btn line">Plan next week</button></form>
   </div>
 </div>
@@ -37,6 +37,10 @@
 
 <div class="cal-layout">
   <section class="gcal-card card" aria-label="Weekly meal calendar">
+    <div class="view-switch" role="group" aria-label="Plan view">
+      <button type="button" class="btn sm line" data-plan-view="calendar" aria-pressed="true">Calendar</button>
+      <button type="button" class="btn sm line" data-plan-view="agenda" aria-pressed="false">Agenda</button>
+    </div>
     <div class="legend"><span class="lg b">Breakfast</span><span class="lg l">Lunch</span><span class="lg d">Dinner</span><span class="lg c">Cooking</span></div>
     <div class="gcal" data-testid="calendar" style="--tpl:{{ '52px .72fr repeat(7,minmax(0,1fr))' if prep_col else '52px repeat(7,minmax(0,1fr))' }};--hour:{{ hour_px }}px;--grid:{{ grid_px }}px">
       <div class="gcal-head">

@@ -398,3 +398,15 @@ ul.ring li { display:flex; justify-content:space-between; gap:10px; padding:8px 
 
 .mode-banner { padding:7px 20px; text-align:center; background:var(--brand-50); color:var(--brand-600); font-size:.78rem; font-weight:700; }
 .alert[hidden] { display:none; }
+
+.view-switch { display:flex; gap:6px; padding:10px 16px 0; }
+.view-switch [aria-pressed="true"] { background:var(--brand-50); color:var(--brand-600) !important; border-color:var(--brand); }
+.gcal.is-agenda .gcal-head, .gcal.is-agenda .gutter { display:none; }
+.gcal.is-agenda .gcal-body { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; padding:12px; }
+.gcal.is-agenda .gcol { height:auto; border:1px solid var(--line); border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:8px; background:var(--surface); }
+.gcal.is-agenda .m-dayhead { display:flex; font-weight:800; }
+.gcal.is-agenda .m-skip { display:block; }
+.gcal.is-agenda .daybtn { opacity:1; }
+.gcal.is-agenda .event, .gcal.is-agenda .event:hover { position:static; width:auto; height:auto; min-height:0; padding:9px 12px; transform:none; }
+.gcal.is-agenda .gskipped { position:static; }
+@media (max-width:760px) { .view-switch { display:none; } }
