@@ -27,6 +27,7 @@ class Profile(Base):
     restrictions: Mapped[list] = mapped_column(JSON, default=list)
     goal: Mapped[str] = mapped_column(String(32), default="none")  # none | high_protein | calorie_target
     calorie_target: Mapped[Optional[int]] = mapped_column(default=None)
+    onboarded: Mapped[bool] = mapped_column(default=False)
     free_text: Mapped[str] = mapped_column(String(1000), default="")
 
 

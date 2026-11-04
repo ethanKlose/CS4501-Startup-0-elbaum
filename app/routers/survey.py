@@ -160,7 +160,12 @@ async def survey_submit(request: Request, user: User = Depends(current_user), db
         ctx = survey_context(db, user)
         db.rollback()
         return render(request, "survey.html", user, 400, errors=errors, form=dict(form), form_restrictions=form.getlist("restrictions"), **ctx)
+    first_time = not profile.onboarded
+    if profile.budget is not None:
+        profile.onboarded = True
     db.commit()
+    if first_time and profile.onboarded:
+        return RedirectResponse("/", 303)  # finished setup: on to the plan
     return RedirectResponse("/survey?saved=1", 303)
 
 

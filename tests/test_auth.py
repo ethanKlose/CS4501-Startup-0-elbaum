@@ -22,6 +22,7 @@ def test_register_validation(client):
 
 def test_login_logout(client):
     signup(client)
+    client.post("/survey", data={"budget": "50"})  # finish onboarding
     client.post("/logout")
     assert client.post("/login", data={"email": "a@b.co", "password": "wrongwrong"}).status_code == 401
     r = client.post("/login", data={"email": "A@b.co", "password": "password123"}, follow_redirects=False)

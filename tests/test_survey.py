@@ -170,3 +170,19 @@ def test_cannot_delete_other_users_pantry_item(client):
     signup(client, "c@d.co")
     client.post(f"/pantry/{item_id}/delete")
     assert len(pantry(client)) == 1
+
+
+def test_new_user_is_sent_to_survey_then_home(client):
+    signup(client)
+    r = client.get("/", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/survey"
+    # Minimal completion: budget only; optional sections skipped.
+    r = client.post("/survey", data={"budget": "60"}, follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/"
+    assert client.get("/", follow_redirects=False).status_code == 200
+
+
+def test_survey_without_budget_does_not_finish_setup(client):
+    signup(client)
+    client.post("/survey", data={"free_text": "hi"})
+    assert client.get("/", follow_redirects=False).status_code == 303

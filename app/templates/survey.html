@@ -18,7 +18,8 @@
 </section>
 {% endblock %}
 {% block content %}
-<h1>Your survey</h1>
+<h1>{% if profile.onboarded %}Your survey{% else %}Let's get you set up{% endif %}</h1>
+{% if not profile.onboarded %}<p class="muted">About 3 minutes. Only your <strong>budget</strong> is required — everything marked optional can be skipped and edited later.</p>{% endif %}
 {% if saved %}<p class="ok" role="status">Saved.</p>{% endif %}
 <form method="post" class="card" style="max-width:640px">
   <fieldset>
