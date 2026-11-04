@@ -261,6 +261,6 @@ class AnthropicLLM:
 
 def get_llm():
     """FastAPI dependency. Override in tests via app.dependency_overrides[get_llm]."""
-    if settings.anthropic_api_key:
+    if settings.anthropic_api_key.strip():
         return AnthropicLLM(settings.anthropic_api_key, settings.anthropic_model)
     return FakeLLM()
