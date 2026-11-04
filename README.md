@@ -27,17 +27,26 @@ Demo login: `demo@platejoy.dev` / `demo-password` (or sign up).
 3. With no key the app uses `FakeLLM`: a deterministic, offline planner over a built-in recipe catalog. It is still
    subject to every validator, so the whole app (and all tests) work without a key.
 
-## How the guardrail works
-`planner.run_with_retries` -> `llm.generate_plan` -> `validators.validate_plan` (format, coverage, cooking time,
-cost integrity, budget, restrictions + free-text exclusions, goal, pinned meals, disliked meals). Errors are sent back to
-the LLM (up to 3 attempts). If all fail, `explain.find_conflicts` tells the user which constraints conflict. A plan that
-fails is never saved or displayed.
+## How generation works
+1. **The LLM picks WHAT to eat** (`llm.generate_plan`): diet, budget, calories, protein, variety, shared ingredients.
+2. **A deterministic scheduler picks WHEN to cook** (`services/schedule.py`). A busy Wednesday does not mean fewer
+   meals: its dinner is cooked on Sunday/Tuesday in a batch and reheated. Reheating is free. Storage is safety-checked
+   from the ingredients (fish 2 days, eggs 3, meat 4, other 5, fresh foods 1, else freezer). Cook day `-1` is the
+   Sunday before the week.
+3. **Validators** (`services/validators.py`):
+   * **HARD** (plan is thrown away): format, one meal per slot, ingredient costs, budget, restrictions and
+     free-text exclusions, pinned meals, rated-down meals.
+   * **SOFT** (shown as a "Heads up" warning): cooking time per cook day, calorie target (weekly +/-10%, daily +/-30%),
+     protein. Strict on attempts 1-2 (errors go back to the LLM), tolerated on the final attempt.
+4. If hard checks never pass, `explain.find_conflicts` says which constraints conflict (budget, diet, pins).
+
+Survey prep options (style, preferred cook days, session length) feed the scheduler.
 
 ## Features (GitHub issues #2-#27, #29-#32)
 Survey (budget, busy days/minutes, restrictions, goal, free text, pantry, edit later) - plan generation + verification -
-weekly calendar with prep blocks and meal detail - skip day / pin / regenerate / swap - consolidated grocery list
+weekly calendar with a cooking plan (batch cooking) and meal detail - skip day / pin / regenerate / swap - consolidated grocery list
 (pantry-aware, grouped, check-offs) - cooked/skipped, ratings, weekly check-in, leftovers to pantry.
-Not in alpha: Instacart (#28), migrations (Alembic), CSRF tokens, rate limiting.
+Not in alpha: snack slot, Instacart (#28), migrations (Alembic), CSRF tokens, rate limiting.
 
 ## Deploy
 `docker compose up --build` (SQLite lives in the `platejoy-data` volume). Any container host with a persistent
@@ -45,4 +54,4 @@ volume works (Fly.io, Render). Move to Postgres by changing `DATABASE_URL` once 
 
 ## Layout
 `app/routers` HTTP routes · `app/services` planner, validators, LLM clients · `app/templates` UI · `tests/` pytest · `scripts/seed.py`.
-Alpha note: tables are created with `create_all` (no migrations yet) — `make reset` wipes the local DB after schema changes.
+Alpha note: tables are created with `create_all` (no migrations yet) — `make reset` wipes the local DB after schema changes (**run it after pulling this version: new columns**).
