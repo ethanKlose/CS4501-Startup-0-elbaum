@@ -12,6 +12,16 @@ from app.models import DaySetting, Profile, User
 router = APIRouter()
 
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+RESTRICTIONS = {
+    "vegetarian": "Vegetarian",
+    "vegan": "Vegan",
+    "gluten_free": "Gluten-free",
+    "dairy_free": "Dairy-free",
+    "nut_allergy": "Nut allergy",
+    "shellfish_allergy": "Shellfish allergy",
+    "egg_free": "Egg-free",
+    "halal": "Halal",
+}
 DEFAULT_MINUTES = 45
 MAX_MINUTES = 480
 
@@ -81,7 +91,15 @@ def apply_days(form, errors, db, user, **_):
         d.busy = form.get(f"busy_{d.weekday}") is not None
 
 
-APPLIERS = [apply_budget, apply_days]
+def apply_restrictions(form, profile, **_):
+    # Hidden marker field tells us the section was actually on the submitted form.
+    if "restrictions_present" not in form:
+        return
+    chosen = [r for r in form.getlist("restrictions") if r in RESTRICTIONS]
+    profile.restrictions = sorted(set(chosen))
+
+
+APPLIERS = [apply_budget, apply_days, apply_restrictions]
 
 
 @router.get("/survey")
@@ -92,7 +110,7 @@ def survey_form(request: Request, user: User = Depends(current_user), db: Sessio
 
 
 def survey_context(db, user):
-    return dict(profile=get_profile(db, user), days=get_days(db, user), weekdays=WEEKDAYS)
+    return dict(profile=get_profile(db, user), days=get_days(db, user), weekdays=WEEKDAYS, restriction_options=RESTRICTIONS)
 
 
 @router.post("/survey")
@@ -106,6 +124,6 @@ async def survey_submit(request: Request, user: User = Depends(current_user), db
         db.rollback()
         ctx = survey_context(db, user)
         db.rollback()
-        return render(request, "survey.html", user, 400, errors=errors, form=dict(form), **ctx)
+        return render(request, "survey.html", user, 400, errors=errors, form=dict(form), form_restrictions=form.getlist("restrictions"), **ctx)
     db.commit()
     return RedirectResponse("/survey?saved=1", 303)

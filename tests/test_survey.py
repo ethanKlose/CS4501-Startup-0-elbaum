@@ -70,3 +70,25 @@ def test_budget_only_post_does_not_touch_days(client):
     client.post("/survey", data=days_payload(minutes_0="5"))
     client.post("/survey", data={"budget": "50"})
     assert day_rows(client)[0].minutes == 5
+
+
+def test_restrictions_saved_and_filtered(client):
+    signup(client)
+    client.post("/survey", data={"restrictions_present": "1", "restrictions": ["vegan", "nut_allergy", "bogus"]})
+    assert profile(client).restrictions == ["nut_allergy", "vegan"]
+    page = client.get("/survey").text
+    assert 'value="vegan"\n      checked' in page or "checked> Vegan" in page
+
+
+def test_restrictions_can_be_cleared(client):
+    signup(client)
+    client.post("/survey", data={"restrictions_present": "1", "restrictions": ["vegan"]})
+    client.post("/survey", data={"restrictions_present": "1"})
+    assert profile(client).restrictions == []
+
+
+def test_other_posts_leave_restrictions_alone(client):
+    signup(client)
+    client.post("/survey", data={"restrictions_present": "1", "restrictions": ["vegan"]})
+    client.post("/survey", data={"budget": "40"})
+    assert profile(client).restrictions == ["vegan"]

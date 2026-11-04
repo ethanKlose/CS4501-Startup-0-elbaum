@@ -13,6 +13,14 @@
     {% if errors.budget %}<p class="error" role="alert">{{ errors.budget }}</p>{% endif %}
   </fieldset>
   <fieldset>
+    <legend>Dietary restrictions &amp; allergies</legend>
+    <input type="hidden" name="restrictions_present" value="1">
+    {% for key, label in restriction_options.items() %}
+    <label class="check"><input type="checkbox" name="restrictions" value="{{ key }}"
+      {% if (form is defined and key in form_restrictions) or (form is not defined and key in (profile.restrictions or [])) %}checked{% endif %}> {{ label }}</label>
+    {% endfor %}
+  </fieldset>
+  <fieldset>
     <legend>Your week</legend>
     <p class="muted">Tick busy days and set how many minutes you can spend cooking that day (0 = no cooking).</p>
     {% for d in days %}
