@@ -64,3 +64,9 @@ def test_interpret_preferences_falls_back_if_model_fails():
     llm = client_with("not json at all")
     out = llm.interpret_preferences("no fish, I can't cook on Wednesdays")
     assert out["excluded"] == ["fish"] and out["day_minutes_cap"] == {"2": 0}
+
+
+def test_invalid_preference_days_fall_back_instead_of_crashing_survey():
+    llm=client_with('{"excluded":[],"day_minutes_cap":{"7":15}}')
+    out=llm.interpret_preferences('No cooking on Wednesdays')
+    assert out['day_minutes_cap']=={'2':0}

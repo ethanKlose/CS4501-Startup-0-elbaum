@@ -24,7 +24,7 @@ from app.services.lifestyle import violations as lifestyle_violations
 from app.services.pricing import apply_recipe_prices
 from app.services.schedule import capacities, storage_days
 from app.services.types import SLOTS, WEEKDAYS, PlanContext
-from app.services.validators import HIGH_PROTEIN_DAILY_G, SOFT_CHECKS, schedule_for
+from app.services.validators import HIGH_PROTEIN_DAILY_G, SOFT_CHECKS, schedule_for, check_checkout_budget, check_cooking_deadlines
 
 # ----------------------------------------------------------------------------- fake
 
@@ -38,6 +38,19 @@ def _recipe_to_meal(r: dict, day: int, slot: str) -> dict:
 
 _STOP = {"cooking", "cook", "time", "more", "too", "much", "spicy", "a", "the", "any", "all", "eating", "to", "of", "that", "it", "i", "me", "my"}
 _TRIGGER = re.compile(r"\b(?:no|without|avoid|skip|hate|dislike|allergic to|allergy to|cannot eat|can't eat|don't eat|do not eat|don't like|do not like|not a fan of|never)\s+(.+)", re.I)
+
+
+def normalize_preferences(raw):
+    if not isinstance(raw,dict):raise ValueError('Preference extraction must return an object.')
+    excluded=raw.get('excluded',[]);caps=raw.get('day_minutes_cap',{})
+    if not isinstance(excluded,list) or not isinstance(caps,dict):raise ValueError('Invalid preference fields.')
+    terms=[x.strip().lower() for x in excluded if isinstance(x,str) and 0<len(x.strip())<=100][:40]
+    cleaned={}
+    for day,value in caps.items():
+        if str(day) not in {str(i) for i in range(7)}:raise ValueError('Invalid weekday in preferences.')
+        if isinstance(value,bool) or not isinstance(value,(int,float)) or not 0<=value<=480:raise ValueError('Invalid cooking limit.')
+        cleaned[str(day)]=int(value)
+    return {'excluded':sorted(set(terms)),'day_minutes_cap':cleaned}
 
 
 class FakeLLM:
@@ -81,10 +94,11 @@ class FakeLLM:
                 for m in plan["meals"]:
                     days[m["day"]] = days.get(m["day"], 0) + m["calories"]
                 dev = abs(sum(days.values()) / max(len(days), 1) - ctx.calorie_target) if ctx.calorie_target else 0
-                key = (len(issues), over, dev)
+                hard = check_checkout_budget(plan,ctx) + check_cooking_deadlines(plan,ctx)
+                key = (len(hard), len(issues), over, dev)
                 if best is None or key < best[0]:
                     best = (key, plan)
-                if not issues:
+                if not hard and not issues:
                     return plan
         return best[1]
 
@@ -265,8 +279,7 @@ class AnthropicLLM:
         )
         try:
             out = self._ask(system, text, 500)
-            return {"excluded": [str(x) for x in out.get("excluded", [])],
-                    "day_minutes_cap": {str(k): int(v) for k, v in out.get("day_minutes_cap", {}).items()}}
+            return normalize_preferences(out)
         except Exception:
             return FakeLLM().interpret_preferences(text)
 
