@@ -99,7 +99,7 @@ async function confirmClick(button, accept) {
   await page.getByLabel('Rating', {exact: true}).selectOption('5');
   await page.getByRole('button', {name: 'Save rating', exact: true}).click();
   assert.equal(await page.getByRole('button', {name: 'Swap meal', exact: true}).count(), 0);
-  const blocked = await context.request.post('/meals/' + cookedId + '/swap');
+  const blocked = await context.request.post('/meals/' + cookedId + '/swap', {headers: {'X-CSRF-Token': await page.locator('meta[name=csrf-token]').getAttribute('content')}});
   assert.match(await blocked.text(), /Only planned, unrated meals/);
   await page.goto('/');
   cards = await mealData();

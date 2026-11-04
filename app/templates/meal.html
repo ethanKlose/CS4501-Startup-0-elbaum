@@ -32,13 +32,13 @@
         <div class="row">
           {% if not closed %}
           {% for st, label in [('cooked','Mark cooked'),('skipped','Mark skipped'),('planned','Reset')] if st != meal.status %}
-          <form method="post" action="/meals/{{ meal.id }}/status" class="inline"><input type="hidden" name="status" value="{{ st }}"><input type="hidden" name="next" value="/meals/{{ meal.id }}">
+          <form method="post" action="/meals/{{ meal.id }}/status" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="status" value="{{ st }}"><input type="hidden" name="next" value="/meals/{{ meal.id }}">
             <button class="btn sm {{ 'soft' if st == 'cooked' else 'line' }}">{{ label }}</button></form>
           {% endfor %}
           {% else %}<p class="muted tiny">This plan is closed. Cooking history is kept for inventory.</p>{% endif %}
         </div>
         {% if meal.status == 'cooked' %}
-        <form method="post" action="/meals/{{ meal.id }}/rate" class="row" data-testid="rating" style="margin-top:12px">
+        <form method="post" action="/meals/{{ meal.id }}/rate" class="row" data-testid="rating" style="margin-top:12px"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
           <label style="flex:1">Rating
             <select name="rating" aria-label="Rating">
               {% for n in range(1, 6) %}<option value="{{ n }}" {% if meal.rating == n %}selected{% endif %}>{{ '★' * n }}{{ '☆' * (5 - n) }}</option>{% endfor %}
@@ -51,10 +51,10 @@
 
       <section class="card"><h3>Change it up</h3>
         <div class="row">
-          <form method="post" action="/meals/{{ meal.id }}/pin" class="inline"><input type="hidden" name="next" value="/meals/{{ meal.id }}">
+          <form method="post" action="/meals/{{ meal.id }}/pin" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="next" value="/meals/{{ meal.id }}">
             <button class="btn sm line">{{ icon('pin', 15) }} {% if meal.pinned %}Unpin{% else %}Pin this meal{% endif %}</button></form>
           {% if not closed and meal.status == 'planned' and meal.rating is none %}
-          <form method="post" action="/meals/{{ meal.id }}/swap" class="inline" data-generate data-generate-title="Finding a replacement…">
+          <form method="post" action="/meals/{{ meal.id }}/swap" class="inline" data-generate data-generate-title="Finding a replacement…"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <button class="btn sm line">{{ icon('swap', 15) }} Swap meal</button></form>
           {% endif %}
         </div>

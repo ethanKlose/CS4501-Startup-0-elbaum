@@ -14,7 +14,7 @@
   <div class="plate big" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
   <h1>{{ "You’re all set. Let’s build your first week" if welcome else "Ready to plan your week?" }}</h1>
   <p class="muted">We’ll use your budget, diet and schedule, double-check the result, and lay it out on your calendar. It takes a few seconds.</p>
-  <form method="post" action="/plan/generate" data-generate data-generate-title="Building your week…" {% if welcome %}data-autosubmit{% endif %}>
+  <form method="post" action="/plan/generate" data-generate data-generate-title="Building your week…" {% if welcome %}data-autosubmit{% endif %}><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <button class="btn primary lg">{{ icon('sparkles') }} Generate my week</button>
   </form>
   <p class="muted tiny">Your first plan starts next Monday. Sunday prep is included only when that date is still ahead.</p>
@@ -26,9 +26,9 @@
   <div><h1>{{ week_title }}</h1><div class="row"><span class="chip brand">{{ icon('shield', 14) }} Verified plan</span><span class="muted tiny">Tap a meal for the recipe</span></div></div>
   <div class="row">
     <a class="btn line" href="/grocery">{{ icon('cart') }} Grocery list</a>
-    <form method="post" action="/plan/regenerate" class="inline" data-confirm="Replace the displayed plan? Pinned recipes stay. Cooking history is archived, confirmed purchases update your pantry, and the new plan starts with fresh check-offs." data-generate data-generate-title="Regenerating your week…">
+    <form method="post" action="/plan/regenerate" class="inline" data-confirm="Replace the displayed plan? Pinned recipes stay. Cooking history is archived, confirmed purchases update your pantry, and the new plan starts with fresh check-offs." data-generate data-generate-title="Regenerating your week…"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <button class="btn primary">{{ icon('refresh') }} Regenerate week</button></form>
-    <form method="post" action="/plan/next-week" class="inline" data-confirm="Start the following week? The current plan is archived and confirmed purchases update your pantry. The new week starts with all days active." data-generate data-generate-title="Planning next week…">
+    <form method="post" action="/plan/next-week" class="inline" data-confirm="Start the following week? The current plan is archived and confirmed purchases update your pantry. The new week starts with all days active." data-generate data-generate-title="Planning next week…"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <button class="btn line">Plan next week</button></form>
   </div>
 </div>
@@ -49,7 +49,7 @@
         <div class="gh {{ 'today' if c.today }} {{ 'prep' if c.prep }}">
           <h2 class="dow"><span class="d-full">{{ c.name }}</span><span class="d-short">{{ c.short }}</span></h2>
           <span class="dnum">{{ c.daynum }}</span>{% if c.prep %}<em class="prepnote">prep</em>{% endif %}
-          {% if not c.prep and not closed %}<form method="post" action="/plan/days/{{ c.day }}/skip" class="skipform"><button class="daybtn" title="{{ 'Restore this day' if c.skipped else 'Mark as eating out' }}">{{ 'Restore' if c.skipped else 'Eating out' }}</button></form>{% endif %}
+          {% if not c.prep and not closed %}<form method="post" action="/plan/days/{{ c.day }}/skip" class="skipform"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="daybtn" title="{{ 'Restore this day' if c.skipped else 'Mark as eating out' }}">{{ 'Restore' if c.skipped else 'Eating out' }}</button></form>{% endif %}
         </div>
         {% endfor %}
       </div>
@@ -58,7 +58,7 @@
         {% for c in columns %}
         <div class="gcol {{ 'today' if c.today }} {{ 'prep' if c.prep }} {{ 'is-skipped' if c.skipped }}" data-day="{{ c.day }}">
           <div class="m-dayhead">{{ c.name }}{% if c.prep %} · before the week{% endif %} <span class="muted">{{ c.date.strftime('%b') }} {{ c.daynum }}</span>
-            {% if not c.prep and not closed %}<form method="post" action="/plan/days/{{ c.day }}/skip" class="m-skip"><button class="daybtn">{{ 'Restore day' if c.skipped else 'Eating out' }}</button></form>{% endif %}</div>
+            {% if not c.prep and not closed %}<form method="post" action="/plan/days/{{ c.day }}/skip" class="m-skip"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="daybtn">{{ 'Restore day' if c.skipped else 'Eating out' }}</button></form>{% endif %}</div>
           {% if c.skipped %}<div class="gskipped" data-testid="skipped">No meals planned (eating out)</div>{% endif %}
           {% for e in c.events %}
           {% if e.kind == 'meal' %}

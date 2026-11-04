@@ -20,7 +20,7 @@
       progress();
       try {
         var response = await fetch('/grocery/toggle', {
-          method: 'POST', body: new URLSearchParams({key: box.dataset.key, checked: box.checked, plan_id: document.querySelector('[data-plan-id]').dataset.planId})
+          method: 'POST', headers: {'X-CSRF-Token': document.querySelector('meta[name=csrf-token]').content}, body: new URLSearchParams({key: box.dataset.key, checked: box.checked, plan_id: document.querySelector('[data-plan-id]').dataset.planId})
         });
         // A redirected login page must not be mistaken for a successful save.
         if (response.status !== 204) throw new Error('Save failed');

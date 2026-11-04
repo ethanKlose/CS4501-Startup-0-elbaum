@@ -17,7 +17,7 @@
   {% if saved %}<div class="alert info" role="status">{{ icon('check-circle') }}<span>Saved. Regenerate your week to apply the changes.</span></div>{% endif %}
   {% if errors %}<div class="alert error" role="alert">{{ icon('alert') }}<div>Please fix this first:<ul>{% for m in errors.values() %}<li>{{ m }}</li>{% endfor %}</ul></div></div>{% endif %}
 
-  <form method="post" id="wizard" class="wiz" data-first="{{ '1' if first else '' }}" novalidate>
+  <form method="post" id="wizard" class="wiz" data-first="{{ '1' if first else '' }}" novalidate><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <nav class="wiz-tabs" aria-label="Survey sections">
       <button type="button" data-goto="0"><b>1</b><span>Budget &amp; goal</span></button>
       <button type="button" data-goto="1"><b>2</b><span>Food</span></button>
@@ -111,10 +111,10 @@
     <ul class="plain pantry">
       {% for item in pantry %}
       <li><span class="pname">{{ item.name }}{% if item.quantity is not none %} — {{ '%g' % item.quantity }} {{ item.unit }}{% endif %}</span>
-        <form method="post" action="/pantry/{{ item.id }}/delete" class="inline"><button class="iconbtn sm" aria-label="Remove {{ item.name }}">{{ icon('x', 14) }}</button></form></li>
+        <form method="post" action="/pantry/{{ item.id }}/delete" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="iconbtn sm" aria-label="Remove {{ item.name }}">{{ icon('x', 14) }}</button></form></li>
       {% else %}<li class="muted">Nothing yet.</li>{% endfor %}
     </ul>
-    <form method="post" action="/pantry/add" class="row pantry-add">
+    <form method="post" action="/pantry/add" class="row pantry-add"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <input name="name" placeholder="item (e.g. rice)" required aria-label="Item name" style="flex:2;min-width:140px">
       <input name="quantity" type="number" step="any" min="0" placeholder="qty" aria-label="Quantity" style="flex:1;min-width:70px">
       <input name="unit" placeholder="unit" aria-label="Unit" style="flex:1;min-width:70px">

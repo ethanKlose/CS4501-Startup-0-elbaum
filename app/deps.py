@@ -28,5 +28,5 @@ def current_user(user: Optional[User] = Depends(current_user_optional)) -> User:
 
 
 def render(request: Request, name: str, user: Optional[User] = None, status_code: int = 200, **ctx):
-    ctx.update(user=user, request=request, offline_mode=not bool(settings.anthropic_api_key.strip()))
+    ctx.update(user=user, request=request, csrf_token=request.session.get("csrf_token", ""), offline_mode=not bool(settings.anthropic_api_key.strip()))
     return templates.TemplateResponse(request, name, ctx, status_code=status_code)

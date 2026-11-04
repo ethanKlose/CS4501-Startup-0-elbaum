@@ -130,6 +130,7 @@
   var SLOT = { breakfast: 'b', lunch: 'l', dinner: 'd' };
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function form(action, fields, label, cls, extra) {
+    fields = Object.assign({csrf_token: document.querySelector('meta[name=csrf-token]').content}, fields);
     return '<form method="post" action="' + action + '" ' + (extra || '') + '>' + Object.keys(fields).map(function (k) { return '<input type="hidden" name="' + k + '" value="' + esc(fields[k]) + '">'; }).join('') +
       '<button class="btn sm ' + cls + '">' + label + '</button></form>';
   }

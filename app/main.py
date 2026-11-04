@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import settings
+from app.web_security import CSRFProtection
 from app.db import init_db
 from app.deps import LoginRequired
 from app.routers import auth, checkin, grocery, pages, plan, survey
@@ -22,6 +23,7 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(title="PlateJoy (alpha)", lifespan=lifespan)
+    app.add_middleware(CSRFProtection)
     app.add_middleware(SessionMiddleware, secret_key=settings.secret_key, same_site="lax")
     app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
 

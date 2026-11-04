@@ -11,7 +11,7 @@
     <h1>Log in</h1>
     <p class="muted">Pick up where you left off.</p>
     {% if error %}<div class="alert error" role="alert" style="margin-top:14px">{{ icon('alert') }}<span>{{ error }}</span></div>{% endif %}
-    <form method="post" class="stack">
+    <form method="post" class="stack"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <label>Email <input type="email" name="email" value="{{ email or '' }}" autocomplete="email" placeholder="you@virginia.edu" required autofocus></label>
       <label>Password
         <span class="pw"><input type="password" name="password" autocomplete="current-password" required>

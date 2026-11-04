@@ -20,6 +20,18 @@ def session_factory():
     return sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
 
+class FormClient(TestClient):
+    def request(self, method, url, **kwargs):
+        if method.upper() not in {'GET', 'HEAD', 'OPTIONS'}:
+            headers = dict(kwargs.get('headers') or {})
+            if not any(k.lower() == 'x-csrf-token' for k in headers):
+                if not self.cookies.get('csrf_token'):
+                    super().request('GET', '/health')
+                headers['X-CSRF-Token'] = self.cookies.get('csrf_token', '')
+            kwargs['headers'] = headers
+        return super().request(method, url, **kwargs)
+
+
 @pytest.fixture()
 def client(session_factory):
     app = create_app()
@@ -33,5 +45,5 @@ def client(session_factory):
 
     app.dependency_overrides[get_db] = override
     app.state.session_factory = session_factory
-    with TestClient(app) as c:
+    with FormClient(app) as c:
         yield c
