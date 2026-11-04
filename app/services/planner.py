@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import DaySetting, Meal, PantryItem, Plan, Profile, User
+from app.services.diet import meal_violations
 from app.services.explain import summarize_failure
 from app.services.types import DayCtx, PlanContext
 from app.services.validators import validate_plan
@@ -43,12 +44,19 @@ def build_context(db: Session, user: User, llm, seed: int = 0) -> PlanContext:
         if str(i) in caps:
             minutes = min(minutes, int(caps[str(i)]))
         day_ctx.append(DayCtx(weekday=i, minutes=minutes, busy=bool(d and d.busy), skipped=i in prev_skipped))
+    pinned = []
+    if prev and prev.status == "ok":
+        for m in prev.meals:
+            d = m.as_dict()
+            # keep pins only if still valid for the current diet and day plan
+            if m.pinned and m.day not in prev_skipped and not meal_violations(d, profile.restrictions or [], interp.get("excluded", [])):
+                pinned.append(d)
     pantry = [dict(name=p.name, quantity=p.quantity, unit=p.unit)
               for p in db.scalars(select(PantryItem).where(PantryItem.user_id == user.id))]
     return PlanContext(
         budget=profile.budget, days=day_ctx, restrictions=list(profile.restrictions or []),
         excluded=list(interp.get("excluded", [])), goal=profile.goal, calorie_target=profile.calorie_target,
-        free_text=profile.free_text, pantry=pantry, seed=seed,
+        free_text=profile.free_text, pantry=pantry, pinned=pinned, seed=seed,
     )
 
 
@@ -56,12 +64,14 @@ def save_plan(db: Session, user: User, ctx: PlanContext, plan_dict: dict, attemp
     plan = Plan(user_id=user.id, status="ok", attempts=attempts, budget=ctx.budget, seed=ctx.seed,
                 days=[asdict(d) for d in ctx.days])
     total = 0.0
+    pinned_keys = {(p["day"], p["slot"]) for p in ctx.pinned}
     for m in sorted(plan_dict["meals"], key=lambda x: (x["day"], ["breakfast", "lunch", "dinner"].index(x["slot"]))):
         cost = round(sum(i["cost"] for i in m["ingredients"]), 2)
         total += cost
         plan.meals.append(Meal(day=m["day"], slot=m["slot"], name=m["name"], cook_minutes=m["cook_minutes"],
                                calories=m["calories"], protein=m["protein"], cost=cost,
-                               steps=m["steps"], ingredients=m["ingredients"]))
+                               steps=m["steps"], ingredients=m["ingredients"],
+                               pinned=(m["day"], m["slot"]) in pinned_keys))
     plan.total_cost = round(total, 2)
     db.add(plan)
     db.flush()

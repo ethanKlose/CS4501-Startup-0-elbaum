@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
@@ -46,3 +46,11 @@ def toggle_day(weekday: int, request: Request, user: User = Depends(current_user
     if currently:
         request.session["flash_info"] = "Day restored. Regenerate to fill it (your pinned meals are kept)."
     return RedirectResponse("/", 303)
+
+
+@router.post("/meals/{meal_id}/pin")
+def toggle_pin(meal_id: int, request: Request, next: str = Form("/"), user: User = Depends(current_user), db: Session = Depends(get_db)):
+    meal = owned_meal(db, user, meal_id)
+    meal.pinned = not meal.pinned
+    db.commit()
+    return RedirectResponse(next if next.startswith("/") and not next.startswith("//") else "/", 303)

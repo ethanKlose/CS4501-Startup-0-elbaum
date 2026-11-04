@@ -92,7 +92,19 @@ def check_cost_integrity(plan: dict, ctx: PlanContext) -> List[str]:
     return errors[:10]
 
 
-CHECKS = [check_coverage, check_time, check_cost_integrity, check_budget, check_diet, check_goal]
+def check_pinned(plan: dict, ctx: PlanContext) -> List[str]:
+    """Pinned meals must come back unchanged in the same day/slot."""
+    errors = []
+    at = {(m["day"], m["slot"]): m for m in plan["meals"]}
+    for p in ctx.pinned:
+        got = at.get((p["day"], p["slot"]))
+        same = got and got["name"] == p["name"] and [i["name"] for i in got["ingredients"]] == [i["name"] for i in p["ingredients"]]
+        if not same:
+            errors.append(f"Pinned meal '{p['name']}' ({WEEKDAYS[p['day']]} {p['slot']}) must be kept exactly as it was.")
+    return errors
+
+
+CHECKS = [check_coverage, check_time, check_cost_integrity, check_budget, check_diet, check_goal, check_pinned]
 
 
 def validate_plan(raw, ctx: PlanContext):

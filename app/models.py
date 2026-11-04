@@ -84,6 +84,7 @@ class Meal(Base):
     cost: Mapped[float] = mapped_column(default=0)
     steps: Mapped[list] = mapped_column(JSON, default=list)
     ingredients: Mapped[list] = mapped_column(JSON, default=list)
+    pinned: Mapped[bool] = mapped_column(default=False)
 
     plan = relationship("Plan", back_populates="meals")
 

@@ -51,3 +51,54 @@ def test_regenerate_keeps_skipped_days(planned):
 
 def test_skip_requires_plan_and_valid_day(planned):
     assert planned.post("/plan/days/9/skip").status_code == 404
+
+
+def newest_meals(client):
+    plan = db_plan(client)
+    return {(m.day, m.slot): m for m in db_meals(client) if m.plan_id == plan.id}
+
+
+def test_pin_and_unpin(planned):
+    m = newest_meals(planned)[(0, "dinner")]
+    planned.post(f"/meals/{m.id}/pin")
+    assert newest_meals(planned)[(0, "dinner")].pinned is True
+    assert "Pinned" in planned.get("/").text
+    planned.post(f"/meals/{m.id}/pin")
+    assert newest_meals(planned)[(0, "dinner")].pinned is False
+
+
+def test_pinned_meals_survive_regeneration(planned):
+    before = newest_meals(planned)
+    keys = [(0, "dinner"), (2, "lunch"), (5, "breakfast")]
+    for k in keys:
+        planned.post(f"/meals/{before[k].id}/pin")
+    for _ in range(3):  # different random seeds each time
+        planned.post("/plan/generate")
+        after = newest_meals(planned)
+        for k in keys:
+            assert after[k].name == before[k].name and after[k].ingredients == before[k].ingredients
+            assert after[k].pinned
+        assert len(after) == 21
+
+
+def test_unpinned_meals_can_change(planned):
+    seen = set()
+    for _ in range(4):
+        planned.post("/plan/generate")
+        seen.add(tuple(m.name for _, m in sorted(newest_meals(planned).items())))
+    assert len(seen) > 1
+
+
+def test_cannot_pin_other_users_meal(planned):
+    m = newest_meals(planned)[(0, "dinner")]
+    planned.post("/logout")
+    signup(planned, "z@z.co")
+    assert planned.post(f"/meals/{m.id}/pin").status_code == 404
+
+
+def test_pin_that_violates_new_restriction_is_dropped(planned):
+    m = newest_meals(planned)[(0, "dinner")]
+    planned.post(f"/meals/{m.id}/pin")
+    planned.post("/survey", data={"restrictions_present": "1", "restrictions": ["vegan", "gluten_free", "dairy_free", "egg_free"]})
+    planned.post("/plan/generate")
+    assert len(newest_meals(planned)) == 21
