@@ -66,3 +66,16 @@ def apply_pantry(items: List[Dict], pantry: Iterable[dict]) -> List[Dict]:
                 it["have"] = f"{pq:g} {pu}".strip() + " (different unit)"
         out.append(it)
     return out
+
+
+SECTION_ORDER = ["produce", "dairy", "meat", "seafood", "bakery", "frozen", "pantry", "other"]
+SECTION_LABEL = {"produce": "Produce", "dairy": "Dairy & eggs", "meat": "Meat", "seafood": "Seafood",
+                 "bakery": "Bakery", "frozen": "Frozen", "pantry": "Pantry", "other": "Other"}
+
+
+def group_by_section(items: List[Dict]) -> List[Dict]:
+    """[{section, label, entries}] in store-walk order; every item appears in exactly one section."""
+    buckets: Dict[str, List[Dict]] = {s: [] for s in SECTION_ORDER}
+    for it in items:
+        buckets[it["section"] if it["section"] in buckets else "other"].append(it)
+    return [dict(section=s, label=SECTION_LABEL[s], entries=buckets[s]) for s in SECTION_ORDER if buckets[s]]

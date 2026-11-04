@@ -78,3 +78,29 @@ def test_grocery_page_excludes_pantry(client):
         client.post("/pantry/add", data={"name": n})
     after = client.get("/grocery").text
     assert all(f'data-item="{n}"' not in after for n in names)
+
+
+from app.services.grocery import group_by_section  # noqa: E402
+
+
+def test_grouped_by_section_in_store_order_each_item_once():
+    meals = [dict(name="A", ingredients=[ing("milk", 1, "cup", "dairy"), ing("kale", 1, "cup", "produce"), ing("rice", 1, "cup", "pantry"), ing("beef", 1, "lb", "meat")]),
+             dict(name="B", ingredients=[ing("kale", 1, "cup", "produce"), ing("mystery", 1, "", "weird")])]
+    groups = group_by_section(build_list(meals))
+    assert [g["section"] for g in groups] == ["produce", "dairy", "meat", "pantry", "other"]
+    flat = [i["name"] for g in groups for i in g["entries"]]
+    assert sorted(flat) == sorted(set(flat)) and len(flat) == 5
+
+
+def test_same_item_with_conflicting_sections_appears_once():
+    meals = [dict(name="A", ingredients=[ing("eggs", 2, "each", "dairy")]), dict(name="B", ingredients=[ing("eggs", 1, "each", "other")])]
+    groups = group_by_section(build_list(meals))
+    assert sum(len(g["entries"]) for g in groups) == 1
+
+
+def test_page_has_section_headings(client):
+    signup(client)
+    client.post("/survey", data={"budget": "100"})
+    client.post("/plan/generate")
+    page = client.get("/grocery").text
+    assert 'data-section="produce"' in page and "<h2>Produce</h2>" in page

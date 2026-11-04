@@ -6,14 +6,19 @@
   <p class="muted">Generate a plan first, then your single shopping list shows up here.</p>
 {% else %}
   <p class="totals">{{ items|length }} items · about <strong>${{ '%.2f' % total }}</strong></p>
-  <ul class="plain grocery">
-    {% for it in items %}
-    <li data-item="{{ it.name }}">
-      <span class="gname">{{ it.name }}</span>
-      <span class="muted">{{ '%g' % it.quantity }} {{ it.unit }}</span>
-      {% if it.have %}<small class="muted">(you have {{ it.have }})</small>{% endif %}
-    </li>
-    {% endfor %}
-  </ul>
+  {% for g in groups %}
+  <section class="gsection" data-section="{{ g.section }}">
+    <h2>{{ g.label }}</h2>
+    <ul class="plain grocery">
+      {% for it in g.entries %}
+      <li data-item="{{ it.name }}">
+        <span class="gname">{{ it.name }}</span>
+        <span class="muted">{{ '%g' % it.quantity }} {{ it.unit }}</span>
+        {% if it.have %}<small class="muted">(you have {{ it.have }})</small>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endfor %}
 {% endif %}
 {% endblock %}

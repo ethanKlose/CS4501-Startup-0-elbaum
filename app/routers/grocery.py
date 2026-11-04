@@ -17,5 +17,5 @@ def grocery_list(request: Request, user: User = Depends(current_user), db: Sessi
               for p in db.scalars(select(PantryItem).where(PantryItem.user_id == user.id))]
     items = grocery.build_list(m.as_dict() for m in plan.meals) if plan and plan.status == "ok" else []
     items = grocery.apply_pantry(items, pantry)
-    return render(request, "grocery.html", user, plan=plan, items=items,
+    return render(request, "grocery.html", user, plan=plan, items=items, groups=grocery.group_by_section(items),
                   total=round(sum(i["cost"] for i in items), 2))
