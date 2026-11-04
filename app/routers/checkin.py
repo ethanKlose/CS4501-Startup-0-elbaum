@@ -10,6 +10,7 @@ from app.db import get_db
 from app.deps import current_user, render
 from app.models import CheckIn, Plan, User
 from app.services import planner, inventory
+from app.services.locking import lock_user
 from app.services.weeks import plan_week_start
 
 router = APIRouter()
@@ -50,6 +51,7 @@ def checkin_submit(
     bought_all: bool = Form(False), plan_id: int = Form(None),
     user: User = Depends(current_user), db: Session = Depends(get_db),
 ):
+    lock_user(db, user.id)
     plan = planner.latest_plan(db, user)
     if not plan or plan.status != "ok":
         return RedirectResponse("/", 303)

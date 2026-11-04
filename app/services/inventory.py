@@ -7,6 +7,7 @@ manual corrections made after a plan was generated.
 from sqlalchemy import select
 from app.models import PantryItem
 from app.services import grocery
+from app.services.locking import lock_user
 
 
 def state(plan):
@@ -48,6 +49,8 @@ def checked_keys(plan, items):
 
 
 def record_purchase(db, plan, item, checked=True):
+    lock_user(db, plan.user_id)
+    db.refresh(plan)
     ledger = dict(state(plan))
     if ledger.get('settled'):
         raise ValueError('This plan is closed. Inventory has already been updated.')
@@ -79,6 +82,8 @@ def settle(db, plan):
     No check-offs means no confirmed purchases. Unknown-quantity pantry entries
     mean 'I have plenty' and remain unknown. Units are never implicitly converted.
     """
+    lock_user(db, plan.user_id)
+    db.refresh(plan)
     if closed(plan):
         return state(plan).get('leftovers', [])
     shopping_snapshot = shopping_items(db, plan)

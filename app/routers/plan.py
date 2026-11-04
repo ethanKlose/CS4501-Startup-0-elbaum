@@ -6,6 +6,7 @@ from app.db import get_db
 from app.deps import current_user, render
 from app.models import Meal, Plan, User
 from app.services import planner, inventory
+from app.services.locking import lock_user
 from app.services.llm import get_llm
 
 router = APIRouter()
@@ -33,6 +34,7 @@ def next_week(request: Request, user: User = Depends(current_user), db: Session 
 
 
 def owned_meal(db: Session, user: User, meal_id: int) -> Meal:
+    lock_user(db, user.id)
     meal = db.get(Meal, meal_id)
     plan = db.get(Plan, meal.plan_id) if meal else None
     if not meal or plan.user_id != user.id:
@@ -52,6 +54,7 @@ def meal_detail(meal_id: int, request: Request, user: User = Depends(current_use
 
 @router.post("/plan/days/{weekday}/skip")
 def toggle_day(weekday: int, request: Request, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    lock_user(db, user.id)
     plan = planner.latest_plan(db, user)
     if not plan or plan.status != "ok" or not 0 <= weekday <= 6:
         raise HTTPException(404, "No plan or day")

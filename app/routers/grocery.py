@@ -6,6 +6,7 @@ from app.db import get_db
 from app.deps import current_user, render
 from app.models import GroceryCheck, User
 from app.services import grocery, planner, inventory
+from app.services.locking import lock_user
 
 router = APIRouter()
 
@@ -22,6 +23,7 @@ def grocery_list(request: Request, user: User = Depends(current_user), db: Sessi
 
 @router.post("/grocery/toggle")
 def toggle(key: str = Form(...), checked: bool = Form(...), plan_id: int = Form(None), user: User = Depends(current_user), db: Session = Depends(get_db)):
+    lock_user(db, user.id)
     plan = planner.latest_plan(db, user)
     if not plan or len(key) > 200:
         return Response(status_code=404)

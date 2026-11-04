@@ -13,6 +13,7 @@ from app.services.explain import summarize_failure
 from app.services.schedule import capacities, schedule
 from app.services.types import DayCtx, PlanContext
 from app.services import inventory
+from app.services.locking import lock_user
 from app.services.weeks import plan_week_start, planning_today, target_week
 from app.services.validators import SOFT_CHECKS, schedule_for, validate_full
 
@@ -160,6 +161,7 @@ def run_with_retries(llm, ctx: PlanContext):
 
 
 def generate(db: Session, user: User, llm, seed: Optional[int] = None, new_week: bool = False) -> Plan:
+    lock_user(db, user.id)
     seed = random.randint(1, 10**6) if seed is None else seed
     previous = latest_plan(db, user)
     if previous:
