@@ -1,0 +1,814 @@
+{
+  "source": "USDA FoodData Central SR Legacy, April 2018 release",
+  "download_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+  "archive_sha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+  "measure_note": "Gram conversions are explicit recipe assumptions; package, brand, edible yield and cooked/raw choices can change nutrition. Rice is measured cooked; oats/lentils/pasta are dry. Cans and tofu blocks use the listed gram sizes.",
+  "ingredients": {
+    "almonds": {
+      "fdc_id": 170567,
+      "usda_description": "Nuts, almonds",
+      "calories_per_100g": 579.0,
+      "protein_per_100g": 21.15,
+      "grams_per_unit": {
+        "tbsp": 9
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/170567/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "avocado": {
+      "fdc_id": 171705,
+      "usda_description": "Avocados, raw, all commercial varieties",
+      "calories_per_100g": 160.0,
+      "protein_per_100g": 2.0,
+      "grams_per_unit": {
+        "each": 201
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/171705/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "banana": {
+      "fdc_id": 173944,
+      "usda_description": "Bananas, raw",
+      "calories_per_100g": 89.0,
+      "protein_per_100g": 1.09,
+      "grams_per_unit": {
+        "each": 118
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/173944/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "beef sirloin": {
+      "fdc_id": 172174,
+      "usda_description": "Beef, loin, top sirloin cap steak, boneless, separable lean only, trimmed to 1/8\" fat, choice, raw",
+      "calories_per_100g": 138.0,
+      "protein_per_100g": 21.34,
+      "grams_per_unit": {
+        "oz": 28.3495
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/172174/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "bell pepper": {
+      "fdc_id": 170108,
+      "usda_description": "Peppers, sweet, red, raw",
+      "calories_per_100g": 26.0,
+      "protein_per_100g": 0.99,
+      "grams_per_unit": {
+        "each": 119
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/170108/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "black beans": {
+      "fdc_id": 175237,
+      "usda_description": "Beans, black, mature seeds, cooked, boiled, with salt",
+      "calories_per_100g": 132.0,
+      "protein_per_100g": 8.86,
+      "grams_per_unit": {
+        "cup": 172
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/175237/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "blueberries": {
+      "fdc_id": 171711,
+      "usda_description": "Blueberries, raw",
+      "calories_per_100g": 57.0,
+      "protein_per_100g": 0.74,
+      "grams_per_unit": {
+        "cup": 148
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/171711/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "broccoli": {
+      "fdc_id": 170379,
+      "usda_description": "Broccoli, raw",
+      "calories_per_100g": 34.0,
+      "protein_per_100g": 2.82,
+      "grams_per_unit": {
+        "cup": 91
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/170379/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "butter": {
+      "fdc_id": 173430,
+      "usda_description": "Butter, without salt",
+      "calories_per_100g": 717.0,
+      "protein_per_100g": 0.85,
+      "grams_per_unit": {
+        "tbsp": 14.2
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/173430/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "canned chickpeas": {
+      "fdc_id": 173800,
+      "usda_description": "Chickpeas (garbanzo beans, bengal gram), mature seeds, canned, drained solids",
+      "calories_per_100g": 139.0,
+      "protein_per_100g": 7.05,
+      "grams_per_unit": {
+        "can": 240
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/173800/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "canned tomatoes": {
+      "fdc_id": 170051,
+      "usda_description": "Tomatoes, red, ripe, canned, packed in tomato juice",
+      "calories_per_100g": 16.0,
+      "protein_per_100g": 0.79,
+      "grams_per_unit": {
+        "can": 411
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/170051/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "canned tuna": {
+      "fdc_id": 171986,
+      "usda_description": "Fish, tuna, light, canned in water, without salt, drained solids",
+      "calories_per_100g": 116.0,
+      "protein_per_100g": 25.51,
+      "grams_per_unit": {
+        "can": 113
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/171986/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "carrots": {
+      "fdc_id": 170393,
+      "usda_description": "Carrots, raw",
+      "calories_per_100g": 41.0,
+      "protein_per_100g": 0.93,
+      "grams_per_unit": {
+        "each": 61
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/170393/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "celery": {
+      "fdc_id": 169988,
+      "usda_description": "Celery, raw",
+      "calories_per_100g": 14.0,
+      "protein_per_100g": 0.69,
+      "grams_per_unit": {
+        "stalk": 40
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/169988/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "cheddar cheese": {
+      "fdc_id": 173414,
+      "usda_description": "Cheese, cheddar (Includes foods for USDA's Food Distribution Program)",
+      "calories_per_100g": 403.0,
+      "protein_per_100g": 22.87,
+      "grams_per_unit": {
+        "cup": 113,
+        "slice": 28
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/173414/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "chicken breast": {
+      "fdc_id": 171077,
+      "usda_description": "Chicken, broiler or fryers, breast, skinless, boneless, meat only, raw",
+      "calories_per_100g": 120.0,
+      "protein_per_100g": 22.5,
+      "grams_per_unit": {
+        "oz": 28.3495
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/171077/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "chicken sausage": {
+      "fdc_id": 173880,
+      "usda_description": "Sausage, chicken or turkey, Italian style,  lower sodium",
+      "calories_per_100g": 183.0,
+      "protein_per_100g": 21.43,
+      "grams_per_unit": {
+        "oz": 28.3495
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/173880/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "chicken thighs": {
+      "fdc_id": 173627,
+      "usda_description": "Chicken, broilers or fryers, dark meat, thigh, meat only, raw",
+      "calories_per_100g": 121.0,
+      "protein_per_100g": 19.66,
+      "grams_per_unit": {
+        "oz": 28.3495
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/173627/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "chili powder": {
+      "fdc_id": 171319,
+      "usda_description": "Spices, chili powder",
+      "calories_per_100g": 282.0,
+      "protein_per_100g": 13.46,
+      "grams_per_unit": {
+        "tsp": 2.7
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/171319/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "coconut milk": {
+      "fdc_id": 170173,
+      "usda_description": "Nuts, coconut milk, canned (liquid expressed from grated meat and water)",
+      "calories_per_100g": 197.0,
+      "protein_per_100g": 2.02,
+      "grams_per_unit": {
+        "can": 400
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/170173/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "corn flakes": {
+      "fdc_id": 174648,
+      "usda_description": "Cereals ready-to-eat, RALSTON Corn Flakes",
+      "calories_per_100g": 384.0,
+      "protein_per_100g": 5.9,
+      "grams_per_unit": {
+        "cup": 28
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/174648/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "cottage cheese": {
+      "fdc_id": 172182,
+      "usda_description": "Cheese, cottage, lowfat, 2% milkfat",
+      "calories_per_100g": 81.0,
+      "protein_per_100g": 10.45,
+      "grams_per_unit": {
+        "cup": 226
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/172182/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "cucumber": {
+      "fdc_id": 168409,
+      "usda_description": "Cucumber, with peel, raw",
+      "calories_per_100g": 15.0,
+      "protein_per_100g": 0.65,
+      "grams_per_unit": {
+        "each": 301
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/168409/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "curry powder": {
+      "fdc_id": 170924,
+      "usda_description": "Spices, curry powder",
+      "calories_per_100g": 325.0,
+      "protein_per_100g": 14.29,
+      "grams_per_unit": {
+        "tbsp": 6.3
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/170924/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "diced tomatoes": {
+      "fdc_id": 170051,
+      "usda_description": "Tomatoes, red, ripe, canned, packed in tomato juice",
+      "calories_per_100g": 16.0,
+      "protein_per_100g": 0.79,
+      "grams_per_unit": {
+        "can": 411
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/170051/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "dry lentils": {
+      "fdc_id": 172420,
+      "usda_description": "Lentils, raw",
+      "calories_per_100g": 352.0,
+      "protein_per_100g": 24.63,
+      "grams_per_unit": {
+        "cup": 192
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/172420/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "eggs": {
+      "fdc_id": 171287,
+      "usda_description": "Egg, whole, raw, fresh",
+      "calories_per_100g": 143.0,
+      "protein_per_100g": 12.56,
+      "grams_per_unit": {
+        "each": 50
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/171287/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "firm tofu": {
+      "fdc_id": 172475,
+      "usda_description": "Tofu, raw, firm, prepared with calcium sulfate",
+      "calories_per_100g": 144.0,
+      "protein_per_100g": 17.27,
+      "grams_per_unit": {
+        "block": 396
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/172475/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "flour tortilla": {
+      "fdc_id": 167535,
+      "usda_description": "Tortillas, ready-to-bake or -fry, flour, shelf stable",
+      "calories_per_100g": 297.0,
+      "protein_per_100g": 8.01,
+      "grams_per_unit": {
+        "each": 49
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/167535/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "frozen corn": {
+      "fdc_id": 168398,
+      "usda_description": "Corn, sweet, yellow, frozen, kernels cut off cob, unprepared (Includes foods for USDA's Food Distribution Program)",
+      "calories_per_100g": 88.0,
+      "protein_per_100g": 3.02,
+      "grams_per_unit": {
+        "cup": 165
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/168398/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "frozen peas": {
+      "fdc_id": 170016,
+      "usda_description": "Peas, green, frozen, unprepared (Includes foods for USDA's Food Distribution Program)",
+      "calories_per_100g": 77.0,
+      "protein_per_100g": 5.22,
+      "grams_per_unit": {
+        "cup": 134
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/170016/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "garlic": {
+      "fdc_id": 169230,
+      "usda_description": "Garlic, raw",
+      "calories_per_100g": 149.0,
+      "protein_per_100g": 6.36,
+      "grams_per_unit": {
+        "clove": 3
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/169230/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "ginger": {
+      "fdc_id": 169231,
+      "usda_description": "Ginger root, raw",
+      "calories_per_100g": 80.0,
+      "protein_per_100g": 1.82,
+      "grams_per_unit": {
+        "tsp": 2
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/169231/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "granola": {
+      "fdc_id": 171646,
+      "usda_description": "Cereals ready-to-eat, granola, homemade",
+      "calories_per_100g": 489.0,
+      "protein_per_100g": 13.67,
+      "grams_per_unit": {
+        "cup": 122
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/171646/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "greek yogurt": {
+      "fdc_id": 171312,
+      "usda_description": "Yogurt, Greek, nonfat, plain, CHOBANI",
+      "calories_per_100g": 54.0,
+      "protein_per_100g": 9.53,
+      "grams_per_unit": {
+        "cup": 245
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/171312/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "green beans": {
+      "fdc_id": 169961,
+      "usda_description": "Beans, snap, green, raw",
+      "calories_per_100g": 31.0,
+      "protein_per_100g": 1.83,
+      "grams_per_unit": {
+        "cup": 100
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/169961/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "ground turkey": {
+      "fdc_id": 171505,
+      "usda_description": "Turkey, Ground, raw",
+      "calories_per_100g": 148.0,
+      "protein_per_100g": 19.66,
+      "grams_per_unit": {
+        "oz": 28.3495
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/171505/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "honey": {
+      "fdc_id": 169640,
+      "usda_description": "Honey",
+      "calories_per_100g": 304.0,
+      "protein_per_100g": 0.3,
+      "grams_per_unit": {
+        "tbsp": 21
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/169640/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "hummus": {
+      "fdc_id": 174289,
+      "usda_description": "Hummus, commercial",
+      "calories_per_100g": 237.0,
+      "protein_per_100g": 7.78,
+      "grams_per_unit": {
+        "tbsp": 15
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/174289/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "kidney beans": {
+      "fdc_id": 174285,
+      "usda_description": "Beans, kidney, red, mature seeds, canned, drained solids",
+      "calories_per_100g": 124.0,
+      "protein_per_100g": 7.98,
+      "grams_per_unit": {
+        "can": 240
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/174285/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "lemon": {
+      "fdc_id": 167746,
+      "usda_description": "Lemons, raw, without peel",
+      "calories_per_100g": 29.0,
+      "protein_per_100g": 1.1,
+      "grams_per_unit": {
+        "each": 58
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/167746/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "lettuce": {
+      "fdc_id": 169249,
+      "usda_description": "Lettuce, green leaf, raw",
+      "calories_per_100g": 15.0,
+      "protein_per_100g": 1.36,
+      "grams_per_unit": {
+        "leaf": 5
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/169249/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "maple syrup": {
+      "fdc_id": 169661,
+      "usda_description": "Syrups, maple",
+      "calories_per_100g": 260.0,
+      "protein_per_100g": 0.04,
+      "grams_per_unit": {
+        "tbsp": 20
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/169661/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "marinara sauce": {
+      "fdc_id": 171192,
+      "usda_description": "Sauce, pasta, spaghetti/marinara, ready-to-serve",
+      "calories_per_100g": 50.0,
+      "protein_per_100g": 1.39,
+      "grams_per_unit": {
+        "cup": 257
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/171192/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "mayonnaise": {
+      "fdc_id": 171009,
+      "usda_description": "Salad dressing, mayonnaise, regular",
+      "calories_per_100g": 680.0,
+      "protein_per_100g": 0.96,
+      "grams_per_unit": {
+        "tbsp": 13.8
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/171009/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "milk": {
+      "fdc_id": 171265,
+      "usda_description": "Milk, whole, 3.25% milkfat, with added vitamin D",
+      "calories_per_100g": 61.0,
+      "protein_per_100g": 3.15,
+      "grams_per_unit": {
+        "cup": 244
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/171265/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "mixed greens": {
+      "fdc_id": 169249,
+      "usda_description": "Lettuce, green leaf, raw",
+      "calories_per_100g": 15.0,
+      "protein_per_100g": 1.36,
+      "grams_per_unit": {
+        "cup": 36
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/169249/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "mozzarella cheese": {
+      "fdc_id": 170845,
+      "usda_description": "Cheese, mozzarella, whole milk",
+      "calories_per_100g": 299.0,
+      "protein_per_100g": 22.17,
+      "grams_per_unit": {
+        "cup": 112
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/170845/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "olive oil": {
+      "fdc_id": 171413,
+      "usda_description": "Oil, olive, salad or cooking",
+      "calories_per_100g": 884.0,
+      "protein_per_100g": 0.0,
+      "grams_per_unit": {
+        "tbsp": 13.5,
+        "tsp": 4.5
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/171413/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "onion": {
+      "fdc_id": 170000,
+      "usda_description": "Onions, raw",
+      "calories_per_100g": 40.0,
+      "protein_per_100g": 1.1,
+      "grams_per_unit": {
+        "each": 110
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/170000/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "parmesan cheese": {
+      "fdc_id": 171247,
+      "usda_description": "Cheese, parmesan, grated",
+      "calories_per_100g": 420.0,
+      "protein_per_100g": 28.42,
+      "grams_per_unit": {
+        "cup": 100,
+        "tbsp": 5
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/171247/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "peaches": {
+      "fdc_id": 169928,
+      "usda_description": "Peaches, yellow, raw",
+      "calories_per_100g": 39.0,
+      "protein_per_100g": 0.91,
+      "grams_per_unit": {
+        "each": 150
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/169928/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "peanut butter": {
+      "fdc_id": 172470,
+      "usda_description": "Peanut butter, smooth style, without salt",
+      "calories_per_100g": 598.0,
+      "protein_per_100g": 22.21,
+      "grams_per_unit": {
+        "tbsp": 16
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/172470/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "potatoes": {
+      "fdc_id": 170026,
+      "usda_description": "Potatoes, flesh and skin, raw",
+      "calories_per_100g": 77.0,
+      "protein_per_100g": 2.05,
+      "grams_per_unit": {
+        "each": 170
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/170026/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "rice": {
+      "fdc_id": 168878,
+      "usda_description": "Rice, white, long-grain, regular, enriched, cooked",
+      "calories_per_100g": 130.0,
+      "protein_per_100g": 2.69,
+      "grams_per_unit": {
+        "cup": 158
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/168878/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "rolled oats": {
+      "fdc_id": 169705,
+      "usda_description": "Oats (Includes foods for USDA's Food Distribution Program)",
+      "calories_per_100g": 389.0,
+      "protein_per_100g": 16.89,
+      "grams_per_unit": {
+        "cup": 156
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/169705/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "salmon fillet": {
+      "fdc_id": 175167,
+      "usda_description": "Fish, salmon, Atlantic, farmed, raw",
+      "calories_per_100g": 208.0,
+      "protein_per_100g": 20.42,
+      "grams_per_unit": {
+        "oz": 28.3495
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/175167/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "salsa": {
+      "fdc_id": 174524,
+      "usda_description": "Sauce, salsa, ready-to-serve",
+      "calories_per_100g": 29.0,
+      "protein_per_100g": 1.52,
+      "grams_per_unit": {
+        "tbsp": 16
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/174524/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "shrimp": {
+      "fdc_id": 175179,
+      "usda_description": "Crustaceans, shrimp, raw",
+      "calories_per_100g": 85.0,
+      "protein_per_100g": 20.1,
+      "grams_per_unit": {
+        "oz": 28.3495
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/175179/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "soy milk": {
+      "fdc_id": 172446,
+      "usda_description": "Soymilk, original and vanilla, unfortified",
+      "calories_per_100g": 54.0,
+      "protein_per_100g": 3.27,
+      "grams_per_unit": {
+        "cup": 243
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/172446/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "soy protein powder": {
+      "fdc_id": 173181,
+      "usda_description": "Beverages, Protein powder soy based",
+      "calories_per_100g": 388.0,
+      "protein_per_100g": 55.56,
+      "grams_per_unit": {
+        "scoop": 30
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/173181/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "soy sauce": {
+      "fdc_id": 174277,
+      "usda_description": "Soy sauce made from soy and wheat (shoyu)",
+      "calories_per_100g": 53.0,
+      "protein_per_100g": 8.14,
+      "grams_per_unit": {
+        "tbsp": 16
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/174277/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "spaghetti": {
+      "fdc_id": 169736,
+      "usda_description": "Pasta, dry, enriched",
+      "calories_per_100g": 371.0,
+      "protein_per_100g": 13.04,
+      "grams_per_unit": {
+        "oz": 28.3495
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/169736/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "spinach": {
+      "fdc_id": 168462,
+      "usda_description": "Spinach, raw",
+      "calories_per_100g": 23.0,
+      "protein_per_100g": 2.86,
+      "grams_per_unit": {
+        "cup": 30
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/168462/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "strawberry jam": {
+      "fdc_id": 169641,
+      "usda_description": "Jams and preserves",
+      "calories_per_100g": 278.0,
+      "protein_per_100g": 0.37,
+      "grams_per_unit": {
+        "tbsp": 20
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/169641/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "sunflower seeds": {
+      "fdc_id": 170562,
+      "usda_description": "Seeds, sunflower seed kernels, dried",
+      "calories_per_100g": 584.0,
+      "protein_per_100g": 20.78,
+      "grams_per_unit": {
+        "tbsp": 9
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/170562/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "sweet potato": {
+      "fdc_id": 168482,
+      "usda_description": "Sweet potato, raw, unprepared (Includes foods for USDA's Food Distribution Program)",
+      "calories_per_100g": 86.0,
+      "protein_per_100g": 1.57,
+      "grams_per_unit": {
+        "each": 130
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/168482/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "tempeh": {
+      "fdc_id": 174272,
+      "usda_description": "Tempeh",
+      "calories_per_100g": 192.0,
+      "protein_per_100g": 20.29,
+      "grams_per_unit": {
+        "oz": 28.3495
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/174272/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "tomato": {
+      "fdc_id": 170457,
+      "usda_description": "Tomatoes, red, ripe, raw, year round average",
+      "calories_per_100g": 18.0,
+      "protein_per_100g": 0.88,
+      "grams_per_unit": {
+        "each": 123
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/170457/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "turkey slices": {
+      "fdc_id": 174572,
+      "usda_description": "Turkey breast, low salt, prepackaged or deli, luncheon meat",
+      "calories_per_100g": 109.0,
+      "protein_per_100g": 21.81,
+      "grams_per_unit": {
+        "oz": 28.3495
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/174572/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "turmeric": {
+      "fdc_id": 172231,
+      "usda_description": "Spices, turmeric, ground",
+      "calories_per_100g": 312.0,
+      "protein_per_100g": 9.68,
+      "grams_per_unit": {
+        "tsp": 3
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/172231/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "vegetable broth": {
+      "fdc_id": 171583,
+      "usda_description": "Soup, vegetable broth, ready to serve",
+      "calories_per_100g": 5.0,
+      "protein_per_100g": 0.24,
+      "grams_per_unit": {
+        "cup": 221
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/171583/nutrients",
+      "publication_date": "2019-04-01"
+    },
+    "whole wheat bread": {
+      "fdc_id": 172688,
+      "usda_description": "Bread, whole-wheat, commercially prepared",
+      "calories_per_100g": 252.0,
+      "protein_per_100g": 12.45,
+      "grams_per_unit": {
+        "slice": 32
+      },
+      "source_url": "https://fdc.nal.usda.gov/food-details/172688/nutrients",
+      "publication_date": "2019-04-01"
+    }
+  }
+}

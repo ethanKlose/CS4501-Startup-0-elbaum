@@ -41,7 +41,7 @@ def test_generate_plan_sends_capacity_and_feedback_and_parses():
     payload = json.loads(sent["messages"][0]["content"])
     assert payload["cook_capacity_minutes"]["2"] == 0 and payload["cook_capacity_minutes"]["-1"] == 150
     assert payload["feedback_from_previous_attempt"] == ["Missing lunch on Monday."]
-    assert sent["system"] == SYSTEM and sent["model"] == "test-model"
+    assert sent["system"].startswith(SYSTEM) and sent["model"] == "test-model"
     _, hard, soft = validate_full(out, c)
     assert hard == []
 

@@ -239,7 +239,11 @@ class AnthropicLLM:
         caps = capacities(ctx.days, ctx.prep_style, ctx.prep_days, ctx.prep_minutes, ctx.allow_pre_week)
         payload = {"context": asdict(ctx), "cook_capacity_minutes": {str(k): v for k, v in sorted(caps.items())},
                    "feedback_from_previous_attempt": list(feedback)}
-        return self._ask(SYSTEM, json.dumps(payload), 12000)
+        from app.services.nutrition import catalog_plan
+        payload['approved_recipes']=[{k:v for k,v in r.items() if k in {'name','slots','calories','protein','cost','cook_minutes'}} for r in RECIPES]
+        payload['required_slots']=[{'day':d.weekday,'slot':slot} for d in ctx.active_days() for slot in ctx.slots_for(d.weekday)]
+        prompt=SYSTEM+"\nSelect ONLY names from approved_recipes. Return {\"meals\":[{\"day\":0,\"slot\":\"breakfast\",\"name\":\"approved recipe name\"}]}. Do not generate nutrition, ingredients or instructions; the server supplies those. Cover required_slots exactly."
+        return catalog_plan(self._ask(prompt,json.dumps(payload),5000),ctx)
 
     def interpret_preferences(self, text: str) -> Dict:
         if not (text or "").strip():

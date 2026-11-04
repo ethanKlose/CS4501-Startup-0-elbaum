@@ -44,8 +44,8 @@ RECIPES: List[Dict] = [
     _r("Black bean breakfast burrito", [B], 12, 460, 18,
        [("flour tortilla", 1, "each", "bakery", 0.40), ("black beans", 0.25, "cup", "pantry", 0.30), ("rice", 0.25, "cup", "pantry", 0.15), ("salsa", 2, "tbsp", "pantry", 0.20)],
        ["Warm beans and rice.", "Fill tortilla, add salsa, and roll."]),
-    _r("Pea protein smoothie", [B], 3, 320, 28,
-       [("pea protein powder", 1, "scoop", "pantry", 1.00), ("banana", 1, "each", "produce", 0.30), ("spinach", 1, "cup", "produce", 0.40), ("soy milk", 1, "cup", "dairy", 0.45)],
+    _r("Soy protein smoothie", [B], 3, 320, 28,
+       [("soy protein powder", 1, "scoop", "pantry", 1.00), ("banana", 1, "each", "produce", 0.30), ("spinach", 1, "cup", "produce", 0.40), ("soy milk", 1, "cup", "dairy", 0.45)],
        ["Blend everything until smooth."]),
     # ---- lunch ----
     _r("Chicken and rice bowl", [L, D], 20, 580, 42,
@@ -185,3 +185,9 @@ RECIPES: List[Dict] = [
        [("sweet potato", 1, "each", "produce", 0.80), ("black beans", 0.5, "cup", "pantry", 0.50), ("bell pepper", 0.5, "each", "produce", 0.45), ("avocado", 0.5, "each", "produce", 0.80), ("olive oil", 1, "tbsp", "pantry", 0.15)],
        ["Dice and pan-fry sweet potato until tender.", "Add beans and pepper.", "Top with avocado."]),
 ]
+
+
+# Canonical nutrients are derived from ingredients, never the recipe author/LLM.
+from app.services.nutrition import calculate
+for _recipe in RECIPES:
+    _recipe['calories'], _recipe['protein'] = calculate(_recipe['ingredients'])
