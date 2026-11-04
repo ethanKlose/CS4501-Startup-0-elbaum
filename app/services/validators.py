@@ -11,7 +11,7 @@ from app.services.schema import parse_plan
 from app.services.types import SLOTS, WEEKDAYS, PlanContext
 
 
-HIGH_PROTEIN_DAILY_G = 90
+HIGH_PROTEIN_DAILY_G = 75
 
 
 def check_coverage(plan: dict, ctx: PlanContext) -> List[str]:

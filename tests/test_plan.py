@@ -250,3 +250,10 @@ def test_meal_cost_must_match_ingredients():
     raw["meals"][0]["cost"] = 0.01
     _, errors = validate_plan(raw, c)
     assert any("reports cost" in e for e in errors)
+
+
+@pytest.mark.parametrize("restrictions", [[], ["vegetarian"], ["vegan"], ["vegetarian", "gluten_free"]])
+def test_high_protein_is_feasible_for_common_diets(restrictions):
+    c = ctx(goal="high_protein", restrictions=restrictions)
+    plan, errors = validate_plan(FakeLLM().generate_plan(c), c)
+    assert errors == [], errors

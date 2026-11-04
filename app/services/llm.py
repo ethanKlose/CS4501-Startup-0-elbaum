@@ -19,6 +19,7 @@ from app.config import settings
 from app.services.catalog import RECIPES
 from app.services.diet import meal_violations
 from app.services.types import SLOTS, WEEKDAYS, PlanContext
+from app.services.validators import HIGH_PROTEIN_DAILY_G
 
 # ----------------------------------------------------------------------------- fake
 
@@ -122,7 +123,7 @@ class FakeLLM:
                 if target_cal:
                     val -= abs(cal - target_cal) / 120.0
                 if ctx.goal == "high_protein":
-                    val -= max(0.0, 100 - pro) / 8.0
+                    val -= max(0.0, HIGH_PROTEIN_DAILY_G + 15 - pro) / 8.0
                 if best_val is None or val > best_val:
                     best, best_val = combo, val
             if best is None:  # infeasible: return the cheapest/shortest anyway; validators will reject it

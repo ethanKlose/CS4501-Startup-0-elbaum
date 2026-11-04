@@ -118,4 +118,17 @@ RECIPES: List[Dict] = [
     _r("Loaded steak and potato plate", [D], 35, 820, 52,
        [("beef sirloin", 6, "oz", "meat", 4.20), ("potatoes", 2, "each", "produce", 0.70), ("butter", 1, "tbsp", "dairy", 0.20), ("green beans", 1, "cup", "produce", 0.80), ("olive oil", 1, "tbsp", "pantry", 0.15)],
        ["Roast potatoes 25 minutes.", "Sear steak 4 minutes per side.", "Saute green beans in butter."]),
+    # ---- extra high-protein vegetarian / vegan options ----
+    _r("Cottage cheese and fruit bowl", [B, L], 0, 300, 28,
+       [("cottage cheese", 1, "cup", "dairy", 1.20), ("peaches", 1, "each", "produce", 0.70), ("sunflower seeds", 1, "tbsp", "pantry", 0.20)],
+       ["Spoon cottage cheese into a bowl.", "Top with sliced fruit and seeds."]),
+    _r("Egg and black bean skillet", [B, D], 15, 480, 30,
+       [("eggs", 3, "each", "dairy", 0.90), ("black beans", 0.5, "cup", "pantry", 0.50), ("bell pepper", 0.5, "each", "produce", 0.45), ("salsa", 3, "tbsp", "pantry", 0.30), ("olive oil", 1, "tsp", "pantry", 0.10)],
+       ["Saute pepper and beans.", "Crack eggs on top and cover until set.", "Finish with salsa."]),
+    _r("Tempeh and vegetable stir-fry", [D], 20, 540, 34,
+       [("tempeh", 5, "oz", "produce", 1.90), ("broccoli", 1, "cup", "produce", 0.70), ("rice", 0.75, "cup", "pantry", 0.30), ("soy sauce", 1, "tbsp", "pantry", 0.10), ("garlic", 2, "clove", "produce", 0.10)],
+       ["Cook rice.", "Pan-fry cubed tempeh until golden.", "Stir-fry broccoli and garlic; combine with soy sauce."]),
+    _r("Lentil and tofu power bowl", [L, D], 25, 560, 38,
+       [("dry lentils", 0.5, "cup", "pantry", 0.50), ("firm tofu", 0.5, "block", "produce", 1.00), ("spinach", 2, "cup", "produce", 0.40), ("olive oil", 1, "tbsp", "pantry", 0.15), ("lemon", 0.5, "each", "produce", 0.20)],
+       ["Simmer lentils 20 minutes.", "Pan-fry cubed tofu.", "Serve over spinach with oil and lemon."]),
 ]

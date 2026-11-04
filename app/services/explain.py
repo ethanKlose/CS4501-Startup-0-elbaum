@@ -9,6 +9,7 @@ from typing import List
 from app.services.catalog import RECIPES
 from app.services.diet import meal_violations
 from app.services.types import SLOTS, WEEKDAYS, PlanContext
+from app.services.validators import HIGH_PROTEIN_DAILY_G
 
 
 def find_conflicts(ctx: PlanContext) -> List[str]:
@@ -57,7 +58,7 @@ def find_conflicts(ctx: PlanContext) -> List[str]:
                            f"(the most we can fit is about {hi}). Lower the target or add cooking time.")
             elif lo > ctx.calorie_target * 1.2:
                 out.append(f"A {ctx.calorie_target}-calorie target is below what we can build (minimum about {lo}/day). Raise the target.")
-        if ctx.goal == "high_protein" and best_pro and sum(best_pro.values()) / len(best_pro) < 90:
+        if ctx.goal == "high_protein" and best_pro and sum(best_pro.values()) / len(best_pro) < HIGH_PROTEIN_DAILY_G:
             out.append("A high-protein goal isn't reachable with your restrictions and cooking time. "
                        "Add cooking time, relax a restriction, or drop the goal.")
     return out
