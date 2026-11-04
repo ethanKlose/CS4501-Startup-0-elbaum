@@ -104,3 +104,37 @@ def test_page_has_section_headings(client):
     client.post("/plan/generate")
     page = client.get("/grocery").text
     assert 'data-section="produce"' in page and "<h2>Produce</h2>" in page
+
+
+def test_check_off_persists_across_reloads(client):
+    import re
+
+    signup(client)
+    client.post("/survey", data={"budget": "100"})
+    client.post("/plan/generate")
+    page = client.get("/grocery").text
+    keys = re.findall(r'data-key="([^"]+)"', page)
+    assert keys
+    n = len(keys)
+    assert client.post("/grocery/toggle", data={"key": keys[0], "checked": "true"}).status_code == 204
+    again = client.get("/grocery").text
+    assert f'data-key="{keys[0]}" checked' in again and f'<span id="remaining">{n - 1}</span>' in again
+    client.post("/grocery/toggle", data={"key": keys[0], "checked": "false"})  # uncheck
+    assert f'data-key="{keys[0]}" checked' not in client.get("/grocery").text
+
+
+def test_toggle_is_idempotent_and_per_user(client):
+    signup(client)
+    client.post("/survey", data={"budget": "100"})
+    client.post("/plan/generate")
+    for _ in range(2):
+        client.post("/grocery/toggle", data={"key": "rice|cup", "checked": "true"})
+    from app.models import GroceryCheck
+
+    with client.app.state.session_factory() as s:
+        assert s.query(GroceryCheck).count() == 1
+    client.post("/logout")
+    signup(client, "other@x.co")
+    client.post("/survey", data={"budget": "100"})
+    client.post("/plan/generate")
+    assert 'data-key="rice|cup" checked' not in client.get("/grocery").text

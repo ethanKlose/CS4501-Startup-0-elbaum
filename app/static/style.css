@@ -40,3 +40,5 @@ button.small { font-size:.8rem; margin:0; padding:0; }
 ul.grocery li { display:flex; gap:.75rem; align-items:center; padding:.4rem 0; border-bottom:1px solid var(--line); }
 .gname { flex:1; text-transform:capitalize; }
 .gsection h2 { font-size:1.05rem; color:var(--accent); margin:1.2rem 0 .2rem; }
+ul.grocery li.done .gname { text-decoration:line-through; color:var(--muted); }
+ul.grocery input[type=checkbox] { width:1.3rem; height:1.3rem; }

@@ -91,3 +91,13 @@ class Meal(Base):
     def as_dict(self) -> dict:
         return dict(day=self.day, slot=self.slot, name=self.name, cook_minutes=self.cook_minutes, calories=self.calories,
                     protein=self.protein, cost=self.cost, steps=self.steps, ingredients=self.ingredients)
+
+
+class GroceryCheck(Base):
+    """A row exists when the item (name|unit key) is checked off for that plan."""
+
+    __tablename__ = "grocery_checks"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    plan_id: Mapped[int] = mapped_column(ForeignKey("plans.id"), index=True)
+    key: Mapped[str] = mapped_column(String(200))

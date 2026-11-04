@@ -1,17 +1,31 @@
 {% extends "base.html" %}
-{% block title %}Grocery list · PlateJoy{% endblock %}
+{% block title %}Grocery list · PlateJoy<script>
+document.querySelectorAll('ul.grocery input[type=checkbox]').forEach(function (box) {
+  box.addEventListener('change', function () {
+    var li = box.closest('li');
+    li.classList.toggle('done', box.checked);
+    var left = document.querySelectorAll('ul.grocery input:not(:checked)').length;
+    document.getElementById('remaining').textContent = left;
+    fetch('/grocery/toggle', {method: 'POST', body: new URLSearchParams({key: box.dataset.key, checked: box.checked})})
+      .then(function (r) { if (!r.ok) throw new Error(); })
+      .catch(function () { box.checked = !box.checked; li.classList.toggle('done', box.checked); alert('Could not save — check your connection.'); });
+  });
+});
+</script>
+{% endblock %}
 {% block content %}
 <h1>Grocery list</h1>
 {% if not items %}
   <p class="muted">Generate a plan first, then your single shopping list shows up here.</p>
 {% else %}
-  <p class="totals">{{ items|length }} items · about <strong>${{ '%.2f' % total }}</strong></p>
+  <p class="totals">{{ items|length }} items · about <strong>${{ '%.2f' % total }}</strong> · <span id="remaining">{{ remaining }}</span> left to buy</p>
   {% for g in groups %}
   <section class="gsection" data-section="{{ g.section }}">
     <h2>{{ g.label }}</h2>
     <ul class="plain grocery">
       {% for it in g.entries %}
-      <li data-item="{{ it.name }}">
+      <li data-item="{{ it.name }}" class="{{ 'done' if it.key in checked else '' }}">
+        <input type="checkbox" aria-label="Got {{ it.name }}" data-key="{{ it.key }}" {{ 'checked' if it.key in checked }}>
         <span class="gname">{{ it.name }}</span>
         <span class="muted">{{ '%g' % it.quantity }} {{ it.unit }}</span>
         {% if it.have %}<small class="muted">(you have {{ it.have }})</small>{% endif %}
