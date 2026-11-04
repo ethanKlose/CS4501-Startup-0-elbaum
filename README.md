@@ -1,5 +1,7 @@
 # PlateJoy (alpha)
 
+Current work branch: `KS_Work`. See [HOW_TO_RUN_LOCALLY.md](HOW_TO_RUN_LOCALLY.md) for Windows commands, and [KS_WORK_IMPROVEMENTS.md](KS_WORK_IMPROVEMENTS.md) for the new feature and validation notes.
+
 LLM-driven weekly meal planning for UVA students. Every LLM-generated plan passes through validators
 (budget, restrictions, schedule, goal) and failures are fed back to the LLM to retry.
 
@@ -45,17 +47,17 @@ Demo login: `demo@platejoy.dev` / `demo-password` (or sign up).
 
 Survey prep options (style, preferred cook days, session length) feed the scheduler.
 
-New plans start next Monday, with a saved week-start date. Sunday prep is disabled when that Sunday is already today or in the past. Regenerate replaces the displayed future week; Plan next week advances to a new week and clears one-week eating-out skips. Old plans keep their own dates and cooking/rating history. A closed or completed meal cannot be swapped.
+Plans can start next Monday or cover the rest of the current week, with a saved week-start date. Sunday prep is disabled when that Sunday is already today or in the past. Regenerate replaces the displayed future week; Plan next week advances to a new week and clears one-week eating-out skips. Old plans keep their own dates and cooking/rating history. A closed or completed meal cannot be swapped.
 
-Grocery check-offs record the quantity actually purchased. At check-in, only those purchases count unless the user explicitly confirms buying the whole list. Settlement applies `current pantry + confirmed purchases - cooked ingredients` once. It never assumes that uncooked pantry stock was bought again. Unknown-quantity pantry entries remain unknown, and different units stay separate. Check-in closes cooking/status and shopping edits for that plan; feedback and ratings can still be edited. Replacing a plan also settles it, and a failed generation rolls the settlement back.
+Grocery check-offs record the quantity actually purchased. Check-offs capture whole package quantities, including surplus. At check-in, only those purchases count unless the user explicitly confirms buying the whole list. Settlement applies `current pantry + confirmed purchases - cooked ingredients` once. It never assumes that uncooked pantry stock was bought again. Unknown-quantity pantry entries remain unknown, and different units stay separate. Check-in closes cooking/status and shopping edits for that plan; feedback and ratings can still be edited. Replacing a plan also settles it, and a failed generation rolls the settlement back.
 
-The ledger and explicit week date live in the existing plan settings JSON; these fixes add no database columns. Desktop users can switch between Calendar and Agenda. The header identifies offline demo mode when no API key is configured.
+The inventory ledger and week date live in plan settings JSON. Alembic adopts existing alpha tables and adds separate preference/security tables without deleting accounts or plans. Desktop users can switch between Calendar and Agenda. The header identifies offline demo mode when no API key is configured.
 
 ## Features (GitHub issues #2-#27, #29-#32)
 Survey (budget, busy days/minutes, restrictions, goal, free text, pantry, edit later) - plan generation + verification -
 weekly calendar with a cooking plan (batch cooking) and meal detail - skip day / pin / regenerate / swap - consolidated grocery list
 (pantry-aware, grouped, check-offs) - cooked/skipped, ratings, weekly check-in, leftovers to pantry.
-Not in alpha: snack slot, Instacart (#28), migrations (Alembic), CSRF tokens, rate limiting.
+Not implemented: snack slots, live store-price feeds, Instacart checkout or automatic Google Calendar synchronization. Calendar export, Alembic migrations, CSRF protection and rate limits are implemented.
 
 ## Deploy
 `docker compose up --build` (SQLite lives in the `platejoy-data` volume). Any container host with a persistent
@@ -65,7 +67,7 @@ Check persistence before using it with real data: create a test account, run `do
 
 ## Layout
 `app/routers` HTTP routes · `app/services` planner, validators, LLM clients · `app/templates` UI · `tests/` pytest · `scripts/seed.py`.
-Alpha note: tables are created with `create_all` (no migrations yet). These fixes do not require a reset for an existing database compatible with the base alpha commit. `make reset` deletes the default local database; use it only when you intend to discard local data.
+Database migrations run on startup and from `python -m alembic upgrade head`. Existing compatible alpha tables are adopted non-destructively. `make reset` deletes the default local database; it is not an upgrade command.
 
 ## Browser smoke test
 Requires Node.js 20 or newer, in addition to the Python setup above.
@@ -79,3 +81,27 @@ make test-e2e
 The test starts its own local app with a disposable database and no API key. It covers onboarding, generation, recipe actions, exact pin preservation with the demo planner, blocked completed-meal swaps, day controls, failed grocery-save rollback, pantry editing, check-in, week advancement, theme, phone/tablet layouts, and login/logout. CI runs both pytest and this browser check. A failure screenshot is written to the ignored `test-results/` directory.
 
 See `START_HERE.md` for the downloadable repository instructions and `FIXES.md` for the commit map and validation results.
+
+
+## New student workflows
+
+- `/survey`: equipment, skill, dining-hall meals, cooking windows and meal times.
+- `/prices`: whole-package sizes, local receipt prices, provenance and observation dates. Built-ins remain demo estimates.
+- `/plans`: private plan history. Each plan can export `.ics`; import it into a calendar app. This is export, not autonomous two-way synchronization.
+- `/checkin`: settlement and an undo action for the latest plan. Undo rejects reversals that would require removing stock already used elsewhere.
+- `/forgot-password`: expiring single-use recovery links. Configure SMTP for delivery; local development uses a non-public `.local-mail` outbox.
+- `/feedback`: actual spending, planning time, baseline and usability results with optional numeric-export consent. See `USABILITY_STUDY.md`.
+
+## Live evaluation
+
+```bash
+# In the configured Python virtual environment:
+python -m scripts.evaluate_planner --output evals/offline-baseline.json
+python -m scripts.evaluate_planner --live --repeats 2 --output evals/live-results.json
+```
+
+The live command requires your own API key and may incur charges. An absent key produces an honest unavailable report and exit code 2. Costs remain unknown unless you supply evaluation-only per-million-token rates. No live results or human-study results are fabricated. See `DATA_SOURCES.md` for USDA nutrient provenance and measurement assumptions.
+
+## Production configuration
+
+Set `APP_ENV=production`, an unpredictable `SECRET_KEY` of at least 32 characters, and an HTTPS `PUBLIC_BASE_URL`. Cookies become secure and default secrets are rejected. Configure SMTP credentials for real password recovery. `scripts.seed` does not create a demo account in production. Keep secrets in `.env`/the host secret store, not Git. Container access logs are disabled to avoid recording recovery tokens in URL queries. SQLite serializes writes; migrate to PostgreSQL before a larger multi-user rollout and load-test the deployment.

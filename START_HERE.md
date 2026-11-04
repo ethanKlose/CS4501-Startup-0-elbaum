@@ -1,6 +1,8 @@
 # KS_LLM
 
-This is a complete clone of the PlateJoy `alpha-mvp` branch with the requested fixes committed on `ks/fixes`.
+This is a complete clone of the PlateJoy `alpha-mvp` branch with the requested fixes committed on `KS_Work`.
+
+For Windows setup, use [HOW_TO_RUN_LOCALLY.md](HOW_TO_RUN_LOCALLY.md). For applying this update to an existing checkout, use [APPLY_UPDATES.md](APPLY_UPDATES.md).
 
 ## Open on your Mac
 

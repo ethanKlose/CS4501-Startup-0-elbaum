@@ -1,5 +1,7 @@
 # KS_LLM fixes
 
+This records the earlier fix pass. See `KS_WORK_IMPROVEMENTS.md` for the subsequent feature work and final validation.
+
 Based on `alpha-mvp` at `263ef2b2fbc8628844d2a1ca3ab152027eec3817`.
 Work branch: `ks/fixes`. Each fix or enhancement has its own commit. Nothing was pushed to GitHub.
 

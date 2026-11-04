@@ -13,7 +13,7 @@ def main():
     settings.validate()
     init_db()
     if settings.production:
-        print("Production database migrated; demo account is disabled.")
+        print("Production database migrated; no demo account will be created.")
         return
     with SessionLocal() as db:
         if not db.scalar(select(User).where(User.email == DEMO_EMAIL)):

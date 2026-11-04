@@ -1,0 +1,6 @@
+{
+  "status": "unavailable",
+  "engine": "anthropic",
+  "reason": "ANTHROPIC_API_KEY is not configured",
+  "results": []
+}
