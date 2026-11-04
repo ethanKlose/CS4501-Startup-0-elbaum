@@ -27,8 +27,9 @@
 <div class="cal-top reveal">
   <div><h1>{{ week_title }}</h1><div class="row"><span class="chip brand">{{ icon('shield', 14) }} Verified plan</span><span class="muted tiny">Tap a meal for the recipe</span></div></div>
   <div class="row">
+    <a class="btn line" href="/plans/{{ plan.id }}/calendar.ics">Export calendar</a>
     <a class="btn line" href="/grocery">{{ icon('cart') }} Grocery list</a>
-    {% if not archived %}<form method="post" action="/plan/regenerate" class="inline" data-confirm="Replace the displayed plan? Pinned recipes stay. Cooking history is archived, confirmed purchases update your pantry, and the new plan starts with fresh check-offs." data-generate data-generate-title="Regenerating your week…"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    {% if not archived %}<form method="post" action="/plan/generate" class="inline" data-generate data-confirm="Replace this plan with meals for the rest of this week? Confirmed purchases update your pantry."><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="start_mode" value="today"><button class="btn line">Plan from today</button></form><form method="post" action="/plan/regenerate" class="inline" data-confirm="Replace the displayed plan? Pinned recipes stay. Cooking history is archived, confirmed purchases update your pantry, and the new plan starts with fresh check-offs." data-generate data-generate-title="Regenerating your week…"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <button class="btn primary">{{ icon('refresh') }} Regenerate week</button></form>
     <form method="post" action="/plan/next-week" class="inline" data-confirm="Start the following week? The current plan is archived and confirmed purchases update your pantry. The new week starts with all days active." data-generate data-generate-title="Planning next week…"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <button class="btn line">Plan next week</button></form>{% endif %}

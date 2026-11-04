@@ -95,3 +95,13 @@ def plan_history(request:Request,user=Depends(current_user_optional),db:Session=
     if user is None:return RedirectResponse('/login',303)
     plans=list(db.scalars(select(Plan).where(Plan.user_id==user.id).order_by(Plan.id.desc())))
     return render(request,'history.html',user,plans=plans,week_start=plan_week_start)
+
+
+@router.get('/plans/{plan_id}/calendar.ics')
+def export_calendar(plan_id:int,request:Request,user=Depends(current_user_optional),db:Session=Depends(get_db)):
+    from fastapi import Response
+    from app.services.calendar_export import export
+    if user is None:return RedirectResponse('/login',303)
+    plan=db.get(Plan,plan_id)
+    if not plan or plan.user_id!=user.id:raise HTTPException(404,'Plan not found')
+    return Response(export(plan),media_type='text/calendar',headers={'Content-Disposition':f'attachment; filename="platejoy-plan-{plan.id}.ics"'})
