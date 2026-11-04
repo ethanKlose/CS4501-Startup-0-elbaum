@@ -33,3 +33,4 @@ table.plan th, table.plan td { border:1px solid var(--line); padding:.4rem .6rem
 .mname { font-weight:600; line-height:1.25; }
 @media (max-width: 900px) { .calendar { grid-template-columns:repeat(2, minmax(0,1fr)); } }
 @media (max-width: 520px) { .calendar { grid-template-columns:1fr; } }
+.prep { background:color-mix(in srgb, var(--accent) 14%, var(--card)); border:1px dashed var(--accent); border-radius:6px; padding:.4rem; font-size:.9rem; }

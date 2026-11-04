@@ -65,6 +65,7 @@ class Plan(Base):
     budget: Mapped[float] = mapped_column(default=0)
     total_cost: Mapped[float] = mapped_column(default=0)
     seed: Mapped[int] = mapped_column(default=0)
+    days: Mapped[list] = mapped_column(JSON, default=list)  # snapshot of per-day availability: weekday/minutes/busy/skipped
 
     meals = relationship("Meal", back_populates="plan", cascade="all, delete-orphan", order_by="Meal.day, Meal.id")
 

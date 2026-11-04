@@ -7,6 +7,7 @@ from app.deps import current_user_optional, render
 from app.routers.survey import get_profile
 from app.services import planner
 from app.services.analysis import sharing_stats
+from app.services.prep import prep_blocks
 from app.services.types import SLOTS, WEEKDAYS
 
 router = APIRouter()
@@ -22,5 +23,6 @@ def home(request: Request, user=Depends(current_user_optional), db: Session = De
         return RedirectResponse("/survey", 303)
     plan = planner.latest_plan(db, user)
     error = request.session.pop("flash_error", None)
+    prep = prep_blocks([m.as_dict() for m in plan.meals], plan.days) if plan and plan.status == "ok" else []
     sharing = sharing_stats(m.as_dict() for m in plan.meals) if plan and plan.status == "ok" else None
-    return render(request, "home.html", user, profile=profile, plan=plan, error=error, weekdays=WEEKDAYS, slots=SLOTS, sharing=sharing)
+    return render(request, "home.html", user, profile=profile, plan=plan, error=error, weekdays=WEEKDAYS, slots=SLOTS, sharing=sharing, prep={b["day"]: b for b in prep})

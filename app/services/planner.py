@@ -1,5 +1,6 @@
 """Builds the PlanContext from the user's saved answers, asks the LLM, validates, and saves."""
 import random
+from dataclasses import asdict
 from typing import Optional
 
 from sqlalchemy import select
@@ -50,7 +51,8 @@ def build_context(db: Session, user: User, llm, seed: int = 0) -> PlanContext:
 
 
 def save_plan(db: Session, user: User, ctx: PlanContext, plan_dict: dict, attempts: int) -> Plan:
-    plan = Plan(user_id=user.id, status="ok", attempts=attempts, budget=ctx.budget, seed=ctx.seed)
+    plan = Plan(user_id=user.id, status="ok", attempts=attempts, budget=ctx.budget, seed=ctx.seed,
+                days=[asdict(d) for d in ctx.days])
     total = 0.0
     for m in sorted(plan_dict["meals"], key=lambda x: (x["day"], ["breakfast", "lunch", "dinner"].index(x["slot"]))):
         cost = round(sum(i["cost"] for i in m["ingredients"]), 2)

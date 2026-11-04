@@ -14,6 +14,8 @@
   {% for day in range(7) %}
   <section class="day" aria-labelledby="day-{{ day }}">
     <h2 id="day-{{ day }}">{{ weekdays[day] }}</h2>
+    {% if prep.get(day) %}<div class="prep" data-testid="prep-block"><strong>Prep · {{ prep[day].minutes }} min</strong><br>
+      <small>For {{ prep[day].meals|join(', ') }}</small></div>{% endif %}
     {% for slot in slots %}
       {% for m in plan.meals if m.day == day and m.slot == slot %}
       <div class="meal">
