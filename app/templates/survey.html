@@ -121,6 +121,14 @@
       <button class="btn soft">Add</button>
     </form>
   </section>
+<section class="card pad-lg" id="lifestyle" style="margin-top:20px"><h2>Your kitchen and campus meals</h2>
+<form method="post" action="/preferences/lifestyle"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<p>Available equipment</p><div class="chips">{% for key,label in equipment_options.items() %}<label class="chipcheck"><input type="checkbox" name="equipment" value="{{ key }}" {{ 'checked' if key in lifestyle.get('equipment',equipment_options.keys()) }}><span>{{ label }}</span></label>{% endfor %}</div>
+<label>Cooking skill<select name="cooking_skill"><option value="any">Comfortable with any recipe</option><option value="beginner" {{ 'selected' if lifestyle.get('cooking_skill') == 'beginner' }}>Beginner - recipes up to 25 minutes</option></select></label>
+<p>Meals already covered by a dining hall or eating out are excluded from recipes and shopping. Nutrition totals cover only meals planned here.</p>
+{% for d in range(7) %}<div class="row"><strong>{{ weekdays[d] }}</strong>{% for slot in ['breakfast','lunch','dinner'] %}{% set ns=namespace(selected=false) %}{% for m in lifestyle.get('external_slots',[]) %}{% if m.day == d and m.slot == slot %}{% set ns.selected=true %}{% endif %}{% endfor %}<label class="check"><input type="checkbox" name="external_{{ d }}_{{ slot }}" {{ 'checked' if ns.selected }}>{{ slot|capitalize }}</label>{% endfor %}</div>{% endfor %}
+<button class="btn primary" style="margin-top:12px">Save kitchen and campus meals</button></form></section>
+
 </div>
 
 <aside class="wiz-side">

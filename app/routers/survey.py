@@ -9,6 +9,8 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.deps import current_user, render
 from app.services.llm import get_llm
+from app.services.preferences import get_preferences,save_preferences
+from app.services.lifestyle import EQUIPMENT
 from app.services.schedule import PREP_STYLES
 from app.models import DaySetting, PantryItem, Profile, User
 
@@ -217,7 +219,7 @@ def field_values(profile: Profile, days, form=None) -> dict:
 def survey_context(db, user):
     pantry = list(db.scalars(select(PantryItem).where(PantryItem.user_id == user.id).order_by(PantryItem.name)))
     profile, days = get_profile(db, user), get_days(db, user)
-    return dict(pantry=pantry, profile=profile, days=days, understood=understood(profile, days), weekdays=WEEKDAYS, restriction_options=RESTRICTIONS, goal_options=GOALS, prep_styles=PREP_STYLES)
+    return dict(lifestyle=get_preferences(db,user.id), equipment_options=EQUIPMENT, pantry=pantry, profile=profile, days=days, understood=understood(profile, days), weekdays=WEEKDAYS, restriction_options=RESTRICTIONS, goal_options=GOALS, prep_styles=PREP_STYLES)
 
 
 @router.post("/survey")

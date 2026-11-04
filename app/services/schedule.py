@@ -109,13 +109,13 @@ def _slot_idx(m: dict) -> Tuple[int, int]:
 
 
 def schedule(meals: Sequence[dict], caps: Dict[int, int], style: str = "auto", prep_days: Iterable[int] = (),
-             busy: Iterable[int] = (), earliest_day: int = PRE_WEEK) -> Schedule:
+             busy: Iterable[int] = (), earliest_day: int = PRE_WEEK, allow_freezer: bool = True) -> Schedule:
     """Try a few deterministic strategies and keep the one with the least overbooking, then the fewest cook days."""
     prep_days, busy = list(prep_days), list(busy)
     best = None
     for order in ("tight", "early"):
         for consolidate in (100.0, 20.0):
-            cand = _build(meals, caps, style, prep_days, busy, order, consolidate, earliest_day)
+            cand = _build(meals, caps, style, prep_days, busy, order, consolidate, earliest_day, allow_freezer)
             over = sum(u - cand.caps.get(c, 0) for c, u in cand.used.items() if u > cand.caps.get(c, 0))
             key = (len(deadline_errors(cand.sessions)), over, len(cand.used))
             if best is None or key < best[0]:
@@ -124,7 +124,7 @@ def schedule(meals: Sequence[dict], caps: Dict[int, int], style: str = "auto", p
 
 
 def _build(meals: Sequence[dict], caps: Dict[int, int], style: str, prep_days: Iterable[int], busy: Iterable[int],
-           order: str, consolidate: float, earliest_day: int) -> Schedule:
+           order: str, consolidate: float, earliest_day: int, allow_freezer: bool) -> Schedule:
     prefs = set(prep_days) | ({PRE_WEEK} if 6 in set(prep_days) else set())
     busy = set(busy)
     remaining = dict(caps)
@@ -151,7 +151,7 @@ def _build(meals: Sequence[dict], caps: Dict[int, int], style: str, prep_days: I
         rep = members[0]
         base = max(m["cook_minutes"] for m in members)
         fridge, can_freeze = storage_days(rep), freezable(rep)
-        reach = FREEZER_DAYS if (can_freeze and style != "daily") else fridge
+        reach = FREEZER_DAYS if (can_freeze and allow_freezer and style != "daily") else fridge
         if style == "daily":
             reach = 0
         pending = list(members)

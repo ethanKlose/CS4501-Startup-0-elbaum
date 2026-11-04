@@ -36,7 +36,19 @@ class PlanContext:
     prep_minutes: int = 120
     week_start: Optional[str] = None
     allow_pre_week: bool = True
+    equipment: Optional[List[str]] = None
+    cooking_skill: str = "any"
+    allow_freezer: bool = True
+    external_slots: List[Dict] = field(default_factory=list)
+    cooking_windows: Dict = field(default_factory=dict)
+    meal_times: Dict = field(default_factory=dict)
+    earliest_day: int = -1
+    earliest_minute: int = 0
     seed: int = 0
 
     def active_days(self) -> List[DayCtx]:
         return [d for d in self.days if not d.skipped]
+
+    def slots_for(self, weekday):
+        external={(m['day'],m['slot']) for m in self.external_slots}
+        return [s for s in SLOTS if (weekday,s) not in external]

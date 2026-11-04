@@ -18,6 +18,7 @@ from typing import Dict, List
 from app.config import settings
 from app.services.catalog import RECIPES
 from app.services.diet import meal_violations
+from app.services.lifestyle import violations as lifestyle_violations
 from app.services.schedule import capacities, storage_days
 from app.services.types import SLOTS, WEEKDAYS, PlanContext
 from app.services.validators import HIGH_PROTEIN_DAILY_G, SOFT_CHECKS, schedule_for
@@ -92,7 +93,7 @@ class FakeLLM:
         leftovers = {x.lower() for x in ctx.leftovers}
         allowed = [
             r for r in RECIPES
-            if not meal_violations(r, ctx.restrictions, ctx.excluded) and r["name"] not in ctx.disliked
+            if not meal_violations(r, ctx.restrictions, ctx.excluded) and not lifestyle_violations(r,ctx) and r["name"] not in ctx.disliked
         ]
         min_cost = {s: min([r["cost"] for r in allowed if s in r["slots"]] or [0]) for s in SLOTS}
 
@@ -102,7 +103,7 @@ class FakeLLM:
         for m in meals:
             used.update(i["name"].lower() for i in m["ingredients"])
         spent = sum(m["cost"] for m in meals)
-        open_slots = [(d.weekday, s) for d in ctx.active_days() for s in SLOTS if (d.weekday, s) not in pinned]
+        open_slots = [(d.weekday, s) for d in ctx.active_days() for s in ctx.slots_for(d.weekday) if (d.weekday, s) not in pinned]
         slots_left = len(open_slots)
         target_cal = ctx.calorie_target
 
@@ -119,7 +120,7 @@ class FakeLLM:
                 so_far = sum(m["calories"] for m in meals if m["day"] != day.weekday)
                 gap = (target_cal * n_done - so_far) / max(len(active) - n_done, 1)
                 day_target = target_cal + max(-300, min(300, gap))
-            open_today = [s for s in SLOTS if (day.weekday, s) not in pinned]
+            open_today = [s for s in ctx.slots_for(day.weekday) if (day.weekday, s) not in pinned]
             if not open_today:
                 continue
             future = slots_left - len(open_today)

@@ -14,6 +14,7 @@ from app.services.schedule import capacities, schedule
 from app.services.types import DayCtx, PlanContext
 from app.services import inventory
 from app.services.locking import lock_user
+from app.services.preferences import get_preferences
 from app.services.weeks import plan_week_start, planning_today, target_week
 from app.services.validators import SOFT_CHECKS, schedule_for, validate_full
 
@@ -80,10 +81,15 @@ def build_context(db: Session, user: User, llm, seed: int = 0, week_start=None) 
             # keep pins only if still valid for the current diet and day plan
             if m.pinned and m.day not in prev_skipped and not meal_violations(d, profile.restrictions or [], interp.get("excluded", [])):
                 pinned.append(d)
+    lifestyle = get_preferences(db,user.id)
     pantry = [dict(name=p.name, quantity=p.quantity, unit=p.unit)
               for p in db.scalars(select(PantryItem).where(PantryItem.user_id == user.id))]
     return PlanContext(
-        budget=profile.budget, days=day_ctx, restrictions=list(profile.restrictions or []),
+        budget=profile.budget, days=day_ctx,
+        equipment=lifestyle.get('equipment'), cooking_skill=lifestyle.get('cooking_skill','any'),
+        allow_freezer='freezer' in lifestyle.get('equipment',['freezer']),
+        external_slots=list(lifestyle.get('external_slots',[])), cooking_windows=dict(lifestyle.get('cooking_windows',{})),
+        meal_times=dict(lifestyle.get('meal_times',{})), restrictions=list(profile.restrictions or []),
         excluded=list(interp.get("excluded", [])), goal=profile.goal, calorie_target=profile.calorie_target,
         free_text=profile.free_text, pantry=pantry, pinned=pinned, liked=liked, disliked=disliked, avoid=avoid, leftovers=list(checkin.leftovers or []) if checkin else [],
         week_start=week_start.isoformat(), allow_pre_week=(week_start - dt.timedelta(days=1)) > planning_today(),
@@ -93,7 +99,8 @@ def build_context(db: Session, user: User, llm, seed: int = 0, week_start=None) 
 
 def plan_settings(ctx: PlanContext) -> dict:
     return dict(prep_style=ctx.prep_style, prep_days=list(ctx.prep_days), prep_minutes=ctx.prep_minutes,
-                goal=ctx.goal, calorie_target=ctx.calorie_target, week_start=ctx.week_start, allow_pre_week=ctx.allow_pre_week)
+                goal=ctx.goal, calorie_target=ctx.calorie_target, equipment=ctx.equipment, cooking_skill=ctx.cooking_skill,
+                allow_freezer=ctx.allow_freezer, external_slots=ctx.external_slots, cooking_windows=ctx.cooking_windows, meal_times=ctx.meal_times, week_start=ctx.week_start, allow_pre_week=ctx.allow_pre_week)
 
 
 def save_plan(db: Session, user: User, ctx: PlanContext, plan_dict: dict, attempts: int, warnings=()) -> Plan:
@@ -122,6 +129,8 @@ def plan_ctx(plan: Plan) -> PlanContext:
     return PlanContext(budget=plan.budget, days=[DayCtx(d["weekday"], d["minutes"], d.get("busy", False), d.get("skipped", False)) for d in plan.days],
                        goal=st.get("goal", "none"), calorie_target=st.get("calorie_target"), prep_style=st.get("prep_style", "auto"),
                        prep_days=st.get("prep_days", []), prep_minutes=st.get("prep_minutes", 120),
+                       equipment=st.get('equipment'), cooking_skill=st.get('cooking_skill','any'), allow_freezer=st.get('allow_freezer',True),
+                       external_slots=st.get('external_slots',[]), cooking_windows=st.get('cooking_windows',{}), meal_times=st.get('meal_times',{}),
                        week_start=st.get("week_start"), allow_pre_week=st.get("allow_pre_week", True))
 
 

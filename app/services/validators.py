@@ -7,6 +7,7 @@ from collections import Counter
 from typing import List
 
 from app.services.diet import meal_violations
+from app.services.lifestyle import violations as lifestyle_violations
 from app.services.schedule import Schedule, capacities, overbook_messages, schedule
 from app.services.schema import MealIn, parse_plan
 from app.services.types import SLOTS, WEEKDAYS, PlanContext
@@ -22,10 +23,11 @@ def check_coverage(plan: dict, ctx: PlanContext) -> List[str]:
     for d in ctx.days:
         for slot in SLOTS:
             n = seen.get((d.weekday, slot), 0)
-            if d.skipped and n:
+            external=slot not in ctx.slots_for(d.weekday)
+            if (d.skipped or external) and n:
                 errors.append(f"{WEEKDAYS[d.weekday]} is marked as skipped; remove its meals.")
                 break
-            if not d.skipped and n == 0:
+            if not d.skipped and not external and n == 0:
                 errors.append(f"Missing {slot} on {WEEKDAYS[d.weekday]}.")
             if n > 1:
                 errors.append(f"More than one {slot} on {WEEKDAYS[d.weekday]}.")
@@ -49,12 +51,13 @@ def check_diet(plan: dict, ctx: PlanContext) -> List[str]:
     errors: List[str] = []
     for m in plan["meals"]:
         errors.extend(meal_violations(m, ctx.restrictions, ctx.excluded))
+        errors.extend(lifestyle_violations(m,ctx))
     return errors[:15]
 
 
 def schedule_for(plan: dict, ctx: PlanContext) -> Schedule:
     caps = capacities(ctx.days, ctx.prep_style, ctx.prep_days, ctx.prep_minutes, ctx.allow_pre_week)
-    return schedule(plan["meals"], caps, ctx.prep_style, ctx.prep_days, [d.weekday for d in ctx.days if d.busy], earliest_day=-1 if ctx.allow_pre_week else 0)
+    return schedule(plan["meals"], caps, ctx.prep_style, ctx.prep_days, [d.weekday for d in ctx.days if d.busy], earliest_day=-1 if ctx.allow_pre_week else 0, allow_freezer=ctx.allow_freezer)
 
 
 def check_schedule(plan: dict, ctx: PlanContext) -> List[str]:
@@ -80,6 +83,8 @@ def check_goal(plan: dict, ctx: PlanContext) -> List[str]:
         d["pro"] += m["protein"]
     if not days:
         return errors
+    if ctx.external_slots and ctx.goal != "none":
+        return ["Nutrition totals exclude meals eaten elsewhere; full-day nutrition goals cannot be verified."]
     if ctx.goal == "calorie_target" and ctx.calorie_target:
         t = ctx.calorie_target
         avg = sum(v["cal"] for v in days.values()) / len(days)
