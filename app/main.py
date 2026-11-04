@@ -9,7 +9,7 @@ from app.config import settings
 from app.web_security import CSRFProtection
 from app.db import init_db
 from app.deps import LoginRequired
-from app.routers import prices, lifestyle, recovery, auth, checkin, grocery, pages, plan, survey
+from app.routers import feedback, prices, lifestyle, recovery, auth, checkin, grocery, pages, plan, survey
 from fastapi.responses import RedirectResponse
 
 BASE = Path(__file__).parent
@@ -36,6 +36,7 @@ def create_app() -> FastAPI:
     app.include_router(recovery.router)
     app.include_router(lifestyle.router)
     app.include_router(prices.router)
+    app.include_router(feedback.router)
     app.include_router(pages.router)
     app.include_router(survey.router)
     app.include_router(plan.router)

@@ -2,7 +2,7 @@
 {% from "_icons.html" import icon %}
 {% block title %}Weekly check-in · PlateJoy{% endblock %}
 {% block content %}
-<div class="page-head reveal"><div><h1>Weekly check-in</h1><p class="muted" style="margin:0">One minute. Next week’s plan learns from how this one went.</p></div></div>
+<div class="page-head reveal"><div><h1>Weekly check-in</h1><a href="/feedback">Share spending and usability feedback</a><p class="muted" style="margin:0">One minute. Next week’s plan learns from how this one went.</p></div></div>
 {% if not plan or plan.status != 'ok' %}
   <section class="empty card"><div class="plate big" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
     <h2>Nothing to check in on yet</h2><p class="muted">Generate a plan first, then check in at the end of the week.</p>
