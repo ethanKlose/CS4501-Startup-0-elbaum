@@ -1,13 +1,13 @@
 from typing import Dict, List, Optional
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.deps import current_user, render
-from app.models import DaySetting, Profile, User
+from app.models import DaySetting, PantryItem, Profile, User
 
 router = APIRouter()
 
@@ -140,11 +140,12 @@ APPLIERS = [apply_budget, apply_days, apply_restrictions, apply_goal, apply_free
 def survey_form(request: Request, user: User = Depends(current_user), db: Session = Depends(get_db)):
     ctx = survey_context(db, user)
     db.commit()
-    return render(request, "survey.html", user, errors={}, saved=request.query_params.get("saved"), **ctx)
+    return render(request, "survey.html", user, errors={}, saved=request.query_params.get("saved"), pantry_error=request.query_params.get("pantry_error"), **ctx)
 
 
 def survey_context(db, user):
-    return dict(profile=get_profile(db, user), days=get_days(db, user), weekdays=WEEKDAYS, restriction_options=RESTRICTIONS, goal_options=GOALS)
+    pantry = list(db.scalars(select(PantryItem).where(PantryItem.user_id == user.id).order_by(PantryItem.name)))
+    return dict(pantry=pantry, profile=get_profile(db, user), days=get_days(db, user), weekdays=WEEKDAYS, restriction_options=RESTRICTIONS, goal_options=GOALS)
 
 
 @router.post("/survey")
@@ -161,3 +162,41 @@ async def survey_submit(request: Request, user: User = Depends(current_user), db
         return render(request, "survey.html", user, 400, errors=errors, form=dict(form), form_restrictions=form.getlist("restrictions"), **ctx)
     db.commit()
     return RedirectResponse("/survey?saved=1", 303)
+
+
+@router.post("/pantry/add")
+def pantry_add(
+    request: Request,
+    name: str = Form(""),
+    quantity: str = Form(""),
+    unit: str = Form(""),
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    name = name.strip().lower()
+    if not name or len(name) > 100:
+        return RedirectResponse("/survey?pantry_error=Enter+an+item+name", 303)
+    qty = None
+    if quantity.strip():
+        try:
+            qty = float(quantity)
+        except ValueError:
+            qty = -1
+        if qty < 0 or qty != qty:
+            return RedirectResponse("/survey?pantry_error=Quantity+must+be+a+positive+number", 303)
+    existing = db.scalar(select(PantryItem).where(PantryItem.user_id == user.id, PantryItem.name == name))
+    if existing:
+        existing.quantity, existing.unit = qty, unit.strip()[:20]
+    else:
+        db.add(PantryItem(user_id=user.id, name=name, quantity=qty, unit=unit.strip()[:20]))
+    db.commit()
+    return RedirectResponse("/survey#pantry", 303)
+
+
+@router.post("/pantry/{item_id}/delete")
+def pantry_delete(item_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    item = db.get(PantryItem, item_id)
+    if item and item.user_id == user.id:
+        db.delete(item)
+        db.commit()
+    return RedirectResponse("/survey#pantry", 303)

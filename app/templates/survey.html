@@ -1,5 +1,22 @@
 {% extends "base.html" %}
-{% block title %}Survey · PlateJoy{% endblock %}
+{% block title %}Survey · PlateJoy<section class="card" id="pantry" style="max-width:640px">
+  <h2>Pantry <span class="muted">(optional)</span></h2>
+  <p class="muted">What you already have. Plans will use these first and your grocery list will skip them.</p>
+  {% if pantry_error %}<p class="error" role="alert">{{ pantry_error }}</p>{% endif %}
+  <ul class="plain">
+    {% for item in pantry %}
+    <li>{{ item.name }}{% if item.quantity is not none %} — {{ '%g' % item.quantity }} {{ item.unit }}{% endif %}
+      <form method="post" action="/pantry/{{ item.id }}/delete" class="inline"><button class="link" aria-label="Remove {{ item.name }}">remove</button></form></li>
+    {% else %}<li class="muted">Nothing yet.</li>{% endfor %}
+  </ul>
+  <form method="post" action="/pantry/add" class="row">
+    <input name="name" placeholder="item (e.g. rice)" required aria-label="Item name">
+    <input name="quantity" type="number" step="any" min="0" placeholder="qty" style="width:5rem" aria-label="Quantity">
+    <input name="unit" placeholder="unit" style="width:5rem" aria-label="Unit">
+    <button>Add</button>
+  </form>
+</section>
+{% endblock %}
 {% block content %}
 <h1>Your survey</h1>
 {% if saved %}<p class="ok" role="status">Saved.</p>{% endif %}

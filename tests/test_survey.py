@@ -130,3 +130,43 @@ def test_free_text_saved_and_trimmed(client):
 def test_free_text_too_long(client):
     signup(client)
     assert client.post("/survey", data={"free_text": "x" * 501}).status_code == 400
+
+
+def pantry(client):
+    from app.models import PantryItem
+
+    with client.app.state.session_factory() as s:
+        return s.query(PantryItem).all()
+
+
+def test_pantry_add_remove(client):
+    signup(client)
+    client.post("/pantry/add", data={"name": " Rice ", "quantity": "2", "unit": "lb"})
+    client.post("/pantry/add", data={"name": "salt"})
+    items = pantry(client)
+    assert {i.name for i in items} == {"rice", "salt"}
+    assert "rice — 2 lb" in client.get("/survey").text
+    rice = next(i for i in items if i.name == "rice")
+    client.post(f"/pantry/{rice.id}/delete")
+    assert {i.name for i in pantry(client)} == {"salt"}
+
+
+def test_pantry_rejects_bad_input_and_dedupes(client):
+    signup(client)
+    client.post("/pantry/add", data={"name": ""})
+    client.post("/pantry/add", data={"name": "rice", "quantity": "-3"})
+    assert pantry(client) == []
+    client.post("/pantry/add", data={"name": "rice", "quantity": "1"})
+    client.post("/pantry/add", data={"name": "rice", "quantity": "5"})
+    items = pantry(client)
+    assert len(items) == 1 and items[0].quantity == 5
+
+
+def test_cannot_delete_other_users_pantry_item(client):
+    signup(client, "a@b.co")
+    client.post("/pantry/add", data={"name": "rice"})
+    item_id = pantry(client)[0].id
+    client.post("/logout")
+    signup(client, "c@d.co")
+    client.post(f"/pantry/{item_id}/delete")
+    assert len(pantry(client)) == 1

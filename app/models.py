@@ -40,3 +40,13 @@ class DaySetting(Base):
     weekday: Mapped[int]
     busy: Mapped[bool] = mapped_column(default=False)
     minutes: Mapped[int] = mapped_column(default=45)
+
+
+class PantryItem(Base):
+    __tablename__ = "pantry_items"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    name: Mapped[str] = mapped_column(String(100))  # stored lowercase
+    quantity: Mapped[Optional[float]] = mapped_column(default=None)
+    unit: Mapped[str] = mapped_column(String(20), default="")

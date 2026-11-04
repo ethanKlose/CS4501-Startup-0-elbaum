@@ -21,3 +21,5 @@ fieldset { border:1px solid var(--line); border-radius:8px; display:flex; flex-d
 legend { font-weight:700; padding:0 .4rem; }
 .dayrow { display:flex; align-items:center; gap:1rem; flex-wrap:wrap; }
 .dayname { width:6.5rem; font-weight:600; }
+ul.plain { list-style:none; padding:0; margin:0; }
+.row { display:flex; gap:.5rem; flex-wrap:wrap; }
