@@ -99,11 +99,13 @@ class FakeLLM:
                 s += rng.random() * 1.2
                 if ctx.goal == "high_protein":
                     s += r["protein"] / 15
+                if target_cal:
+                    s -= abs(r["calories"] - target_cal / 3.0) / 100.0
                 return s - 0.25 * r["cost"]
 
             cands = []
             for slot in open_today:
-                pool = sorted((r for r in allowed if slot in r["slots"]), key=score, reverse=True)[:7]
+                pool = sorted((r for r in allowed if slot in r["slots"]), key=score, reverse=True)[:8]
                 cands.append(pool)
             best, best_val = None, None
             base_cal = sum(m["calories"] for m in todays)

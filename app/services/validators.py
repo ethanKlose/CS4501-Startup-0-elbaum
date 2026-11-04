@@ -6,8 +6,12 @@ on retry, and (summarized) shown to the user if retries run out.
 from collections import Counter
 from typing import List
 
+from app.services.diet import meal_violations
 from app.services.schema import parse_plan
 from app.services.types import SLOTS, WEEKDAYS, PlanContext
+
+
+HIGH_PROTEIN_DAILY_G = 90
 
 
 def check_coverage(plan: dict, ctx: PlanContext) -> List[str]:
@@ -38,7 +42,47 @@ def check_budget(plan: dict, ctx: PlanContext) -> List[str]:
     return []
 
 
-CHECKS = [check_coverage, check_budget]
+def check_diet(plan: dict, ctx: PlanContext) -> List[str]:
+    """Every meal vs. selected restrictions/allergies AND ingredients extracted from free-text requests."""
+    errors: List[str] = []
+    for m in plan["meals"]:
+        errors.extend(meal_violations(m, ctx.restrictions, ctx.excluded))
+    return errors[:15]
+
+
+def check_time(plan: dict, ctx: PlanContext) -> List[str]:
+    errors = []
+    by_day = Counter()
+    for m in plan["meals"]:
+        by_day[m["day"]] += m["cook_minutes"]
+    for d in ctx.days:
+        if by_day[d.weekday] > d.minutes:
+            errors.append(f"{WEEKDAYS[d.weekday]} needs {by_day[d.weekday]} cooking minutes but only {d.minutes} are available.")
+    return errors
+
+
+def check_goal(plan: dict, ctx: PlanContext) -> List[str]:
+    errors = []
+    days = {}
+    for m in plan["meals"]:
+        d = days.setdefault(m["day"], {"cal": 0, "pro": 0.0})
+        d["cal"] += m["calories"]
+        d["pro"] += m["protein"]
+    if not days:
+        return errors
+    if ctx.goal == "calorie_target" and ctx.calorie_target:
+        lo, hi = ctx.calorie_target * 0.8, ctx.calorie_target * 1.2
+        for day, v in sorted(days.items()):
+            if not lo <= v["cal"] <= hi:
+                errors.append(f"{WEEKDAYS[day]} has {v['cal']} calories; the target is {ctx.calorie_target} (+/-20%).")
+    if ctx.goal == "high_protein":
+        avg = sum(v["pro"] for v in days.values()) / len(days)
+        if avg < HIGH_PROTEIN_DAILY_G:
+            errors.append(f"Average protein is {avg:.0f}g/day; a high-protein goal needs at least {HIGH_PROTEIN_DAILY_G}g/day.")
+    return errors
+
+
+CHECKS = [check_coverage, check_time, check_budget, check_diet, check_goal]
 
 
 def validate_plan(raw, ctx: PlanContext):

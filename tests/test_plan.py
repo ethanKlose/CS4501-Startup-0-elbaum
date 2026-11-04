@@ -7,7 +7,7 @@ from tests.helpers import signup
 
 
 def ctx(**kw):
-    base = dict(budget=100.0, days=[DayCtx(i, 60) for i in range(7)])
+    base = dict(budget=100.0, days=[DayCtx(i, 45) for i in range(7)])
     base.update(kw)
     return PlanContext(**base)
 
@@ -123,3 +123,79 @@ def test_budget_is_a_hard_limit_for_real_fake_llm(client):
     client.post("/plan/generate")
     for p in plans(client):
         assert p.total_cost <= 30
+
+
+from app.services.validators import validate_plan  # noqa: E402
+
+
+@pytest.mark.parametrize("restrictions", [["vegan"], ["vegetarian"], ["gluten_free"], ["dairy_free"], ["nut_allergy"],
+                                          ["shellfish_allergy"], ["egg_free"], ["halal"], ["vegan", "gluten_free", "nut_allergy"]])
+def test_fake_llm_respects_every_restriction(restrictions):
+    c = ctx(restrictions=restrictions)
+    plan, errors = validate_plan(FakeLLM().generate_plan(c), c)
+    assert errors == [], errors
+
+
+def test_validator_catches_violating_meal():
+    c = ctx(restrictions=["vegetarian"])
+    raw = FakeLLM().generate_plan(c)
+    raw["meals"][3]["ingredients"].append(dict(name="chicken breast", quantity=4, unit="oz", section="meat", cost=1.0))
+    plan, errors = validate_plan(raw, c)
+    assert any("violates 'vegetarian'" in e for e in errors)
+
+
+def test_free_text_is_interpreted():
+    out = FakeLLM().interpret_preferences("no fish, I hate cooking on Mondays")
+    assert out["excluded"] == ["fish"] and out["day_minutes_cap"] == {"0": 15}
+    out = FakeLLM().interpret_preferences("I'm allergic to mushrooms and olives. No cooking on Fridays")
+    assert set(out["excluded"]) == {"mushrooms", "olives"} and out["day_minutes_cap"] == {"4": 0}
+
+
+def test_free_text_applied_to_plan_not_just_stored(client):
+    signup(client)
+    client.post("/survey", data={"budget": "100", "free_text": "no fish, no chicken. I hate cooking on Mondays"})
+    client.post("/plan/generate")
+    ms = meals(client)
+    assert len(ms) == 21
+    for m in ms:
+        text = (m.name + " " + " ".join(i["name"] for i in m.ingredients)).lower()
+        assert "salmon" not in text and "tuna" not in text and "chicken" not in text
+    assert sum(m.cook_minutes for m in ms if m.day == 0) <= 15
+
+
+def test_violation_triggers_regeneration(onboarded):
+    import copy
+
+    good = good_plan()
+    bad = copy.deepcopy(good)
+    bad["meals"][0]["ingredients"].append(dict(name="peanut butter", quantity=1, unit="tbsp", section="pantry", cost=0.1))
+    onboarded.post("/survey", data={"restrictions_present": "1", "restrictions": ["nut_allergy"]})
+    llm = Scripted(bad, good_plan(restrictions=["nut_allergy"]))
+    onboarded.app.dependency_overrides[get_llm] = lambda: llm
+    onboarded.post("/plan/generate")
+    assert len(llm.calls) == 2 and "nut allergy" in llm.calls[1][0]
+    assert len(plans(onboarded)) == 1
+
+
+def test_cooking_time_limit_enforced():
+    c = ctx(days=[DayCtx(i, 10) for i in range(7)])
+    raw = FakeLLM().generate_plan(ctx())  # plan assumes 45 min/day
+    _, errors = validate_plan(raw, c)
+    assert any("cooking minutes" in e for e in errors)
+    plan, errors = validate_plan(FakeLLM().generate_plan(c), c)
+    assert errors == [], errors
+
+
+def test_goal_calorie_target():
+    c = ctx(goal="calorie_target", calorie_target=2000, days=[DayCtx(i, 60) for i in range(7)])
+    plan, errors = validate_plan(FakeLLM().generate_plan(c), c)
+    assert errors == [], errors
+
+
+def test_goal_high_protein():
+    c = ctx(goal="high_protein")
+    plan, errors = validate_plan(FakeLLM().generate_plan(c), c)
+    assert errors == [], errors
+    base, _ = validate_plan(FakeLLM().generate_plan(ctx()), ctx())
+    avg = lambda p: sum(m["protein"] for m in p["meals"]) / 7
+    assert avg(plan) >= 90
