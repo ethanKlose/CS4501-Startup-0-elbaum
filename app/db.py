@@ -46,12 +46,20 @@ def check_schema(eng) -> None:
     if problems:
         raise RuntimeError(
             "Your local database is from an older version (missing columns -> " + "; ".join(problems) + "). "
-            "Run `make reset` to recreate it (this deletes local data)."
+            "Back up this database and apply a migration for the missing columns. No data was deleted."
         )
 
 
 def init_db():
     from app import models  # noqa: F401  (register tables)
 
+    from alembic import command
+    from alembic.config import Config
+    from pathlib import Path
+    root = Path(__file__).resolve().parent.parent
+    config = Config(str(root / 'alembic.ini'))
+    config.set_main_option('script_location', str(root / 'migrations'))
+    with engine.begin() as connection:
+        config.attributes['connection'] = connection
+        command.upgrade(config, 'head')
     check_schema(engine)
-    Base.metadata.create_all(bind=engine)

@@ -127,3 +127,24 @@ class CheckIn(Base):
     variety: Mapped[str] = mapped_column(String(16), default="right")  # repetitive | right
     notes: Mapped[str] = mapped_column(String(500), default="")
     leftovers: Mapped[list] = mapped_column(JSON, default=list)
+
+
+class UserPreference(Base):
+    __tablename__ = 'user_preferences'
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), primary_key=True)
+    data: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
+class SecurityCounter(Base):
+    __tablename__ = 'security_counters'
+    key: Mapped[str] = mapped_column(String(128), primary_key=True)
+    count: Mapped[int] = mapped_column(default=0)
+    expires_at: Mapped[float]
+
+
+class PasswordReset(Base):
+    __tablename__ = 'password_resets'
+    token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), index=True)
+    expires_at: Mapped[float]
+    used: Mapped[bool] = mapped_column(default=False)

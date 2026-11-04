@@ -16,5 +16,5 @@ def test_old_database_gets_a_clear_message():
     eng = make_engine("sqlite://")
     with eng.begin() as c:
         c.execute(text("CREATE TABLE meals (id INTEGER PRIMARY KEY, plan_id INTEGER, day INTEGER)"))
-    with pytest.raises(RuntimeError, match="make reset"):
+    with pytest.raises(RuntimeError, match="migration"):
         check_schema(eng)
