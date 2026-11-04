@@ -46,6 +46,16 @@ def check_budget(plan: dict, ctx: PlanContext) -> List[str]:
     return []
 
 
+def check_checkout_budget(plan,ctx):
+    if not ctx.checkout_budget:return []
+    from app.services.pricing import plan_checkout
+    try:total,_=plan_checkout(plan['meals'],ctx.pantry,ctx.price_offers)
+    except ValueError as e:return [str(e)]
+    if total>ctx.budget+0.001:
+        return [f"Whole-package checkout estimate ${total:.2f} exceeds the ${ctx.budget:.2f} budget. Reuse pantry ingredients, choose cheaper recipes, or update package prices."]
+    return []
+
+
 def check_diet(plan: dict, ctx: PlanContext) -> List[str]:
     """Every meal vs. selected restrictions/allergies AND ingredients extracted from free-text requests."""
     errors: List[str] = []
@@ -132,7 +142,7 @@ def check_disliked(plan: dict, ctx: PlanContext) -> List[str]:
 
 
 # HARD: safety, money, format. A plan breaking any of these is never shown.
-HARD_CHECKS = [check_coverage, check_cost_integrity, check_budget, check_diet, check_pinned, check_disliked, check_cooking_deadlines]
+HARD_CHECKS = [check_coverage, check_cost_integrity, check_budget, check_checkout_budget, check_diet, check_pinned, check_disliked, check_cooking_deadlines]
 # SOFT: preferences. The LLM is asked to fix them, but on the final attempt they become visible warnings.
 SOFT_CHECKS = [check_schedule, check_goal]
 

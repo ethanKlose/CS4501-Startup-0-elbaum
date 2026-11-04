@@ -19,6 +19,7 @@ from app.config import settings
 from app.services.catalog import RECIPES
 from app.services.diet import meal_violations
 from app.services.lifestyle import violations as lifestyle_violations
+from app.services.pricing import apply_recipe_prices
 from app.services.schedule import capacities, storage_days
 from app.services.types import SLOTS, WEEKDAYS, PlanContext
 from app.services.validators import HIGH_PROTEIN_DAILY_G, SOFT_CHECKS, schedule_for
@@ -92,7 +93,7 @@ class FakeLLM:
         pantry = {p["name"].lower() for p in ctx.pantry}
         leftovers = {x.lower() for x in ctx.leftovers}
         allowed = [
-            r for r in RECIPES
+            apply_recipe_prices(r,ctx.price_offers) for r in RECIPES
             if not meal_violations(r, ctx.restrictions, ctx.excluded) and not lifestyle_violations(r,ctx) and r["name"] not in ctx.disliked
         ]
         min_cost = {s: min([r["cost"] for r in allowed if s in r["slots"]] or [0]) for s in SLOTS}

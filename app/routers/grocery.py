@@ -6,6 +6,8 @@ from app.db import get_db
 from app.deps import current_user, render
 from app.models import GroceryCheck, User
 from app.services import grocery, planner, inventory
+from app.services.pricing import checkout
+from app.services.preferences import get_preferences
 from app.services.locking import lock_user
 
 router = APIRouter()
@@ -16,9 +18,10 @@ def grocery_list(request: Request, user: User = Depends(current_user), db: Sessi
     plan = planner.latest_plan(db, user)
     items = inventory.shopping_items(db, plan)
     checked = inventory.checked_keys(plan, items) if plan else set()
+    package_rows=checkout(items,get_preferences(db,user.id).get('price_offers',{}))
     remaining = sum(1 for i in items if i["key"] not in checked)
     return render(request, "grocery.html", user, plan=plan, checked=checked, remaining=remaining, items=items, groups=grocery.group_by_section(items),
-                  total=round(sum(i["cost"] for i in items), 2), closed=inventory.closed(plan))
+                  package_rows=package_rows, checkout_total=round(sum(i["checkout_cost"] for i in package_rows),2), total=round(sum(i["cost"] for i in items), 2), closed=inventory.closed(plan))
 
 
 @router.post("/grocery/toggle")

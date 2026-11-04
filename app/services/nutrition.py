@@ -36,6 +36,8 @@ def catalog_plan(raw,ctx):
             recipe=lookup.get(name)
             if not recipe or slot not in recipe['slots']:raise ValueError(f'Choose an approved recipe for {slot}: {name}')
             meal={k:copy.deepcopy(v) for k,v in recipe.items() if k!='slots'}
+            from app.services.pricing import apply_recipe_prices
+            meal=apply_recipe_prices(meal,ctx.price_offers)
             meal.update(day=day,slot=slot)
         out.append(meal)
     return {'meals':out}

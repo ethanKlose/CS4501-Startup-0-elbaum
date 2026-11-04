@@ -6,6 +6,7 @@
   <div><h1>Grocery list</h1><p class="muted" style="margin:0">One trip for the whole week. Pantry items are already removed.</p></div>
   {% if items %}<a class="btn line" href="/">{{ icon('calendar') }} Back to plan</a>{% endif %}
 </div>
+{% if items %}<section class="card" style="margin-bottom:16px"><h2>Whole-package checkout: ${{ '%.2f' % checkout_total }}</h2><p>Package prices are demo estimates unless you entered a local price. They are separate from the cost of the portions used. <a href="/prices">Edit local package prices</a>.</p><ul>{% for p in package_rows %}<li>{{ p.name }}: {{ p.packages }} package(s) × ${{ '%.2f' % p.package_price }} = ${{ '%.2f' % p.checkout_cost }}; {{ '%g' % p.extra_quantity }} {{ p.unit }} extra. <small>{{ p.price_source }}{{ ' · '+p.observed_on if p.observed_on else '' }}</small></li>{% endfor %}</ul></section>{% endif %}
 {% if closed %}<div class="alert info">This plan is closed and its pantry quantities have been updated. Generate a new week to shop again.</div>{% endif %}
 {% if not items %}
   <section class="empty card">
@@ -18,7 +19,7 @@
   <section class="card gprogress reveal" data-plan-id="{{ plan.id }}" style="--i:1">
     <div class="gp-stats">
       <div><b>{{ items|length }}</b><span>items</span></div>
-      <div><b>${{ '%.2f' % total }}</b><span>estimated</span></div>
+      <div><b>${{ '%.2f' % total }}</b><span>portion cost</span></div>
       <div><b><span id="remaining">{{ remaining }}</span></b><span>left to buy</span></div>
     </div>
     <div class="meter"><span id="gbar" style="width:{{ ((items|length - remaining) / items|length * 100)|round|int }}%"></span></div>

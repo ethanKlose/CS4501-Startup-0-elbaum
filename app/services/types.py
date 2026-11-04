@@ -44,6 +44,8 @@ class PlanContext:
     meal_times: Dict = field(default_factory=dict)
     earliest_day: int = -1
     earliest_minute: int = 0
+    price_offers: Dict = field(default_factory=dict)
+    checkout_budget: bool = False
     seed: int = 0
 
     def active_days(self) -> List[DayCtx]:
