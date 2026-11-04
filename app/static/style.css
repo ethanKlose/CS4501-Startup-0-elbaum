@@ -46,3 +46,6 @@ ul.grocery input[type=checkbox] { width:1.3rem; height:1.3rem; }
 .badge.cooked { color:var(--accent); border-color:var(--accent); }
 .badge.skipped { color:var(--muted); }
 .meal.skipped .mname { text-decoration:line-through; color:var(--muted); }
+.card.warn { border-color:#c98a00; max-width:none; }
+.cookplan .cookday { border-top:1px solid var(--line); padding-top:.4rem; }
+.cookplan ul { margin:.25rem 0 .25rem 1.1rem; padding:0; }

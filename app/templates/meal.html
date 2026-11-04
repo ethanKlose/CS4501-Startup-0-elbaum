@@ -5,9 +5,10 @@
 <article class="card" style="max-width:720px">
   <small class="muted">{{ weekday }} · {{ meal.slot }}</small>
   <h1 style="margin:0">{{ meal.name }}</h1>
-  <p>⏱ {{ meal.cook_minutes }} min · 🔥 {{ meal.calories }} cal · 💪 {{ '%g' % meal.protein }} g protein · 💲{{ '%.2f' % meal.cost }}</p>
+  <p>⏱ {{ meal.cook_minutes }} min cook time · 🔥 {{ meal.calories }} cal · 💪 {{ '%g' % meal.protein }} g protein · 💲{{ '%.2f' % meal.cost }}</p>
   <form method="post" action="/meals/{{ meal.id }}/pin" class="inline"><input type="hidden" name="next" value="/meals/{{ meal.id }}">
     <button class="secondary">{% if meal.pinned %}📌 Pinned — unpin{% else %}Pin this meal{% endif %}</button></form>
+  {% if meal.cook_minutes > 0 %}<p data-testid="cook-when">{% if meal.cook_day == meal.day %}Cook this fresh on {{ weekday }}.{% else %}Cooked ahead on <strong>{{ cook_label }}</strong>{% if meal.frozen %}, frozen. Thaw it the night before{% else %} and kept in the fridge{% endif %}. Just reheat it.{% endif %}</p>{% endif %}
   <div class="row" data-testid="status-controls">
     <span>Status: <strong>{{ meal.status }}</strong></span>
     {% for st, label in [('cooked','Mark cooked'),('skipped','Mark skipped'),('planned','Reset')] if st != meal.status %}

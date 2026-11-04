@@ -10,7 +10,7 @@ from app.models import CheckIn
 from app.routers.checkin import checkin_due
 from app.services import planner
 from app.services.analysis import sharing_stats
-from app.services.prep import prep_blocks
+from app.services.schedule import PRE_WEEK, build_sessions, day_label, sessions_by_day
 from app.services.types import SLOTS, WEEKDAYS
 
 router = APIRouter()
@@ -29,6 +29,11 @@ def home(request: Request, user=Depends(current_user_optional), db: Session = De
     info = request.session.pop("flash_info", None)
     done = bool(plan and db.scalar(select(CheckIn.id).where(CheckIn.plan_id == plan.id)))
     skipped = {d["weekday"] for d in plan.days if d.get("skipped")} if plan else set()
-    prep = prep_blocks([m.as_dict() for m in plan.meals], plan.days) if plan and plan.status == "ok" else []
+    cook_plan = []
+    if plan and plan.status == "ok":
+        sessions = build_sessions(dict(m.as_dict(), cook_day=m.cook_day, frozen=m.frozen) for m in plan.meals)
+        by_day = sessions_by_day(sessions)
+        cook_plan = [dict(day=d, label=day_label(d), minutes=sum(x["minutes"] for x in by_day[d]), sessions=by_day[d])
+                     for d in sorted(by_day)]
     sharing = sharing_stats(m.as_dict() for m in plan.meals) if plan and plan.status == "ok" else None
-    return render(request, "home.html", user, profile=profile, plan=plan, error=error, weekdays=WEEKDAYS, slots=SLOTS, sharing=sharing, info=info, checkin_due=checkin_due(plan, done), skipped=skipped, prep={b["day"]: b for b in prep})
+    return render(request, "home.html", user, profile=profile, plan=plan, error=error, weekdays=WEEKDAYS, slots=SLOTS, sharing=sharing, info=info, checkin_due=checkin_due(plan, done), skipped=skipped, cook_plan=cook_plan, day_label=day_label, short=[w[:3] for w in WEEKDAYS])

@@ -34,7 +34,9 @@ def meal_detail(meal_id: int, request: Request, user: User = Depends(current_use
     from app.services.types import WEEKDAYS
 
     meal = owned_meal(db, user, meal_id)
-    return render(request, "meal.html", user, meal=meal, weekday=WEEKDAYS[meal.day])
+    from app.services.schedule import day_label
+
+    return render(request, "meal.html", user, meal=meal, weekday=WEEKDAYS[meal.day], cook_label=day_label(meal.cook_day))
 
 
 @router.post("/plan/days/{weekday}/skip")

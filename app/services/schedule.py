@@ -196,22 +196,26 @@ def _build(meals: Sequence[dict], caps: Dict[int, int], style: str, prep_days: I
             ids = {id(m) for m in batch}
             pending = [m for m in pending if id(m) not in ids]
 
-    # group into sessions: one entry per (cook day, dish)
+    out.sessions = build_sessions([dict(m, cook_day=out.assign[(m["day"], m["slot"])][0],
+                                        frozen=out.assign[(m["day"], m["slot"])][1]) for m in meals])
+    return out
+
+
+def build_sessions(meals: Iterable[dict]) -> List[dict]:
+    """One session per real batch. `meals` need day, slot, name, cook_minutes, cook_day, frozen (saved or fresh)."""
     groups: Dict[Tuple[int, str], List[dict]] = {}
     for m in meals:
         if m["cook_minutes"] > 0:
-            c, _ = out.assign[(m["day"], m["slot"])]
-            groups.setdefault((c, m["name"]), []).append(m)
+            groups.setdefault((m["cook_day"], m["name"]), []).append(m)
+    sessions = []
     for (c, name), ms in sorted(groups.items()):
         ms.sort(key=_slot_idx)
         base = max(m["cook_minutes"] for m in ms)
-        for i in range(0, len(ms), MAX_BATCH):  # one session per real batch
+        for i in range(0, len(ms), MAX_BATCH):
             chunk = ms[i:i + MAX_BATCH]
-            out.sessions.append(dict(
-                cook_day=c, name=name, servings=len(chunk), minutes=batch_minutes(base, len(chunk)),
-                eats=[dict(day=m["day"], slot=m["slot"], frozen=out.assign[(m["day"], m["slot"])][1]) for m in chunk],
-            ))
-    return out
+            sessions.append(dict(cook_day=c, name=name, servings=len(chunk), minutes=batch_minutes(base, len(chunk)),
+                                 eats=[dict(day=m["day"], slot=m["slot"], frozen=m["frozen"]) for m in chunk]))
+    return sessions
 
 
 def overbook_messages(sched: Schedule) -> List[str]:
