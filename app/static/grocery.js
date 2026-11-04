@@ -10,6 +10,7 @@
     if (remaining) remaining.textContent = left;
     if (bar) bar.style.width = (boxes.length ? (boxes.length - left) / boxes.length * 100 : 0) + '%';
   }
+  progress(); // Use the same precision on initial render and after a rollback.
   boxes.forEach(function (box) {
     box.addEventListener('change', async function () {
       var previous = !box.checked;
