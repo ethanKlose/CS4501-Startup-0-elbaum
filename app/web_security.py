@@ -3,6 +3,7 @@ import hmac
 import secrets
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import PlainTextResponse
+from app.config import settings
 
 
 class CSRFProtection(BaseHTTPMiddleware):
@@ -23,5 +24,5 @@ class CSRFProtection(BaseHTTPMiddleware):
         response = await call_next(request)
         # Login/logout can change session contents; keep the readable token aligned.
         token = request.session.setdefault('csrf_token', secrets.token_urlsafe(32))
-        response.set_cookie('csrf_token', token, samesite='lax', secure=request.url.scheme == 'https')
+        response.set_cookie('csrf_token', token, samesite='lax', secure=settings.production or request.url.scheme == 'https')
         return response

@@ -2,6 +2,7 @@
 import json
 import os
 import smtplib
+import ssl
 import secrets
 from email.message import EmailMessage
 from pathlib import Path
@@ -25,7 +26,7 @@ def send_reset(email, url):
     message.set_content('Reset your password within 30 minutes:\n'+url+'\nIgnore this message if you did not request it.')
     port=int(os.environ.get('SMTP_PORT','587'))
     client=smtplib.SMTP_SSL if port==465 else smtplib.SMTP
-    with client(host,port,timeout=15) as smtp:
-        if port!=465:smtp.starttls()
+    with client(host,port,timeout=15,**({'context':ssl.create_default_context()} if port==465 else {})) as smtp:
+        if port!=465:smtp.starttls(context=ssl.create_default_context())
         if os.environ.get('SMTP_USERNAME'):smtp.login(os.environ['SMTP_USERNAME'],os.environ.get('SMTP_PASSWORD',''))
         smtp.send_message(message)
