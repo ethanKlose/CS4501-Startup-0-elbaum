@@ -1,0 +1,80 @@
+{
+  "status": "completed",
+  "engine": "fake",
+  "model": null,
+  "results": [
+    {
+      "scenario": "baseline",
+      "repeat": 0,
+      "latency_seconds": 0.051,
+      "input_tokens": null,
+      "output_tokens": null,
+      "estimated_usd": null,
+      "success": true,
+      "attempts": 1,
+      "warnings": [],
+      "meals": 21
+    },
+    {
+      "scenario": "vegan",
+      "repeat": 0,
+      "latency_seconds": 0.06,
+      "input_tokens": null,
+      "output_tokens": null,
+      "estimated_usd": null,
+      "success": true,
+      "attempts": 1,
+      "warnings": [],
+      "meals": 21
+    },
+    {
+      "scenario": "nut_allergy",
+      "repeat": 0,
+      "latency_seconds": 0.064,
+      "input_tokens": null,
+      "output_tokens": null,
+      "estimated_usd": null,
+      "success": true,
+      "attempts": 1,
+      "warnings": [],
+      "meals": 21
+    },
+    {
+      "scenario": "no_wednesday_cooking",
+      "repeat": 0,
+      "latency_seconds": 0.05,
+      "input_tokens": null,
+      "output_tokens": null,
+      "estimated_usd": null,
+      "success": true,
+      "attempts": 1,
+      "warnings": [],
+      "meals": 21
+    },
+    {
+      "scenario": "high_protein",
+      "repeat": 0,
+      "latency_seconds": 0.098,
+      "input_tokens": null,
+      "output_tokens": null,
+      "estimated_usd": null,
+      "success": true,
+      "attempts": 1,
+      "warnings": [],
+      "meals": 21
+    },
+    {
+      "scenario": "microwave_only",
+      "repeat": 0,
+      "latency_seconds": 0.009,
+      "input_tokens": null,
+      "output_tokens": null,
+      "estimated_usd": null,
+      "success": true,
+      "attempts": 1,
+      "warnings": [],
+      "meals": 21
+    }
+  ],
+  "success_rate": 1.0
+}

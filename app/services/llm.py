@@ -8,6 +8,8 @@ Both implement:
     interpret_preferences(text: str) -> dict                       ({"excluded": [...], "day_minutes_cap": {"0": 15}})
 """
 import itertools
+import os
+import time
 import json
 import random
 import re
@@ -227,13 +229,19 @@ class AnthropicLLM:
     def __init__(self, api_key: str, model: str):
         import anthropic
 
-        self.client = anthropic.Anthropic(api_key=api_key)
+        self.client = anthropic.Anthropic(api_key=api_key,timeout=float(os.environ.get("LLM_TIMEOUT_SECONDS","20")),max_retries=0)
+        self.metrics = []
         self.model = model
 
     def _ask(self, system: str, user: str, max_tokens: int):
+        started=time.perf_counter()
         resp = self.client.messages.create(
             model=self.model, max_tokens=max_tokens, system=system, messages=[{"role": "user", "content": user}]
         )
+        usage=getattr(resp,'usage',None)
+        metric={'latency_seconds':round(time.perf_counter()-started,3),'input_tokens':getattr(usage,'input_tokens',None),'output_tokens':getattr(usage,'output_tokens',None),'stop_reason':getattr(resp,'stop_reason',None)}
+        if not hasattr(self,'metrics'):self.metrics=[]
+        self.metrics.append(metric)
         return _extract_json("".join(b.text for b in resp.content if getattr(b, "type", "") == "text"))
 
     def generate_plan(self, ctx: PlanContext, feedback=()) -> Dict:
@@ -244,7 +252,7 @@ class AnthropicLLM:
         payload['approved_recipes']=[{k:v for k,v in r.items() if k in {'name','slots','calories','protein','cost','cook_minutes'}} for r in RECIPES]
         payload['required_slots']=[{'day':d.weekday,'slot':slot} for d in ctx.active_days() for slot in ctx.slots_for(d.weekday)]
         prompt=SYSTEM+"\nSelect ONLY names from approved_recipes. Return {\"meals\":[{\"day\":0,\"slot\":\"breakfast\",\"name\":\"approved recipe name\"}]}. Do not generate nutrition, ingredients or instructions; the server supplies those. Cover required_slots exactly."
-        return catalog_plan(self._ask(prompt,json.dumps(payload),5000),ctx)
+        return catalog_plan(self._ask(prompt,json.dumps(payload),int(os.environ.get("LLM_MAX_OUTPUT_TOKENS","5000"))),ctx)
 
     def interpret_preferences(self, text: str) -> Dict:
         if not (text or "").strip():

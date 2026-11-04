@@ -1,5 +1,6 @@
 """Builds the PlanContext from the user's saved answers, asks the LLM, validates, and saves."""
 import random
+import time
 import datetime as dt
 from dataclasses import asdict
 from typing import Optional
@@ -170,11 +171,13 @@ def run_with_retries(llm, ctx: PlanContext):
     feedback: list = []
     errors: list = []
     for attempt in range(1, MAX_ATTEMPTS + 1):
+        started=time.perf_counter()
         try:
             raw = llm.generate_plan(ctx, feedback)
             plan_dict, hard, soft = validate_full(raw, ctx)
         except Exception as e:  # network/JSON/API errors count as a failed attempt
             plan_dict, hard, soft = {}, [f"The generator failed: {e}"], []
+        ctx.generation_trace.append(dict(attempt=attempt,seconds=round(time.perf_counter()-started,3),hard_errors=list(hard),soft_warnings=list(soft)))
         if not hard and not soft:
             return plan_dict, attempt, []
         if not hard and attempt == MAX_ATTEMPTS:
@@ -199,6 +202,7 @@ def generate(db: Session, user: User, llm, seed: Optional[int] = None, new_week:
     ctx = build_context(db, user, llm, seed, week_start=week)
     plan_dict, attempts, warnings = run_with_retries(llm, ctx)
     plan = save_plan(db, user, ctx, plan_dict, attempts, warnings)
+    plan.settings=dict(plan.settings,generation={'engine':getattr(llm,'name','custom'),'attempts':attempts,'trace':ctx.generation_trace,'api_calls':list(getattr(llm,'metrics',[]))})
     db.commit()
     return plan
 
