@@ -1,5 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Welcome</h1>
-<p>You're signed in as {{ user.email }}.</p>
+<h1>Your week</h1>
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+<form method="post" action="/plan/generate" class="inline">
+  <button>{% if plan and plan.status == 'ok' %}Regenerate week{% else %}Generate my week{% endif %}</button>
+</form>
+{% if plan and plan.status == 'ok' %}
+<table class="plan">
+  {% for day in range(7) %}
+  <tr><th>{{ weekdays[day] }}</th>
+    {% for slot in slots %}
+      {% for m in plan.meals if m.day == day and m.slot == slot %}<td><small class="muted">{{ slot }}</small><br>{{ m.name }}</td>{% endfor %}
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
 {% endblock %}

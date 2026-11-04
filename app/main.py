@@ -8,7 +8,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.config import settings
 from app.db import init_db
 from app.deps import LoginRequired
-from app.routers import auth, pages, survey
+from app.routers import auth, pages, plan, survey
 from fastapi.responses import RedirectResponse
 
 BASE = Path(__file__).parent
@@ -32,6 +32,7 @@ def create_app() -> FastAPI:
     app.include_router(auth.router)
     app.include_router(pages.router)
     app.include_router(survey.router)
+    app.include_router(plan.router)
 
     @app.get("/health")
     def health():
