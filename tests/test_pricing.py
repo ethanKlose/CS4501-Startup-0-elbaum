@@ -16,3 +16,11 @@ def test_demo_planner_optimizes_checkout_budget_across_seeds():
     for seed in [1,23,147,7919,39241,526417]:
         ctx=PlanContext(budget=100,days=[DayCtx(i,45) for i in range(7)],checkout_budget=True,seed=seed)
         assert check_checkout_budget(FakeLLM().generate_plan(ctx),ctx)==[]
+
+
+def test_legacy_unknown_prices_are_visible_but_not_accepted_as_verified_packages():
+    import pytest
+    item=dict(key='legacy powder|scoop',name='legacy powder',unit='scoop',quantity=1,cost=2)
+    with pytest.raises(ValueError):checkout([item])
+    row=checkout([item],allow_unknown=True)[0]
+    assert row['unknown_package'] and row['checkout_cost']==2

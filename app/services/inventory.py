@@ -60,7 +60,7 @@ def record_purchase(db, plan, item, checked=True):
     if checked:
         from app.services.pricing import checkout
         from app.services.preferences import get_preferences
-        package=checkout([item],get_preferences(db,plan.user_id).get('price_offers',{}))[0]
+        package=checkout([item],get_preferences(db,plan.user_id).get('price_offers',{}),allow_unknown=True)[0]
         item=dict(item,quantity=package['packages']*package['package_quantity'],cost=package['checkout_cost'])
         # Capture the quantity at purchase time, not whatever a later swap needs.
         previous = bought.get(item['key'])

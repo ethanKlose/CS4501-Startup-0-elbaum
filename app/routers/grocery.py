@@ -18,7 +18,7 @@ def grocery_list(request: Request, user: User = Depends(current_user), db: Sessi
     plan = planner.latest_plan(db, user)
     items = inventory.shopping_items(db, plan)
     checked = inventory.checked_keys(plan, items) if plan else set()
-    package_rows=checkout(items,get_preferences(db,user.id).get('price_offers',{}))
+    package_rows=checkout(items,get_preferences(db,user.id).get('price_offers',{}),allow_unknown=True)
     remaining = sum(1 for i in items if i["key"] not in checked)
     return render(request, "grocery.html", user, plan=plan, checked=checked, remaining=remaining, items=items, groups=grocery.group_by_section(items),
                   package_rows=package_rows, checkout_total=round(sum(i["checkout_cost"] for i in package_rows),2), total=round(sum(i["cost"] for i in items), 2), closed=inventory.closed(plan))

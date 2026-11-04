@@ -29,12 +29,15 @@ def apply_recipe_prices(recipe,offers):
     return recipe
 
 
-def checkout(items,overrides=None):
+def checkout(items,overrides=None,allow_unknown=False):
     offers=reference_offers();offers.update(overrides or {})
     rows=[]
     for item in items:
         offer=offers.get(item['key'])
-        if not offer:raise ValueError('No package price for '+item['name']+' ('+item['unit']+'). Add a local offer first.')
+        if not offer:
+            if not allow_unknown:raise ValueError('No package price for '+item['name']+' ('+item['unit']+'). Unpin the legacy recipe or choose a supported recipe.')
+            rows.append(dict(item,packages=1,package_quantity=item['quantity'],package_price=item['cost'],checkout_cost=item['cost'],extra_quantity=0,price_source='Legacy portion estimate; package size unknown',observed_on=None,unknown_package=True))
+            continue
         quantity=offer['package_quantity'];count=max(0,math.ceil((item['quantity']-1e-9)/quantity))
         rows.append(dict(item,packages=count,package_quantity=quantity,package_price=offer['package_price'],checkout_cost=round(count*offer['package_price'],2),extra_quantity=round(count*quantity-item['quantity'],2),price_source=offer['source'],observed_on=offer.get('observed_on')))
     return rows
