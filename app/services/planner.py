@@ -10,6 +10,9 @@ from app.services.types import DayCtx, PlanContext
 from app.services.validators import validate_plan
 
 
+MAX_ATTEMPTS = 3
+
+
 class PlanFailed(Exception):
     def __init__(self, message: str, errors=None):
         super().__init__(message)
@@ -62,10 +65,17 @@ def save_plan(db: Session, user: User, ctx: PlanContext, plan_dict: dict, attemp
 def generate(db: Session, user: User, llm, seed: Optional[int] = None) -> Plan:
     seed = random.randint(1, 10**6) if seed is None else seed
     ctx = build_context(db, user, llm, seed)
-    raw = llm.generate_plan(ctx, [])
-    plan_dict, errors = validate_plan(raw, ctx)
-    if errors:
-        raise PlanFailed("We couldn't build a valid plan: " + " ".join(errors[:3]), errors)
-    plan = save_plan(db, user, ctx, plan_dict, 1)
-    db.commit()
-    return plan
+    feedback: list = []
+    errors: list = []
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        try:
+            raw = llm.generate_plan(ctx, feedback)
+            plan_dict, errors = validate_plan(raw, ctx)
+        except Exception as e:  # network/JSON/API errors count as a failed attempt
+            plan_dict, errors = {}, [f"The generator failed: {e}"]
+        if not errors:
+            plan = save_plan(db, user, ctx, plan_dict, attempt)
+            db.commit()
+            return plan
+        feedback = errors  # self-correction: the validator's complaints go straight back to the LLM
+    raise PlanFailed("We couldn't build a valid plan: " + " ".join(errors[:3]), errors)

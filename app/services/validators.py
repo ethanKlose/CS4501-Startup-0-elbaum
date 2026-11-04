@@ -26,7 +26,19 @@ def check_coverage(plan: dict, ctx: PlanContext) -> List[str]:
     return errors
 
 
-CHECKS = [check_coverage]
+def plan_total(plan: dict) -> float:
+    """Total recomputed from ingredient costs - never trust the LLM's own arithmetic."""
+    return round(sum(i["cost"] for m in plan["meals"] for i in m["ingredients"]), 2)
+
+
+def check_budget(plan: dict, ctx: PlanContext) -> List[str]:
+    total = plan_total(plan)
+    if total > ctx.budget + 1e-9:
+        return [f"Total cost ${total:.2f} exceeds the weekly budget of ${ctx.budget:.2f} by ${total - ctx.budget:.2f}. Choose cheaper meals or ingredients."]
+    return []
+
+
+CHECKS = [check_coverage, check_budget]
 
 
 def validate_plan(raw, ctx: PlanContext):
