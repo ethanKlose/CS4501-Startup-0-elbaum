@@ -102,3 +102,36 @@ def test_pin_that_violates_new_restriction_is_dropped(planned):
     planned.post("/survey", data={"restrictions_present": "1", "restrictions": ["vegan", "gluten_free", "dairy_free", "egg_free"]})
     planned.post("/plan/generate")
     assert len(newest_meals(planned)) == 21
+
+
+def names(client):
+    return tuple(m.name for _, m in sorted(newest_meals(client).items()))
+
+
+def test_one_click_regenerate_uses_saved_survey(planned):
+    first = names(planned)
+    assert 'action="/plan/regenerate"' in planned.get("/").text
+    seen = {first}
+    for _ in range(4):
+        r = planned.post("/plan/regenerate")  # no form data: everything comes from saved answers
+        assert r.status_code == 200
+        seen.add(names(planned))
+    assert len(seen) > 1
+    assert db_plan(planned).total_cost <= 100
+
+
+def test_saved_survey_edits_apply_to_next_regeneration(planned):
+    planned.post("/survey", data={"restrictions_present": "1", "restrictions": ["vegan"]})
+    planned.post("/plan/regenerate")
+    from app.services.diet import meal_violations
+
+    for m in newest_meals(planned).values():
+        assert meal_violations(m.as_dict(), ["vegan"]) == []
+
+
+def test_failed_regeneration_keeps_previous_valid_plan(planned):
+    old = db_plan(planned).id
+    planned.post("/survey", data={"budget": "5"})
+    r = planned.post("/plan/regenerate")
+    assert "too low" in r.text
+    assert db_plan(planned).id == old

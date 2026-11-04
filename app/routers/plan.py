@@ -11,6 +11,7 @@ from app.services.llm import get_llm
 router = APIRouter()
 
 
+@router.post("/plan/regenerate")
 @router.post("/plan/generate")
 def generate_plan(request: Request, user: User = Depends(current_user), db: Session = Depends(get_db), llm=Depends(get_llm)):
     try:

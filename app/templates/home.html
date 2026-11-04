@@ -5,7 +5,7 @@
 {% if error %}<div class="error" role="alert"><p>{{ error.message }}</p>
   {% if error.conflicts %}<ul>{% for c in error.conflicts %}<li>{{ c }}</li>{% endfor %}</ul>{% endif %}
   <p><a href="/survey">Edit your survey</a></p></div>{% endif %}
-<form method="post" action="/plan/generate" class="inline">
+<form method="post" action="/plan/{% if plan and plan.status == 'ok' %}regenerate{% else %}generate{% endif %}" class="inline">
   <button>{% if plan and plan.status == 'ok' %}Regenerate week{% else %}Generate my week{% endif %}</button>
 </form>
 {% if plan and plan.status == 'ok' %}
