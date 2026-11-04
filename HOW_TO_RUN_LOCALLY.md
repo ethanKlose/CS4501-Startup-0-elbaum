@@ -32,6 +32,28 @@ if not exist .env copy .env.example .env
 
 These commands are for Command Prompt, not PowerShell.
 
+## Windows - Fix
+each Windows teammate should download or pull the latest alpha-mvp branch, open PowerShell in the folder containing app and requirements-dev.txt, and run:
+
+```bash
+python --version
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+
+if (-not (Test-Path .env)) {
+    Copy-Item .env.example .env
+}
+
+.\.venv\Scripts\python.exe -m scripts.seed
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
+```
+
+python --version should show 3.11 or 3.12. If python doesn’t work but py -3.12 does, use that for the environment-creation command.
+
+They can then open http://127.0.0.1:8000 and log in with:
+- Email: demo@platejoy.dev
+- Password: demo-password
+
 ## macOS or Linux
 
 With Python 3.11 or 3.12 installed as `python3`:
