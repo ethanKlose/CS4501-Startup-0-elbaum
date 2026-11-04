@@ -118,3 +118,15 @@ def test_calorie_target_validated(client, cal):
 def test_unknown_goal_rejected(client):
     signup(client)
     assert client.post("/survey", data={"goal": "bulk_up_fast"}).status_code == 400
+
+
+def test_free_text_saved_and_trimmed(client):
+    signup(client)
+    client.post("/survey", data={"free_text": "  no fish, I hate cooking on Mondays  "})
+    assert profile(client).free_text == "no fish, I hate cooking on Mondays"
+    assert "no fish" in client.get("/survey").text
+
+
+def test_free_text_too_long(client):
+    signup(client)
+    assert client.post("/survey", data={"free_text": "x" * 501}).status_code == 400

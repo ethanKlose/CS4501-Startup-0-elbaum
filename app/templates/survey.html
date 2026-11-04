@@ -35,6 +35,13 @@
     {% if errors.goal %}<p class="error" role="alert">{{ errors.goal }}</p>{% endif %}
   </fieldset>
   <fieldset>
+    <legend>Anything else? <span class="muted">(optional)</span></legend>
+    <label>Extra preferences, in your own words
+      <textarea name="free_text" rows="3" maxlength="500" placeholder="e.g. no fish, I hate cooking on Mondays">{{ form.get('free_text') if form is defined else profile.free_text }}</textarea>
+    </label>
+    {% if errors.free_text %}<p class="error" role="alert">{{ errors.free_text }}</p>{% endif %}
+  </fieldset>
+  <fieldset>
     <legend>Your week</legend>
     <p class="muted">Tick busy days and set how many minutes you can spend cooking that day (0 = no cooking).</p>
     {% for d in days %}

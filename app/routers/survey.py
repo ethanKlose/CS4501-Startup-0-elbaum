@@ -120,7 +120,20 @@ def apply_goal(form, profile, errors, **_):
         profile.calorie_target = cal
 
 
-APPLIERS = [apply_budget, apply_days, apply_restrictions, apply_goal]
+MAX_FREE_TEXT = 500
+
+
+def apply_free_text(form, profile, errors, **_):
+    if "free_text" not in form:
+        return
+    text = form.get("free_text", "").strip()
+    if len(text) > MAX_FREE_TEXT:
+        errors["free_text"] = f"Keep extra preferences under {MAX_FREE_TEXT} characters."
+        return
+    profile.free_text = text
+
+
+APPLIERS = [apply_budget, apply_days, apply_restrictions, apply_goal, apply_free_text]
 
 
 @router.get("/survey")
