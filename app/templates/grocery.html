@@ -11,6 +11,7 @@
     <li data-item="{{ it.name }}">
       <span class="gname">{{ it.name }}</span>
       <span class="muted">{{ '%g' % it.quantity }} {{ it.unit }}</span>
+      {% if it.have %}<small class="muted">(you have {{ it.have }})</small>{% endif %}
     </li>
     {% endfor %}
   </ul>

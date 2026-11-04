@@ -32,3 +32,37 @@ def build_list(meals: Iterable[dict]) -> List[Dict]:
         it["section"] = it.pop("sections").most_common(1)[0][0]
         out.append(it)
     return sorted(out, key=lambda x: x["name"])
+
+
+def _same_food(a: str, b: str) -> bool:
+    a, b = norm(a), norm(b)
+    return a == b or a.rstrip("s") == b.rstrip("s")
+
+
+def apply_pantry(items: List[Dict], pantry: Iterable[dict]) -> List[Dict]:
+    """Remove or reduce items the user already has.
+
+    * pantry entry with no quantity  -> "I have it": item is dropped entirely.
+    * quantity + SAME unit           -> subtract; item stays only for the shortfall.
+    * quantity + different unit      -> can't convert units, so keep the full amount and note what they have.
+    """
+    pantry = list(pantry)
+    out = []
+    for it in items:
+        it = dict(it)
+        match = next((p for p in pantry if _same_food(p["name"], it["name"])), None)
+        if match:
+            pq, pu = match.get("quantity"), (match.get("unit") or "").lower().strip()
+            if pq is None:
+                continue
+            if pu == it["unit"].lower():
+                need = round(it["quantity"] - pq, 2)
+                if need <= 0:
+                    continue
+                it["cost"] = round(it["cost"] * need / it["quantity"], 2)
+                it["have"] = f"{pq:g} {pu}".strip()
+                it["quantity"] = need
+            else:
+                it["have"] = f"{pq:g} {pu}".strip() + " (different unit)"
+        out.append(it)
+    return out
