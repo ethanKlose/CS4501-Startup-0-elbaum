@@ -192,13 +192,17 @@ Return ONLY a JSON object (no prose, no markdown fences) of the form:
   "section": "produce"|"dairy"|"meat"|"seafood"|"bakery"|"pantry"|"frozen"|"other", "cost": number}]}]}
 
 HARD rules (a plan breaking any of these is thrown away):
-- exactly one meal per slot per active day; skipped days get no meals;
+- exactly one meal per slot per active day: return every (day, slot) listed in required_meals, nothing
+  missing, nothing extra (skipped days get no meals);
 - the sum of all ingredient costs must not exceed the weekly budget;
 - never use an ingredient that violates a restriction or an excluded ingredient;
 - keep pinned meals exactly as given; do not use the disliked meal names.
 
 BEST-EFFORT goals (misses are shown to the user as warnings, so try hard):
 - hit the calorie target (weekly average within 10%, each day within 30%) or the protein goal;
+- calorie_target is per DAY: the three meals of every day must add up to about that number (2000 kcal means
+  ~650 per meal, not 300). Size portions up, and add rice, pasta, oil, nuts or sides to reach it;
+- variety: do not repeat a dish more than 3 times in the week unless batching helps the schedule;
 - prefer meals that share ingredients and use pantry items and leftovers first.
 
 You choose WHAT to eat, not WHEN to cook. A separate scheduler decides the cook day for every meal, so a busy
@@ -217,6 +221,19 @@ def _extract_json(text: str):
     text = re.sub(r"^```(?:json)?|```$", "", text.strip(), flags=re.M).strip()
     start, end = text.find("{"), text.rfind("}")
     return json.loads(text[start : end + 1])
+
+
+def _fix_costs(plan):
+    """A meal's cost is, by definition, the sum of its ingredient costs. Models get this arithmetic wrong
+    often, so we derive it instead of burning a retry on it."""
+    try:
+        for m in plan.get("meals", []):
+            ings = m.get("ingredients") or []
+            if ings:
+                m["cost"] = round(sum(float(i.get("cost", 0)) for i in ings), 2)
+    except (TypeError, ValueError, AttributeError):
+        pass  # malformed output is left for the validators to report
+    return plan
 
 
 class AnthropicLLM:
@@ -238,7 +255,24 @@ class AnthropicLLM:
         caps = capacities(ctx.days, ctx.prep_style, ctx.prep_days, ctx.prep_minutes, ctx.allow_pre_week)
         payload = {"context": asdict(ctx), "cook_capacity_minutes": {str(k): v for k, v in sorted(caps.items())},
                    "feedback_from_previous_attempt": list(feedback)}
-        return self._ask(SYSTEM, json.dumps(payload), 12000)
+        slots = [{"day": d.weekday, "slot": sl} for d in ctx.days if not d.skipped for sl in SLOTS]
+        payload["required_meals"] = slots  # exactly these (day, slot) pairs, no more and no fewer
+        plan = self._ask(SYSTEM, json.dumps(payload), 12000)
+        # Smaller models sometimes stop early. Ask for just the missing slots (twice at most) before
+        # handing the plan to the validators, instead of wasting a whole retry on it.
+        for _ in range(2):
+            have = {(m.get("day"), m.get("slot")) for m in plan.get("meals", []) if isinstance(m, dict)}
+            missing = [x for x in slots if (x["day"], x["slot"]) not in have]
+            if not missing:
+                break
+            extra = dict(payload, required_meals=missing, already_planned=[
+                {"day": m.get("day"), "slot": m.get("slot"), "name": m.get("name")} for m in plan.get("meals", [])
+                if isinstance(m, dict)], note="Return ONLY the missing meals, in the same JSON format.")
+            try:
+                plan.setdefault("meals", []).extend(self._ask(SYSTEM, json.dumps(extra), 12000).get("meals", []))
+            except Exception:
+                break
+        return _fix_costs(plan)
 
     def interpret_preferences(self, text: str) -> Dict:
         if not (text or "").strip():
@@ -247,7 +281,8 @@ class AnthropicLLM:
             'Extract structured constraints from a student\'s free-text meal preferences. Return ONLY JSON: '
             '{"excluded": [ingredient or food-group words to never serve, e.g. "fish"], '
             '"day_minutes_cap": {"<weekday 0=Mon..6=Sun>": max cooking minutes that day}}. '
-            'Use 15 for "hate cooking" and 0 for "no cooking".'
+            'Use 15 for "hate cooking" and 0 for "no cooking". Weekday numbers: 0=Monday, 1=Tuesday, 2=Wednesday, '
+            '3=Thursday, 4=Friday, 5=Saturday, 6=Sunday.'
         )
         try:
             out = self._ask(system, text, 500)

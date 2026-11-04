@@ -64,3 +64,18 @@ def test_interpret_preferences_falls_back_if_model_fails():
     llm = client_with("not json at all")
     out = llm.interpret_preferences("no fish, I can't cook on Wednesdays")
     assert out["excluded"] == ["fish"] and out["day_minutes_cap"] == {"2": 0}
+
+
+def test_missing_slots_are_topped_up_and_costs_are_derived():
+    c = ctx()
+    full = FakeLLM().generate_plan(c)["meals"]
+    first, rest = full[:5], full[5:]
+    for m in first:
+        m["cost"] = 999  # models get the arithmetic wrong; the server recomputes it from the ingredients
+    replies = [json.dumps({"meals": first}), json.dumps({"meals": rest})]
+    llm = AnthropicLLM.__new__(AnthropicLLM)
+    llm.model = "test-model"
+    llm._ask = lambda system, user, max_tokens: json.loads(replies.pop(0))
+    plan = llm.generate_plan(c)
+    assert not replies and len(plan["meals"]) == len(full)
+    assert all(abs(m["cost"] - sum(i["cost"] for i in m["ingredients"])) < 0.01 for m in plan["meals"])
