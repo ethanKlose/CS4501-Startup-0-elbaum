@@ -9,8 +9,9 @@ from sqlalchemy.orm import Session
 from app.models import CheckIn, DaySetting, Meal, PantryItem, Plan, Profile, User
 from app.services.diet import meal_violations
 from app.services.explain import summarize_failure
+from app.services.schedule import capacities, schedule
 from app.services.types import DayCtx, PlanContext
-from app.services.validators import validate_plan
+from app.services.validators import SOFT_CHECKS, schedule_for, validate_full
 
 
 MAX_ATTEMPTS = 3
@@ -83,36 +84,69 @@ def build_context(db: Session, user: User, llm, seed: int = 0) -> PlanContext:
     )
 
 
-def save_plan(db: Session, user: User, ctx: PlanContext, plan_dict: dict, attempts: int) -> Plan:
+def plan_settings(ctx: PlanContext) -> dict:
+    return dict(prep_style=ctx.prep_style, prep_days=list(ctx.prep_days), prep_minutes=ctx.prep_minutes,
+                goal=ctx.goal, calorie_target=ctx.calorie_target)
+
+
+def save_plan(db: Session, user: User, ctx: PlanContext, plan_dict: dict, attempts: int, warnings=()) -> Plan:
     plan = Plan(user_id=user.id, status="ok", attempts=attempts, budget=ctx.budget, seed=ctx.seed,
-                days=[asdict(d) for d in ctx.days])
+                days=[asdict(d) for d in ctx.days], settings=plan_settings(ctx), warnings=list(warnings))
+    sched = schedule_for(plan_dict, ctx)
     total = 0.0
     pinned_keys = {(p["day"], p["slot"]) for p in ctx.pinned}
     for m in sorted(plan_dict["meals"], key=lambda x: (x["day"], ["breakfast", "lunch", "dinner"].index(x["slot"]))):
         cost = round(sum(i["cost"] for i in m["ingredients"]), 2)
         total += cost
+        cook_day, frozen = sched.assign[(m["day"], m["slot"])]
         plan.meals.append(Meal(day=m["day"], slot=m["slot"], name=m["name"], cook_minutes=m["cook_minutes"],
                                calories=m["calories"], protein=m["protein"], cost=cost,
                                steps=m["steps"], ingredients=m["ingredients"],
-                               pinned=(m["day"], m["slot"]) in pinned_keys))
+                               pinned=(m["day"], m["slot"]) in pinned_keys, cook_day=cook_day, frozen=frozen))
     plan.total_cost = round(total, 2)
     db.add(plan)
     db.flush()
     return plan
 
 
+def plan_ctx(plan: Plan) -> PlanContext:
+    """Rebuild a lightweight context from what was saved with the plan (no LLM or DB lookups)."""
+    st = plan.settings or {}
+    return PlanContext(budget=plan.budget, days=[DayCtx(d["weekday"], d["minutes"], d.get("busy", False), d.get("skipped", False)) for d in plan.days],
+                       goal=st.get("goal", "none"), calorie_target=st.get("calorie_target"), prep_style=st.get("prep_style", "auto"),
+                       prep_days=st.get("prep_days", []), prep_minutes=st.get("prep_minutes", 120))
+
+
+def reschedule(plan: Plan) -> None:
+    """Recompute cook days and soft warnings after the meals changed (swap, skipped day)."""
+    ctx = plan_ctx(plan)
+    pd = dict(meals=[m.as_dict() for m in plan.meals])
+    sched = schedule_for(pd, ctx)
+    for m in plan.meals:
+        m.cook_day, m.frozen = sched.assign[(m.day, m.slot)]
+    plan.warnings = [w for check in SOFT_CHECKS for w in check(pd, ctx)] if pd["meals"] else []
+
+
 def run_with_retries(llm, ctx: PlanContext):
-    """generate -> validate -> feed errors back -> retry. Returns (valid_plan_dict, attempts) or raises PlanFailed."""
+    """generate -> validate -> feed errors back -> retry.
+
+    Attempts 1..N-1 are strict: hard AND soft issues go back to the LLM. The final attempt is tolerant:
+    a plan with only soft issues (e.g. a rest day below the calorie target) is accepted with warnings.
+    Returns (plan_dict, attempts, warnings) or raises PlanFailed.
+    """
     feedback: list = []
     errors: list = []
     for attempt in range(1, MAX_ATTEMPTS + 1):
         try:
             raw = llm.generate_plan(ctx, feedback)
-            plan_dict, errors = validate_plan(raw, ctx)
+            plan_dict, hard, soft = validate_full(raw, ctx)
         except Exception as e:  # network/JSON/API errors count as a failed attempt
-            plan_dict, errors = {}, [f"The generator failed: {e}"]
-        if not errors:
-            return plan_dict, attempt
+            plan_dict, hard, soft = {}, [f"The generator failed: {e}"], []
+        if not hard and not soft:
+            return plan_dict, attempt, []
+        if not hard and attempt == MAX_ATTEMPTS:
+            return plan_dict, attempt, soft
+        errors = hard + soft
         feedback = errors  # self-correction: the validator's complaints go straight back to the LLM
     message, conflicts = summarize_failure(ctx, errors)
     raise PlanFailed(message, errors, conflicts)
@@ -121,8 +155,8 @@ def run_with_retries(llm, ctx: PlanContext):
 def generate(db: Session, user: User, llm, seed: Optional[int] = None) -> Plan:
     seed = random.randint(1, 10**6) if seed is None else seed
     ctx = build_context(db, user, llm, seed)
-    plan_dict, attempts = run_with_retries(llm, ctx)
-    plan = save_plan(db, user, ctx, plan_dict, attempts)
+    plan_dict, attempts, warnings = run_with_retries(llm, ctx)
+    plan = save_plan(db, user, ctx, plan_dict, attempts, warnings)
     db.commit()
     return plan
 
@@ -135,12 +169,13 @@ def swap_meal(db: Session, user: User, llm, meal: Meal) -> Meal:
                        busy=d.get("busy", False), skipped=d.get("skipped", False)) for d in plan.days]
     ctx.pinned = [m.as_dict() for m in plan.meals if m.id != meal.id]
     ctx.disliked = list(ctx.disliked) + [meal.name]
-    plan_dict, _ = run_with_retries(llm, ctx)
+    plan_dict, _, _ = run_with_retries(llm, ctx)
     new = next(m for m in plan_dict["meals"] if m["day"] == meal.day and m["slot"] == meal.slot)
     meal.name, meal.cook_minutes, meal.calories, meal.protein = new["name"], new["cook_minutes"], new["calories"], new["protein"]
     meal.steps, meal.ingredients, meal.pinned = new["steps"], new["ingredients"], False
     meal.cost = round(sum(i["cost"] for i in new["ingredients"]), 2)
     recompute_totals(plan)
+    reschedule(plan)
     db.commit()
     return meal
 
@@ -160,4 +195,5 @@ def set_day_skipped(db: Session, plan: Plan, weekday: int, skipped: bool) -> Non
         for m in [m for m in plan.meals if m.day == weekday]:
             plan.meals.remove(m)
     recompute_totals(plan)
+    reschedule(plan)
     db.commit()

@@ -125,7 +125,7 @@ def test_budget_is_a_hard_limit_for_real_fake_llm(client):
         assert p.total_cost <= 30
 
 
-from app.services.validators import validate_plan  # noqa: E402
+from app.services.validators import validate_full, validate_plan  # noqa: E402
 
 
 @pytest.mark.parametrize("restrictions", [["vegan"], ["vegetarian"], ["gluten_free"], ["dairy_free"], ["nut_allergy"],
@@ -189,8 +189,8 @@ def test_cooking_time_limit_enforced():
 
 def test_goal_calorie_target():
     c = ctx(goal="calorie_target", calorie_target=2000, days=[DayCtx(i, 60) for i in range(7)])
-    plan, errors = validate_plan(FakeLLM().generate_plan(c), c)
-    assert errors == [], errors
+    _, hard, _soft = validate_full(FakeLLM().generate_plan(c), c)
+    assert hard == [], hard  # (soft issues are checked strictly once the fake planner is schedule-aware)
 
 
 def test_goal_high_protein():
@@ -257,3 +257,24 @@ def test_high_protein_is_feasible_for_common_diets(restrictions):
     c = ctx(goal="high_protein", restrictions=restrictions)
     plan, errors = validate_plan(FakeLLM().generate_plan(c), c)
     assert errors == [], errors
+
+
+def test_soft_issues_become_warnings_on_final_attempt(onboarded):
+    """A plan that only misses a soft goal is accepted after the strict attempts, with a visible warning."""
+    import copy
+
+    onboarded.post("/survey", data={"goal": "calorie_target", "calorie_target": "3500"})
+    base = FakeLLM().generate_plan(ctx(goal="calorie_target", calorie_target=3500))
+    llm = Scripted(copy.deepcopy(base))
+    onboarded.app.dependency_overrides[get_llm] = lambda: llm
+    r = onboarded.post("/plan/generate")
+    assert len(llm.calls) == 3  # two strict retries, then tolerant acceptance
+    p = plans(onboarded)[0]
+    assert p.attempts == 3 and any("calories" in w for w in p.warnings)
+
+
+def test_hard_errors_are_never_downgraded(onboarded):
+    llm = Scripted(scale_costs(good_plan(), 10))
+    onboarded.app.dependency_overrides[get_llm] = lambda: llm
+    onboarded.post("/plan/generate")
+    assert plans(onboarded) == []

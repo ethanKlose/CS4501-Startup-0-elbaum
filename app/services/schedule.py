@@ -18,6 +18,7 @@ from app.services.types import SLOTS, WEEKDAYS, DayCtx
 PRE_WEEK = -1
 BATCH_FACTOR = 0.4  # each extra serving of the same dish costs 40% of the base cook time
 FREEZER_DAYS = 30
+MAX_BATCH = 4  # servings of one dish cooked in one go; more than that is unrealistic and hogs a whole day
 FRESH_WORDS = ("salad", "sandwich", "wrap", "toast", "smoothie", "parfait", "scramble", "quesadilla")
 PREP_STYLES = {
     "auto": "Let the app decide",
@@ -108,6 +109,21 @@ def _slot_idx(m: dict) -> Tuple[int, int]:
 
 def schedule(meals: Sequence[dict], caps: Dict[int, int], style: str = "auto", prep_days: Iterable[int] = (),
              busy: Iterable[int] = ()) -> Schedule:
+    """Try a few deterministic strategies and keep the one with the least overbooking, then the fewest cook days."""
+    prep_days, busy = list(prep_days), list(busy)
+    best = None
+    for order in ("tight", "early"):
+        for consolidate in (100.0, 20.0):
+            cand = _build(meals, caps, style, prep_days, busy, order, consolidate)
+            over = sum(u - cand.caps.get(c, 0) for c, u in cand.used.items() if u > cand.caps.get(c, 0))
+            key = (over, len(cand.used))
+            if best is None or key < best[0]:
+                best = (key, cand)
+    return best[1]
+
+
+def _build(meals: Sequence[dict], caps: Dict[int, int], style: str, prep_days: Iterable[int], busy: Iterable[int],
+           order: str, consolidate: float) -> Schedule:
     prefs = set(prep_days) | ({PRE_WEEK} if 6 in set(prep_days) else set())
     busy = set(busy)
     remaining = dict(caps)
@@ -125,6 +141,8 @@ def schedule(meals: Sequence[dict], caps: Dict[int, int], style: str = "auto", p
 
     def tightness(name):
         ms = dishes[name]
+        if order == "early":  # most constrained first: dishes eaten earliest have the fewest possible cook days
+            return (min(_slot_idx(m) for m in ms), -sum(m["cook_minutes"] for m in ms), name)
         return (storage_days(ms[0]), -sum(m["cook_minutes"] for m in ms), name)
 
     for name in sorted(dishes, key=tightness):
@@ -141,7 +159,7 @@ def schedule(meals: Sequence[dict], caps: Dict[int, int], style: str = "auto", p
             e0 = pending[0]
             options = []
             for c in range(max(PRE_WEEK, e0["day"] - reach), e0["day"] + 1):
-                batch = [m for m in pending if 0 <= m["day"] - c <= reach]
+                batch = [m for m in pending if 0 <= m["day"] - c <= reach][:MAX_BATCH]
                 while batch and batch_minutes(base, len(batch)) > remaining[c]:
                     batch.pop()  # shrink the batch until it fits that day
                 if not batch or batch[0] is not e0:
@@ -150,7 +168,7 @@ def schedule(meals: Sequence[dict], caps: Dict[int, int], style: str = "auto", p
                 n_frozen = sum(1 for m in batch if m["day"] - c > fridge)
                 score = 0.0
                 if c in used_days:
-                    score += 100
+                    score += consolidate
                 elif used_days:
                     score -= {"one_session": 300, "sessions": 40 if len(used_days) >= 3 else 10}.get(
                         style, 30 if len(used_days) >= 2 else 12)
@@ -166,7 +184,7 @@ def schedule(meals: Sequence[dict], caps: Dict[int, int], style: str = "auto", p
             else:  # nothing fits anywhere: book the roomiest legal day anyway and let the caller report it
                 legal = [c for c in range(max(PRE_WEEK, e0["day"] - reach), e0["day"] + 1)] or [e0["day"]]
                 c = max(legal, key=lambda x: (remaining[x], x))
-                batch = [m for m in pending if 0 <= m["day"] - c <= reach] or [e0]
+                batch = [m for m in pending if 0 <= m["day"] - c <= reach][:MAX_BATCH] or [e0]
                 if batch[0] is not e0:
                     batch = [e0]
                 need = batch_minutes(base, len(batch))
@@ -187,10 +205,12 @@ def schedule(meals: Sequence[dict], caps: Dict[int, int], style: str = "auto", p
     for (c, name), ms in sorted(groups.items()):
         ms.sort(key=_slot_idx)
         base = max(m["cook_minutes"] for m in ms)
-        out.sessions.append(dict(
-            cook_day=c, name=name, servings=len(ms), minutes=batch_minutes(base, len(ms)),
-            eats=[dict(day=m["day"], slot=m["slot"], frozen=out.assign[(m["day"], m["slot"])][1]) for m in ms],
-        ))
+        for i in range(0, len(ms), MAX_BATCH):  # one session per real batch
+            chunk = ms[i:i + MAX_BATCH]
+            out.sessions.append(dict(
+                cook_day=c, name=name, servings=len(chunk), minutes=batch_minutes(base, len(chunk)),
+                eats=[dict(day=m["day"], slot=m["slot"], frozen=out.assign[(m["day"], m["slot"])][1]) for m in chunk],
+            ))
     return out
 
 

@@ -1,4 +1,4 @@
-"""Validators: no LLM-generated plan reaches the user unless validate_plan() returns [].
+"""Validators: no LLM-generated plan reaches the user unless validate_full() reports no HARD errors.
 
 Each check returns a list of plain-English errors. The same strings are fed back to the LLM
 on retry, and (summarized) shown to the user if retries run out.
@@ -7,6 +7,7 @@ from collections import Counter
 from typing import List
 
 from app.services.diet import meal_violations
+from app.services.schedule import Schedule, capacities, overbook_messages, schedule
 from app.services.schema import parse_plan
 from app.services.types import SLOTS, WEEKDAYS, PlanContext
 
@@ -50,18 +51,22 @@ def check_diet(plan: dict, ctx: PlanContext) -> List[str]:
     return errors[:15]
 
 
-def check_time(plan: dict, ctx: PlanContext) -> List[str]:
-    errors = []
-    by_day = Counter()
-    for m in plan["meals"]:
-        by_day[m["day"]] += m["cook_minutes"]
-    for d in ctx.days:
-        if by_day[d.weekday] > d.minutes:
-            errors.append(f"{WEEKDAYS[d.weekday]} needs {by_day[d.weekday]} cooking minutes but only {d.minutes} are available.")
-    return errors
+def schedule_for(plan: dict, ctx: PlanContext) -> Schedule:
+    caps = capacities(ctx.days, ctx.prep_style, ctx.prep_days, ctx.prep_minutes)
+    return schedule(plan["meals"], caps, ctx.prep_style, ctx.prep_days, [d.weekday for d in ctx.days if d.busy])
+
+
+def check_schedule(plan: dict, ctx: PlanContext) -> List[str]:
+    """SOFT: can the cooking be fit into the time available, counting batches cooked on other days?"""
+    return overbook_messages(schedule_for(plan, ctx))
+
+
+WEEKLY_CAL_TOLERANCE = 0.10
+DAILY_CAL_TOLERANCE = 0.30
 
 
 def check_goal(plan: dict, ctx: PlanContext) -> List[str]:
+    """SOFT: calorie target (weekly average +/-10%, each day +/-30%) and protein."""
     errors = []
     days = {}
     for m in plan["meals"]:
@@ -71,10 +76,13 @@ def check_goal(plan: dict, ctx: PlanContext) -> List[str]:
     if not days:
         return errors
     if ctx.goal == "calorie_target" and ctx.calorie_target:
-        lo, hi = ctx.calorie_target * 0.8, ctx.calorie_target * 1.2
+        t = ctx.calorie_target
+        avg = sum(v["cal"] for v in days.values()) / len(days)
+        if abs(avg - t) > t * WEEKLY_CAL_TOLERANCE:
+            errors.append(f"Average daily calories are {avg:.0f}; the target is {t} (+/-{WEEKLY_CAL_TOLERANCE:.0%} over the week).")
         for day, v in sorted(days.items()):
-            if not lo <= v["cal"] <= hi:
-                errors.append(f"{WEEKDAYS[day]} has {v['cal']} calories; the target is {ctx.calorie_target} (+/-20%).")
+            if abs(v["cal"] - t) > t * DAILY_CAL_TOLERANCE:
+                errors.append(f"{WEEKDAYS[day]} has {v['cal']} calories; the target is {t} (+/-{DAILY_CAL_TOLERANCE:.0%} per day).")
     if ctx.goal == "high_protein":
         avg = sum(v["pro"] for v in days.values()) / len(days)
         if avg < HIGH_PROTEIN_DAILY_G:
@@ -111,14 +119,28 @@ def check_disliked(plan: dict, ctx: PlanContext) -> List[str]:
             for m in plan["meals"] if m["name"] in ctx.disliked and (m["day"], m["slot"]) not in pinned][:5]
 
 
-CHECKS = [check_coverage, check_time, check_cost_integrity, check_budget, check_diet, check_goal, check_pinned, check_disliked]
+# HARD: safety, money, format. A plan breaking any of these is never shown.
+HARD_CHECKS = [check_coverage, check_cost_integrity, check_budget, check_diet, check_pinned, check_disliked]
+# SOFT: preferences. The LLM is asked to fix them, but on the final attempt they become visible warnings.
+SOFT_CHECKS = [check_schedule, check_goal]
+
+
+def validate_full(raw, ctx: PlanContext):
+    """Returns (normalized_plan, hard_errors, soft_warnings)."""
+    plan, errors = parse_plan(raw)
+    if errors:
+        return plan, errors, []
+    hard: List[str] = []
+    for check in HARD_CHECKS:
+        hard.extend(check(plan, ctx))
+    soft: List[str] = []
+    if not hard:
+        for check in SOFT_CHECKS:
+            soft.extend(check(plan, ctx))
+    return plan, hard, soft
 
 
 def validate_plan(raw, ctx: PlanContext):
-    """Returns (normalized_plan, errors). Plan is only trustworthy when errors == []."""
-    plan, errors = parse_plan(raw)
-    if errors:
-        return plan, errors
-    for check in CHECKS:
-        errors.extend(check(plan, ctx))
-    return plan, errors
+    """Strict mode: returns (normalized_plan, errors) where errors = hard + soft. Trustworthy only when empty."""
+    plan, hard, soft = validate_full(raw, ctx)
+    return plan, hard + soft

@@ -68,6 +68,8 @@ class Plan(Base):
     budget: Mapped[float] = mapped_column(default=0)
     total_cost: Mapped[float] = mapped_column(default=0)
     seed: Mapped[int] = mapped_column(default=0)
+    warnings: Mapped[list] = mapped_column(JSON, default=list)  # soft issues the user should know about
+    settings: Mapped[dict] = mapped_column(JSON, default=dict)  # prep style/days/minutes + goal at generation time
     days: Mapped[list] = mapped_column(JSON, default=list)  # snapshot of per-day availability: weekday/minutes/busy/skipped
 
     meals = relationship("Meal", back_populates="plan", cascade="all, delete-orphan", order_by="Meal.day, Meal.id")
@@ -88,6 +90,8 @@ class Meal(Base):
     steps: Mapped[list] = mapped_column(JSON, default=list)
     ingredients: Mapped[list] = mapped_column(JSON, default=list)
     pinned: Mapped[bool] = mapped_column(default=False)
+    cook_day: Mapped[int] = mapped_column(default=0)  # -1 = Sunday before the week, else 0..6
+    frozen: Mapped[bool] = mapped_column(default=False)  # cooked ahead and frozen, thaw before eating
     status: Mapped[str] = mapped_column(String(10), default="planned")  # planned | cooked | skipped
     rating: Mapped[Optional[int]] = mapped_column(default=None)  # 1-5, only after cooked
 

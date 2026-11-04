@@ -59,6 +59,12 @@ def test_zero_minute_days_are_covered_by_batches_on_other_days():
         assert c not in (2, 3) and c <= d
 
 
+def test_batches_are_capped_at_four_servings():
+    ms = [meal('Lentil soup', d) for d in range(7)]
+    s = schedule(ms, capacities(days(240)))
+    assert max(x['servings'] for x in s.sessions) <= 4 and sum(x['servings'] for x in s.sessions) == 7
+
+
 def test_same_dish_is_batched_into_one_session():
     ms = [meal("Lentil soup", 1), meal("Lentil soup", 2), meal("Lentil soup", 3)]
     s = schedule(ms, capacities(days(120)))

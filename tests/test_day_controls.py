@@ -181,3 +181,21 @@ def test_cannot_swap_other_users_meal(planned):
     planned.post("/logout")
     signup(planned, "q@q.co")
     assert planned.post(f"/meals/{target.id}/swap").status_code == 404
+
+
+def test_cook_days_are_saved_and_never_after_eating(planned):
+    for m in newest_meals(planned).values():
+        assert -1 <= m.cook_day <= m.day
+        if m.cook_minutes == 0:
+            assert m.cook_day == m.day
+
+
+def test_skipping_and_swapping_reschedule_cooking(planned):
+    planned.post("/plan/days/0/skip")
+    assert all(m.day != 0 for m in newest_meals(planned).values())
+    for m in newest_meals(planned).values():
+        assert -1 <= m.cook_day <= m.day
+    target = newest_meals(planned)[(4, "dinner")]
+    planned.post(f"/meals/{target.id}/swap")
+    for m in newest_meals(planned).values():
+        assert -1 <= m.cook_day <= m.day
