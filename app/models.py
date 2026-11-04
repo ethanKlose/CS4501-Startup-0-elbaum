@@ -24,3 +24,15 @@ class Profile(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
     budget: Mapped[Optional[float]] = mapped_column(default=None)
+
+
+class DaySetting(Base):
+    """Per-weekday availability (0=Monday ... 6=Sunday)."""
+
+    __tablename__ = "day_settings"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    weekday: Mapped[int]
+    busy: Mapped[bool] = mapped_column(default=False)
+    minutes: Mapped[int] = mapped_column(default=45)

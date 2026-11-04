@@ -12,6 +12,19 @@
     </label>
     {% if errors.budget %}<p class="error" role="alert">{{ errors.budget }}</p>{% endif %}
   </fieldset>
+  <fieldset>
+    <legend>Your week</legend>
+    <p class="muted">Tick busy days and set how many minutes you can spend cooking that day (0 = no cooking).</p>
+    {% for d in days %}
+    <div class="dayrow">
+      <span class="dayname">{{ weekdays[d.weekday] }}</span>
+      <label class="check"><input type="checkbox" name="busy_{{ d.weekday }}" {% if (form is defined and form.get('busy_' ~ d.weekday)) or (form is not defined and d.busy) %}checked{% endif %}> Busy</label>
+      <label class="check"><input type="number" name="minutes_{{ d.weekday }}" min="0" max="480" required style="width:5rem"
+         value="{{ form.get('minutes_' ~ d.weekday) if form is defined else d.minutes }}"> min</label>
+    </div>
+    {% if errors.get('minutes_' ~ d.weekday) %}<p class="error" role="alert">{{ errors.get('minutes_' ~ d.weekday) }}</p>{% endif %}
+    {% endfor %}
+  </fieldset>
   <button>Save</button>
 </form>
 {% endblock %}

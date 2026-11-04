@@ -19,3 +19,5 @@ button.secondary { background:transparent; color:var(--fg); border:1px solid var
 .ok { color:var(--accent); font-weight:600; }
 fieldset { border:1px solid var(--line); border-radius:8px; display:flex; flex-direction:column; gap:.6rem; }
 legend { font-weight:700; padding:0 .4rem; }
+.dayrow { display:flex; align-items:center; gap:1rem; flex-wrap:wrap; }
+.dayname { width:6.5rem; font-weight:600; }
