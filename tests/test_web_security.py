@@ -8,3 +8,21 @@ def test_forms_and_ajax_receive_session_token(client):
     response=client.get('/register')
     assert 'name="csrf_token"' in response.text
     assert client.cookies.get('csrf_token') in response.text
+
+
+def test_shared_rate_counter_blocks_and_expires(session_factory):
+    from app.rate_limits import hit
+    with session_factory() as db:
+        assert hit(db,'login','same-ip',2,60,now=1)
+    with session_factory() as db:
+        assert hit(db,'login','same-ip',2,60,now=2)
+        assert not hit(db,'login','same-ip',2,60,now=3)
+        assert hit(db,'login','same-ip',2,60,now=61)
+
+
+def test_production_rejects_default_secrets(monkeypatch):
+    import pytest
+    from app.config import settings
+    monkeypatch.setenv('APP_ENV','production')
+    monkeypatch.setenv('SECRET_KEY','change-me-in-prod')
+    with pytest.raises(RuntimeError,match='SECRET_KEY'):settings.validate()

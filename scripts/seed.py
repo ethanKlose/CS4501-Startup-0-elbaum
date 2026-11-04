@@ -9,7 +9,12 @@ DEMO_EMAIL, DEMO_PASSWORD = "demo@platejoy.dev", "demo-password"
 
 
 def main():
+    from app.config import settings
+    settings.validate()
     init_db()
+    if settings.production:
+        print("Production database migrated; demo account is disabled.")
+        return
     with SessionLocal() as db:
         if not db.scalar(select(User).where(User.email == DEMO_EMAIL)):
             db.add(User(email=DEMO_EMAIL, password_hash=hash_password(DEMO_PASSWORD)))

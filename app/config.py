@@ -9,6 +9,16 @@ class Settings:
     """Read lazily from env so tests can override before create_app()."""
 
     @property
+    def production(self) -> bool:
+        return os.environ.get("APP_ENV", "development").lower() == "production"
+
+    def validate(self):
+        if self.production and (self.secret_key in {"dev-insecure-secret", "change-me-in-prod"} or len(self.secret_key) < 32):
+            raise RuntimeError("Production requires a unique SECRET_KEY of at least 32 characters.")
+        if self.production and not os.environ.get("PUBLIC_BASE_URL", "").startswith("https://"):
+            raise RuntimeError("Production requires an HTTPS PUBLIC_BASE_URL.")
+
+    @property
     def timezone(self) -> str:
         return os.environ.get("TIMEZONE", "America/New_York")
 

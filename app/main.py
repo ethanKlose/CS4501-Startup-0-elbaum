@@ -22,9 +22,10 @@ async def lifespan(app: FastAPI):
 
 
 def create_app() -> FastAPI:
+    settings.validate()
     app = FastAPI(title="PlateJoy (alpha)", lifespan=lifespan)
     app.add_middleware(CSRFProtection)
-    app.add_middleware(SessionMiddleware, secret_key=settings.secret_key, same_site="lax")
+    app.add_middleware(SessionMiddleware, secret_key=settings.secret_key, same_site="lax", https_only=settings.production)
     app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
 
     @app.exception_handler(LoginRequired)

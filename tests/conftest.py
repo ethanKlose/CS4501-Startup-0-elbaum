@@ -1,6 +1,7 @@
 import os
 
 os.environ.setdefault("DATABASE_URL", "sqlite://")
+os.environ.setdefault("RATE_LIMIT_ENABLED", "0")
 os.environ["ANTHROPIC_API_KEY"] = ""  # tests never hit the real API
 
 import pytest

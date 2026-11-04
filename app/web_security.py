@@ -16,6 +16,10 @@ class CSRFProtection(BaseHTTPMiddleware):
                     supplied = str((await request.form()).get('csrf_token', ''))
             if not supplied or not hmac.compare_digest(token, supplied):
                 return PlainTextResponse('Your form expired. Reload the page and try again.', status_code=403)
+        if request.method == "POST":
+            from app.rate_limits import enforce
+            if not await enforce(request):
+                return PlainTextResponse("Too many attempts. Please try again later.", status_code=429, headers={"Retry-After":"900"})
         response = await call_next(request)
         # Login/logout can change session contents; keep the readable token aligned.
         token = request.session.setdefault('csrf_token', secrets.token_urlsafe(32))
