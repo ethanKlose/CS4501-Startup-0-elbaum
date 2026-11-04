@@ -29,6 +29,7 @@
       <a href="/survey" class="{{ 'on' if path.startswith('/survey') }}">{{ icon('sliders') }}<span>Preferences</span></a>
     </nav>
     <div class="topbar-end">
+      {% if user %}<a class="btn sm line" href="/plans">History</a>{% endif %}
       <button class="iconbtn theme-toggle" type="button" aria-label="Toggle dark mode" data-theme-toggle><span class="i-moon">{{ icon('moon') }}</span><span class="i-sun">{{ icon('sun') }}</span></button>
       <details class="usermenu">
         <summary aria-label="Account menu"><span class="avatar">{{ user.email[0]|upper }}</span></summary>

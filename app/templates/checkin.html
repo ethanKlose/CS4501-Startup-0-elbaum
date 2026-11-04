@@ -12,6 +12,7 @@
   <div>
     {% if saved %}<div class="alert info" role="status">{{ icon('check-circle') }}<span>Thanks! Your next plan will take this into account.</span></div>{% endif %}
     {% if saved and leftovers %}<div class="alert info" data-testid="leftovers">{{ icon('leaf') }}<span>Added {{ leftovers|length }} unused ingredients to your <a href="/survey#pantry">pantry</a> so next week's plan can use them up: {{ leftovers|join(', ') }}.</span></div>{% endif %}
+    {% if closed %}<form method="post" action="/checkin/undo" class="card pad-lg"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="plan_id" value="{{ plan.id }}"><p>Submitted by mistake? Reopen this plan to correct cooking or shopping. Its inventory changes will be reversed.</p><button class="btn line">Undo check-in and reopen</button></form>{% endif %}
     <form method="post" class="ci-form"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <input type="hidden" name="plan_id" value="{{ plan.id }}">
       {% if not closed %}<section class="card pad-lg"><h2>Confirm your groceries</h2>

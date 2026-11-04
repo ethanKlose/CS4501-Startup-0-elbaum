@@ -9,6 +9,7 @@
   {% if error.conflicts %}<ul>{% for c in error.conflicts %}<li>{{ c }}</li>{% endfor %}</ul>{% endif %}
   <a href="/survey">Edit your survey</a></div></div>{% endif %}
 
+{% if archived %}<div class="alert info">Archived plan. <a href="/">Return to the current plan</a></div>{% endif %}
 {% if not plan or plan.status != 'ok' %}
 <section class="empty card reveal">
   <div class="plate big" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
@@ -26,10 +27,10 @@
   <div><h1>{{ week_title }}</h1><div class="row"><span class="chip brand">{{ icon('shield', 14) }} Verified plan</span><span class="muted tiny">Tap a meal for the recipe</span></div></div>
   <div class="row">
     <a class="btn line" href="/grocery">{{ icon('cart') }} Grocery list</a>
-    <form method="post" action="/plan/regenerate" class="inline" data-confirm="Replace the displayed plan? Pinned recipes stay. Cooking history is archived, confirmed purchases update your pantry, and the new plan starts with fresh check-offs." data-generate data-generate-title="Regenerating your week…"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    {% if not archived %}<form method="post" action="/plan/regenerate" class="inline" data-confirm="Replace the displayed plan? Pinned recipes stay. Cooking history is archived, confirmed purchases update your pantry, and the new plan starts with fresh check-offs." data-generate data-generate-title="Regenerating your week…"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <button class="btn primary">{{ icon('refresh') }} Regenerate week</button></form>
     <form method="post" action="/plan/next-week" class="inline" data-confirm="Start the following week? The current plan is archived and confirmed purchases update your pantry. The new week starts with all days active." data-generate data-generate-title="Planning next week…"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <button class="btn line">Plan next week</button></form>
+      <button class="btn line">Plan next week</button></form>{% endif %}
   </div>
 </div>
 

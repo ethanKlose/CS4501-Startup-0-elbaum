@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Plan history</h1>
+<p class="muted">Revisit recipes, costs and progress from previous weeks.</p>
+{% for p in plans %}<section class="card" style="margin:12px 0"><h2><a href="/plans/{{ p.id }}">Week of {{ week_start(p) }}</a></h2><p>${{ '%.2f' % p.total_cost }} · {{ p.meals|length }} meals · {{ p.meals|selectattr('status','equalto','cooked')|list|length }} cooked</p></section>{% else %}<p>No plans yet. <a href="/">Build your first week</a>.</p>{% endfor %}
+{% endblock %}

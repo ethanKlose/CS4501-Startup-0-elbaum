@@ -74,3 +74,17 @@ def checkin_submit(
         row.leftovers = [l["name"] for l in left]
     db.commit()
     return RedirectResponse("/checkin?saved=1", 303)
+
+
+@router.post('/checkin/undo')
+def undo_checkin(request:Request,plan_id:int=Form(...),user:User=Depends(current_user),db:Session=Depends(get_db)):
+    lock_user(db,user.id)
+    plan=planner.latest_plan(db,user)
+    if not plan or plan.id!=plan_id:raise HTTPException(409,'Only the latest plan can be reopened.')
+    try:inventory.reopen(db,plan)
+    except ValueError as e:
+        db.rollback();raise HTTPException(409,str(e))
+    row=db.scalar(select(CheckIn).where(CheckIn.plan_id==plan.id))
+    if row:db.delete(row)
+    db.commit()
+    return RedirectResponse('/checkin',303)

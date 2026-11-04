@@ -118,3 +118,25 @@ def settle(db, plan):
     write_state(plan, dict(state(plan), settled=True, changes=changes, leftovers=leftovers, shopping_items=shopping_snapshot))
     db.flush()
     return leftovers
+
+
+def reopen(db, plan):
+    """Reverse this plan's deltas against current stock, preserving manual edits."""
+    lock_user(db,plan.user_id);db.refresh(plan)
+    ledger=dict(state(plan))
+    if not ledger.get('settled'):return
+    rows=pantry(db,plan.user_id)
+    adjustments=[]
+    for change in ledger.get('changes',[]):
+        item=next((p for p in rows if p.name==change['name'] and p.unit==change['unit']),None)
+        if item is None or item.quantity is None:
+            raise ValueError('Pantry entries changed since check-in. Restore those entries before undoing it.')
+        new=round(item.quantity-(change['after']-change['before']),2)
+        if new<0:
+            raise ValueError('Some of these leftovers have already been used. Undo cannot remove more stock than you have.')
+        adjustments.append((item,new))
+    for item,new in adjustments:item.quantity=new
+    ledger['settled']=False
+    ledger['reopen_count']=ledger.get('reopen_count',0)+1
+    for key in ('changes','leftovers','shopping_items'):ledger.pop(key,None)
+    write_state(plan,ledger)

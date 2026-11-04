@@ -1,13 +1,13 @@
 import json
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.deps import current_user_optional, render
-from app.models import CheckIn
+from app.models import CheckIn, Plan
 from app.routers.checkin import checkin_due
 from app.routers.survey import get_profile
 from app.services import planner, inventory
@@ -45,18 +45,22 @@ def meals_json(meals, closed=False) -> str:
 
 
 @router.get("/")
-def home(request: Request, user=Depends(current_user_optional), db: Session = Depends(get_db)):
+def home(request: Request, user=Depends(current_user_optional), db: Session = Depends(get_db), plan_id: int = None):
     if user is None:
         return render(request, "landing.html", None)
     profile = get_profile(db, user)
     db.commit()
     if not profile.onboarded:
         return RedirectResponse("/survey", 303)
-    plan = planner.latest_plan(db, user)
+    latest = planner.latest_plan(db,user)
+    plan = db.get(Plan,plan_id) if plan_id is not None else latest
+    if plan_id is not None and (not plan or plan.user_id != user.id):
+        raise HTTPException(404,"Plan not found")
+    archived = bool(plan and latest and plan.id != latest.id)
     error = request.session.pop("flash_error", None)
     info = request.session.pop("flash_info", None)
     welcome = request.session.pop("welcome", False)
-    ctx = dict(profile=profile, plan=plan, error=error, info=info, welcome=welcome, weekdays=WEEKDAYS)
+    ctx = dict(profile=profile, plan=plan, archived=archived, error=error, info=info, welcome=welcome, weekdays=WEEKDAYS)
     if not (plan and plan.status == "ok"):
         return render(request, "home.html", user, **ctx)
 
@@ -79,3 +83,13 @@ def home(request: Request, user=Depends(current_user_optional), db: Session = De
     return render(request, "home.html", user, columns=columns, hours=hour_labels(start_hour), hour_px=HOUR_PX, grid_px=(HOUR_END - start_hour) * HOUR_PX, week_title=week_title(start), stats=stats,
                   cook_plan=cook_plan, sharing=sharing_stats(m.as_dict() for m in meals), checkin_due=checkin_due(plan, done),
                   short=[w[:3] for w in WEEKDAYS], meals_json=meals_json(meals, inventory.closed(plan)), closed=inventory.closed(plan), prep_col=bool(columns and columns[0]["prep"]), **ctx)
+
+
+router.add_api_route('/plans/{plan_id}',home,methods=['GET'])
+
+
+@router.get('/plans')
+def plan_history(request:Request,user=Depends(current_user_optional),db:Session=Depends(get_db)):
+    if user is None:return RedirectResponse('/login',303)
+    plans=list(db.scalars(select(Plan).where(Plan.user_id==user.id).order_by(Plan.id.desc())))
+    return render(request,'history.html',user,plans=plans,week_start=plan_week_start)
