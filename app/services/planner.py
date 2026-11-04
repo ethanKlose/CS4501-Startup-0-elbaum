@@ -6,7 +6,7 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import DaySetting, Meal, PantryItem, Plan, Profile, User
+from app.models import CheckIn, DaySetting, Meal, PantryItem, Plan, Profile, User
 from app.services.diet import meal_violations
 from app.services.explain import summarize_failure
 from app.services.types import DayCtx, PlanContext
@@ -46,7 +46,9 @@ def build_context(db: Session, user: User, llm, seed: int = 0) -> PlanContext:
     if profile is None or profile.budget is None:
         raise PlanFailed("Finish the survey (at least your weekly budget) before generating a plan.")
     days = {d.weekday: d for d in db.scalars(select(DaySetting).where(DaySetting.user_id == user.id))}
-    interp = llm.interpret_preferences(profile.free_text) if profile.free_text else {"excluded": [], "day_minutes_cap": {}}
+    checkin = db.scalar(select(CheckIn).where(CheckIn.user_id == user.id).order_by(CheckIn.id.desc()).limit(1))
+    prefs_text = " . ".join(t for t in [profile.free_text, checkin.notes if checkin else ""] if t)
+    interp = llm.interpret_preferences(prefs_text) if prefs_text else {"excluded": [], "day_minutes_cap": {}}
     caps = interp.get("day_minutes_cap", {})
     prev = latest_plan(db, user)
     prev_skipped = {d["weekday"] for d in (prev.days if prev and prev.status == "ok" else []) if d.get("skipped")}
@@ -56,8 +58,14 @@ def build_context(db: Session, user: User, llm, seed: int = 0) -> PlanContext:
         minutes = d.minutes if d else 45
         if str(i) in caps:
             minutes = min(minutes, int(caps[str(i)]))
+        if checkin and checkin.cook_time == "too_much":
+            minutes = int(minutes * 0.75) // 5 * 5  # last week took too long: trim every day by ~25%
         day_ctx.append(DayCtx(weekday=i, minutes=minutes, busy=bool(d and d.busy), skipped=i in prev_skipped))
     liked, disliked = rating_preferences(db, user)
+    avoid = []
+    if checkin and checkin.variety == "repetitive":
+        names = [m.name for m in db.scalars(select(Meal).where(Meal.plan_id == checkin.plan_id))]
+        avoid = sorted({n for n in names if names.count(n) >= 2})
     pinned = []
     if prev and prev.status == "ok":
         for m in prev.meals:
@@ -70,7 +78,7 @@ def build_context(db: Session, user: User, llm, seed: int = 0) -> PlanContext:
     return PlanContext(
         budget=profile.budget, days=day_ctx, restrictions=list(profile.restrictions or []),
         excluded=list(interp.get("excluded", [])), goal=profile.goal, calorie_target=profile.calorie_target,
-        free_text=profile.free_text, pantry=pantry, pinned=pinned, liked=liked, disliked=disliked, seed=seed,
+        free_text=profile.free_text, pantry=pantry, pinned=pinned, liked=liked, disliked=disliked, avoid=avoid, seed=seed,
     )
 
 

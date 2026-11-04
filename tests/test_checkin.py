@@ -68,7 +68,10 @@ def test_ratings_influence_future_plans(planned):
 
     ms = meals(planned)
     hated = ms[2]
-    loved = ms[5]
+    loved = next(m for m in ms if m.name != hated.name)  # distinct recipes, plan content is random
+    for m in ms:  # rate every copy of the hated recipe so the average is exact
+        if m.name == hated.name and m.id != hated.id:
+            cook_and_rate(planned, m, 1)
     cook_and_rate(planned, hated, 1)
     cook_and_rate(planned, loved, 5)
     with planned.app.state.session_factory() as s:
@@ -95,3 +98,65 @@ def test_disliked_validator_rejects():
     c.disliked = [plan["meals"][0]["name"]]
     _, errors = validate_plan(plan, c)
     assert any("rated poorly" in e for e in errors)
+
+
+import datetime as dt  # noqa: E402
+
+from app.routers.checkin import checkin_due  # noqa: E402
+
+
+def test_checkin_due_at_end_of_week():
+    plan = Plan(status="ok", created_at=dt.datetime(2026, 11, 2))  # a Monday
+    assert not checkin_due(plan, False, now=dt.datetime(2026, 11, 3))  # Tuesday
+    assert checkin_due(plan, False, now=dt.datetime(2026, 11, 7))  # Saturday
+    assert checkin_due(plan, False, now=dt.datetime(2026, 11, 9))  # 7 days old
+    assert not checkin_due(plan, True, now=dt.datetime(2026, 11, 7))  # already done
+    assert not checkin_due(None, False)
+
+
+def last_checkin(client):
+    from app.models import CheckIn
+
+    with client.app.state.session_factory() as s:
+        return s.query(CheckIn).order_by(CheckIn.id.desc()).first()
+
+
+def test_checkin_saved_and_summary_shown(planned):
+    ms = meals(planned)
+    planned.post(f"/meals/{ms[0].id}/status", data={"status": "cooked"})
+    planned.post(f"/meals/{ms[1].id}/status", data={"status": "skipped"})
+    page = planned.get("/checkin").text
+    assert "cooked <strong>1</strong> of 21" in page
+    r = planned.post("/checkin", data={"overall": "great", "cook_time": "too_much", "variety": "repetitive", "notes": "no mushrooms"})
+    assert "next plan will take this" in r.text
+    c = last_checkin(planned)
+    assert (c.overall, c.cook_time, c.variety, c.notes) == ("great", "too_much", "repetitive", "no mushrooms")
+    planned.post("/checkin", data={"overall": "poor"})  # resubmitting updates, not duplicates
+    from app.models import CheckIn
+
+    with planned.app.state.session_factory() as s:
+        assert s.query(CheckIn).count() == 1
+
+
+def test_checkin_invalid_values_fall_back(planned):
+    planned.post("/checkin", data={"overall": "???", "cook_time": "x", "variety": "y"})
+    c = last_checkin(planned)
+    assert (c.overall, c.cook_time, c.variety) == ("ok", "right", "right")
+
+
+def test_checkin_responses_shape_next_plan(planned):
+    planned.post("/checkin", data={"cook_time": "too_much", "variety": "repetitive", "notes": "no rice, no beans"})
+    planned.post("/plan/regenerate")
+    with planned.app.state.session_factory() as s:
+        plan = s.query(Plan).order_by(Plan.id.desc()).first()
+        ms = s.query(Meal).filter_by(plan_id=plan.id).all()
+        days = plan.days
+    assert all(d["minutes"] <= 33 for d in days)  # 45 * 0.75 -> 30
+    for m in ms:  # free-text notes are interpreted into exclusions
+        text = " ".join(i["name"] for i in m.ingredients)
+        assert "rice" not in text and "beans" not in text
+
+
+def test_banner_hidden_when_not_due_and_link_exists(planned):
+    assert 'data-testid="checkin-banner"' not in planned.get("/").text or dt.datetime.utcnow().weekday() >= 5
+    assert 'href="/checkin"' in planned.get("/").text

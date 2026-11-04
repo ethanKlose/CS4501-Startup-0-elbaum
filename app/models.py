@@ -103,3 +103,19 @@ class GroceryCheck(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     plan_id: Mapped[int] = mapped_column(ForeignKey("plans.id"), index=True)
     key: Mapped[str] = mapped_column(String(200))
+
+
+class CheckIn(Base):
+    """End-of-week feedback. The user's latest check-in shapes every plan generated after it."""
+
+    __tablename__ = "checkins"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    plan_id: Mapped[int] = mapped_column(ForeignKey("plans.id"), index=True)
+    created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.utcnow)
+    overall: Mapped[str] = mapped_column(String(10), default="ok")  # great | ok | poor
+    cook_time: Mapped[str] = mapped_column(String(16), default="right")  # too_much | right | could_do_more
+    variety: Mapped[str] = mapped_column(String(16), default="right")  # repetitive | right
+    notes: Mapped[str] = mapped_column(String(500), default="")
+    leftovers: Mapped[list] = mapped_column(JSON, default=list)

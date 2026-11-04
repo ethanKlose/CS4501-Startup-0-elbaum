@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Weekly check-in · PlateJoy{% endblock %}
+{% block content %}
+<h1>Weekly check-in</h1>
+{% if not plan or plan.status != 'ok' %}
+  <p class="muted">Generate a plan first — then check in at the end of the week.</p>
+{% else %}
+  {% if saved %}<p class="ok" role="status">Thanks! Your next plan will take this into account.</p>{% endif %}
+  <p>This week: you cooked <strong>{{ summary.cooked }}</strong> of {{ summary.total }} meals{% if summary.skipped %}, skipped {{ summary.skipped }}{% endif %}{% if summary.avg_rating %}; average rating {{ summary.avg_rating }}/5{% endif %}.</p>
+  <form method="post" class="card">
+    <fieldset><legend>How did the week go?</legend>
+      {% for k, label in overall.items() %}<label class="check"><input type="radio" name="overall" value="{{ k }}" {% if (existing.overall if existing else 'ok') == k %}checked{% endif %}> {{ label }}</label>{% endfor %}</fieldset>
+    <fieldset><legend>Cooking time</legend>
+      {% for k, label in cook_time.items() %}<label class="check"><input type="radio" name="cook_time" value="{{ k }}" {% if (existing.cook_time if existing else 'right') == k %}checked{% endif %}> {{ label }}</label>{% endfor %}</fieldset>
+    <fieldset><legend>Variety</legend>
+      {% for k, label in variety.items() %}<label class="check"><input type="radio" name="variety" value="{{ k }}" {% if (existing.variety if existing else 'right') == k %}checked{% endif %}> {{ label }}</label>{% endfor %}</fieldset>
+    <label>Anything else? <textarea name="notes" rows="3" maxlength="500" placeholder="e.g. too much chicken, no mushrooms">{{ existing.notes if existing else '' }}</textarea></label>
+    <button>Save check-in</button>
+  </form>
+{% endif %}
+{% endblock %}

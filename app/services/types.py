@@ -30,6 +30,7 @@ class PlanContext:
     liked: List[str] = field(default_factory=list)  # meal names rated highly before
     disliked: List[str] = field(default_factory=list)
     leftovers: List[str] = field(default_factory=list)  # ingredient names to use up
+    avoid: List[str] = field(default_factory=list)  # meal names that felt repetitive last week
     seed: int = 0
 
     def active_days(self) -> List[DayCtx]:

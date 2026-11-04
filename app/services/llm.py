@@ -96,6 +96,7 @@ class FakeLLM:
                 s = 2.0 * sum(i in pantry for i in ings) + 1.5 * sum(i in leftovers for i in ings)
                 s += 0.8 * sum(1 for i in ings if used[i] > 0)
                 s += 3.0 if r["name"] in ctx.liked else 0
+                s -= 2.5 if r["name"] in ctx.avoid else 0
                 s += rng.random() * 1.2
                 if ctx.goal == "high_protein":
                     s += r["protein"] / 15

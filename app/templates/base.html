@@ -13,6 +13,7 @@
     {% if user %}
       <a href="/">Plan</a>
       <a href="/grocery">Grocery</a>
+      <a href="/checkin">Check-in</a>
       <a href="/survey">Survey</a>
       <form method="post" action="/logout" class="inline"><button class="link">Log out ({{ user.email }})</button></form>
     {% else %}
