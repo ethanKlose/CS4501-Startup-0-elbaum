@@ -135,11 +135,11 @@
   function render(m) {
     var slotCls = { breakfast: 'breakfast', lunch: 'lunch', dinner: 'dinner' }[m.slot];
     var actions = form('/meals/' + m.id + '/pin', { next: '/' }, m.pinned ? 'Unpin' : '📌 Pin', 'line');
-    if (m.status === 'planned' && m.rating === null) actions +=
+    if (!m.closed && m.status === 'planned' && m.rating === null) actions +=
       form('/meals/' + m.id + '/swap', {}, '⇄ Swap meal', 'line', 'data-generate data-generate-title="Finding a replacement…"');
-    if (m.status !== 'cooked') actions += form('/meals/' + m.id + '/status', { status: 'cooked', next: '/' }, '✓ Mark cooked', 'soft');
-    if (m.status !== 'skipped') actions += form('/meals/' + m.id + '/status', { status: 'skipped', next: '/' }, 'Skip', 'ghost');
-    if (m.status !== 'planned') actions += form('/meals/' + m.id + '/status', { status: 'planned', next: '/' }, 'Reset', 'ghost');
+    if (!m.closed && m.status !== 'cooked') actions += form('/meals/' + m.id + '/status', { status: 'cooked', next: '/' }, '✓ Mark cooked', 'soft');
+    if (!m.closed && m.status !== 'skipped') actions += form('/meals/' + m.id + '/status', { status: 'skipped', next: '/' }, 'Skip', 'ghost');
+    if (!m.closed && m.status !== 'planned') actions += form('/meals/' + m.id + '/status', { status: 'planned', next: '/' }, 'Reset', 'ghost');
     actions += '<a class="btn sm primary" href="/meals/' + m.id + '" style="margin-left:auto">Full recipe →</a>';
     body.innerHTML =
       '<div class="md-head event ' + slotCls + '" style="position:static;height:auto;width:auto;animation:none;box-shadow:none;border-radius:0;border:0">' +

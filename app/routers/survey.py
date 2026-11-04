@@ -267,7 +267,8 @@ def pantry_add(
             qty = -1
         if qty < 0 or not math.isfinite(qty):
             return RedirectResponse("/survey?pantry_error=Quantity+must+be+a+positive+number", 303)
-    existing = db.scalar(select(PantryItem).where(PantryItem.user_id == user.id, PantryItem.name == name))
+    unit = unit.lower().strip()[:20]
+    existing = db.scalar(select(PantryItem).where(PantryItem.user_id == user.id, PantryItem.name == name, PantryItem.unit == unit))
     if existing:
         existing.quantity, existing.unit = qty, unit.strip()[:20]
     else:

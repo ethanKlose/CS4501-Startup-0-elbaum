@@ -12,6 +12,7 @@ from app.services.diet import meal_violations
 from app.services.explain import summarize_failure
 from app.services.schedule import capacities, schedule
 from app.services.types import DayCtx, PlanContext
+from app.services import inventory
 from app.services.weeks import plan_week_start, planning_today, target_week
 from app.services.validators import SOFT_CHECKS, schedule_for, validate_full
 
@@ -160,6 +161,9 @@ def run_with_retries(llm, ctx: PlanContext):
 
 def generate(db: Session, user: User, llm, seed: Optional[int] = None, new_week: bool = False) -> Plan:
     seed = random.randint(1, 10**6) if seed is None else seed
+    previous = latest_plan(db, user)
+    if previous:
+        inventory.settle(db, previous)
     ctx = build_context(db, user, llm, seed, week_start=target_week(latest_plan(db, user), new_week))
     plan_dict, attempts, warnings = run_with_retries(llm, ctx)
     plan = save_plan(db, user, ctx, plan_dict, attempts, warnings)
@@ -169,6 +173,8 @@ def generate(db: Session, user: User, llm, seed: Optional[int] = None, new_week:
 
 def swap_meal(db: Session, user: User, llm, meal: Meal) -> Meal:
     """Replace one meal. Every other meal is pinned, so only this slot changes; the WHOLE plan is re-verified."""
+    if inventory.closed(db.get(Plan, meal.plan_id)):
+        raise PlanFailed("This plan is closed. Generate a new week to make changes.")
     if meal.status != "planned" or meal.rating is not None:
         raise PlanFailed("Only planned, unrated meals can be swapped. Completed meals keep their cooking and rating history.")
     plan = db.get(Plan, meal.plan_id)
@@ -194,6 +200,10 @@ def recompute_totals(plan: Plan) -> None:
 
 def set_day_skipped(db: Session, plan: Plan, weekday: int, skipped: bool) -> None:
     """Mark a day as changed (e.g. eating out). Its meals are removed, so cost and grocery list shrink."""
+    if inventory.closed(plan):
+        raise PlanFailed("This plan is closed. Generate a new week to make changes.")
+    if skipped and any(m.day == weekday and (m.status == "cooked" or m.rating is not None) for m in plan.meals):
+        raise PlanFailed("A day with completed meals cannot be removed. Its cooking and rating history is kept.")
     days = [dict(d) for d in plan.days]  # copy: JSON columns need reassignment to register the change
     for d in days:
         if d["weekday"] == weekday:

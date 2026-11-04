@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.deps import current_user, render
 from app.models import Meal, Plan, User
-from app.services import planner
+from app.services import planner, inventory
 from app.services.llm import get_llm
 
 router = APIRouter()
@@ -17,6 +17,7 @@ def generate_plan(request: Request, user: User = Depends(current_user), db: Sess
     try:
         planner.generate(db, user, llm)
     except planner.PlanFailed as e:
+        db.rollback()
         request.session["flash_error"] = {"message": e.message, "conflicts": e.conflicts}
     return RedirectResponse("/", 303)
 
@@ -26,6 +27,7 @@ def next_week(request: Request, user: User = Depends(current_user), db: Session 
     try:
         planner.generate(db, user, llm, new_week=True)
     except planner.PlanFailed as e:
+        db.rollback()
         request.session["flash_error"] = {"message": e.message, "conflicts": e.conflicts}
     return RedirectResponse("/", 303)
 
@@ -45,7 +47,7 @@ def meal_detail(meal_id: int, request: Request, user: User = Depends(current_use
     meal = owned_meal(db, user, meal_id)
     from app.services.schedule import day_label
 
-    return render(request, "meal.html", user, meal=meal, weekday=WEEKDAYS[meal.day], cook_label=day_label(meal.cook_day))
+    return render(request, "meal.html", user, meal=meal, weekday=WEEKDAYS[meal.day], closed=inventory.closed(db.get(Plan, meal.plan_id)), cook_label=day_label(meal.cook_day))
 
 
 @router.post("/plan/days/{weekday}/skip")
@@ -54,7 +56,12 @@ def toggle_day(weekday: int, request: Request, user: User = Depends(current_user
     if not plan or plan.status != "ok" or not 0 <= weekday <= 6:
         raise HTTPException(404, "No plan or day")
     currently = any(d["weekday"] == weekday and d.get("skipped") for d in plan.days)
-    planner.set_day_skipped(db, plan, weekday, not currently)
+    try:
+        planner.set_day_skipped(db, plan, weekday, not currently)
+    except planner.PlanFailed as e:
+        db.rollback()
+        request.session['flash_error'] = {'message': e.message, 'conflicts': []}
+        return RedirectResponse('/', 303)
     if currently:
         request.session["flash_info"] = "Day restored. Regenerate to fill it (your pinned meals are kept)."
     return RedirectResponse("/", 303)
@@ -82,6 +89,8 @@ def swap(meal_id: int, request: Request, user: User = Depends(current_user), db:
 @router.post("/meals/{meal_id}/status")
 def set_status(meal_id: int, status: str = Form(...), next: str = Form("/"), user: User = Depends(current_user), db: Session = Depends(get_db)):
     meal = owned_meal(db, user, meal_id)
+    if inventory.closed(db.get(Plan, meal.plan_id)):
+        raise HTTPException(409, "This plan is closed. Its inventory has already been updated.")
     if status not in ("planned", "cooked", "skipped"):
         raise HTTPException(422, "status must be planned, cooked or skipped")
     meal.status = status

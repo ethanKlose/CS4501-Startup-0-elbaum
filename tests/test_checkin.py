@@ -174,7 +174,7 @@ def test_unused_ingredients_added_to_pantry_on_checkin(planned):
     cooked_only = [m for m in ms if m.day == 0]
     for m in cooked_only:
         planned.post(f"/meals/{m.id}/status", data={"status": "cooked"})
-    r = planned.post("/checkin", data={})
+    r = planned.post("/checkin", data={"bought_all": "true"})
     assert 'data-testid="leftovers"' in r.text
     pantry = pantry_names(planned)
     uncooked_ings = {i["name"].lower() for m in ms if m.day != 0 for i in m.ingredients}
@@ -201,7 +201,7 @@ def test_nothing_unused_if_everything_cooked(planned):
 
 
 def test_leftovers_added_once_and_merge_quantities(planned):
-    planned.post("/checkin", data={})
+    planned.post("/checkin", data={"bought_all": "true"})
     first = {k: v.quantity for k, v in pantry_names(planned).items()}
     planned.post("/checkin", data={"overall": "great"})  # re-submit must not double-add
     assert {k: v.quantity for k, v in pantry_names(planned).items()} == first
@@ -216,7 +216,7 @@ def test_next_plan_prefers_leftovers(planned):
     left = FakeLLM().generate_plan(ctx(leftovers=["salmon fillet"]))
     assert count(left) > count(base)
     # and the planner wires the latest check-in's leftovers into the context
-    planned.post("/checkin", data={})
+    planned.post("/checkin", data={"bought_all": "true"})
     with planned.app.state.session_factory() as s:
         from app.models import User
         from app.services import planner

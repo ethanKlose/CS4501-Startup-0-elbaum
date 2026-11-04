@@ -127,8 +127,10 @@ def test_toggle_is_idempotent_and_per_user(client):
     signup(client)
     client.post("/survey", data={"budget": "100"})
     client.post("/plan/generate")
+    import re
+    key = re.findall(r'data-key="([^\"]+)"', client.get("/grocery").text)[0]
     for _ in range(2):
-        client.post("/grocery/toggle", data={"key": "rice|cup", "checked": "true"})
+        client.post("/grocery/toggle", data={"key": key, "checked": "true"})
     from app.models import GroceryCheck
 
     with client.app.state.session_factory() as s:
@@ -137,4 +139,4 @@ def test_toggle_is_idempotent_and_per_user(client):
     signup(client, "other@x.co")
     client.post("/survey", data={"budget": "100"})
     client.post("/plan/generate")
-    assert 'data-key="rice|cup" checked' not in client.get("/grocery").text
+    assert f'data-key="{key}" checked' not in client.get("/grocery").text

@@ -45,7 +45,7 @@
         <div class="gh {{ 'today' if c.today }} {{ 'prep' if c.prep }}">
           <h2 class="dow"><span class="d-full">{{ c.name }}</span><span class="d-short">{{ c.short }}</span></h2>
           <span class="dnum">{{ c.daynum }}</span>{% if c.prep %}<em class="prepnote">prep</em>{% endif %}
-          {% if not c.prep %}<form method="post" action="/plan/days/{{ c.day }}/skip" class="skipform"><button class="daybtn" title="{{ 'Restore this day' if c.skipped else 'Mark as eating out' }}">{{ 'Restore' if c.skipped else 'Eating out' }}</button></form>{% endif %}
+          {% if not c.prep and not closed %}<form method="post" action="/plan/days/{{ c.day }}/skip" class="skipform"><button class="daybtn" title="{{ 'Restore this day' if c.skipped else 'Mark as eating out' }}">{{ 'Restore' if c.skipped else 'Eating out' }}</button></form>{% endif %}
         </div>
         {% endfor %}
       </div>
@@ -54,7 +54,7 @@
         {% for c in columns %}
         <div class="gcol {{ 'today' if c.today }} {{ 'prep' if c.prep }} {{ 'is-skipped' if c.skipped }}" data-day="{{ c.day }}">
           <div class="m-dayhead">{{ c.name }}{% if c.prep %} · before the week{% endif %} <span class="muted">{{ c.date.strftime('%b') }} {{ c.daynum }}</span>
-            {% if not c.prep %}<form method="post" action="/plan/days/{{ c.day }}/skip" class="m-skip"><button class="daybtn">{{ 'Restore day' if c.skipped else 'Eating out' }}</button></form>{% endif %}</div>
+            {% if not c.prep and not closed %}<form method="post" action="/plan/days/{{ c.day }}/skip" class="m-skip"><button class="daybtn">{{ 'Restore day' if c.skipped else 'Eating out' }}</button></form>{% endif %}</div>
           {% if c.skipped %}<div class="gskipped" data-testid="skipped">No meals planned (eating out)</div>{% endif %}
           {% for e in c.events %}
           {% if e.kind == 'meal' %}

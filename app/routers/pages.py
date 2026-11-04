@@ -10,7 +10,7 @@ from app.deps import current_user_optional, render
 from app.models import CheckIn
 from app.routers.checkin import checkin_due
 from app.routers.survey import get_profile
-from app.services import planner
+from app.services import planner, inventory
 from app.services.analysis import sharing_stats
 from app.services.calview import GRID_PX, HOUR_PX, HOUR_START, HOUR_END, build_columns, hour_labels, week_start_for, week_title
 from app.services.schedule import build_sessions, day_label, sessions_by_day
@@ -31,13 +31,13 @@ def cook_note(m) -> str:
     return f"from {who}'s batch" + (" ❄ thaw" if m.frozen else "")
 
 
-def meals_json(meals) -> str:
+def meals_json(meals, closed=False) -> str:
     """Everything the quick-view dialog needs, safe to embed in a <script type=application/json> tag."""
     out = {}
     for m in meals:
         out[m.id] = dict(
             id=m.id, name=m.name, slot=m.slot, day=WEEKDAYS[m.day], cook_minutes=m.cook_minutes, calories=m.calories,
-            protein=m.protein, cost=round(m.cost, 2), status=m.status, pinned=m.pinned, rating=m.rating, note=cook_note(m),
+            closed=closed, protein=m.protein, cost=round(m.cost, 2), status=m.status, pinned=m.pinned, rating=m.rating, note=cook_note(m),
             when=("Cook fresh today." if m.cook_day == m.day else
                   f"Cooked ahead on {day_label(m.cook_day)}{', frozen. Thaw the night before' if m.frozen else ' and kept in the fridge'}. Just reheat.") if m.cook_minutes else "No cooking needed.",
             steps=m.steps, ingredients=[f"{i['quantity']:g} {i['unit']} {i['name']}".replace("  ", " ") for i in m.ingredients])
@@ -78,4 +78,4 @@ def home(request: Request, user=Depends(current_user_optional), db: Session = De
                  pct=min(100, round(plan.total_cost / plan.budget * 100)) if plan.budget else 0)
     return render(request, "home.html", user, columns=columns, hours=hour_labels(start_hour), hour_px=HOUR_PX, grid_px=(HOUR_END - start_hour) * HOUR_PX, week_title=week_title(start), stats=stats,
                   cook_plan=cook_plan, sharing=sharing_stats(m.as_dict() for m in meals), checkin_due=checkin_due(plan, done),
-                  short=[w[:3] for w in WEEKDAYS], meals_json=meals_json(meals), prep_col=bool(columns and columns[0]["prep"]), **ctx)
+                  short=[w[:3] for w in WEEKDAYS], meals_json=meals_json(meals, inventory.closed(plan)), closed=inventory.closed(plan), prep_col=bool(columns and columns[0]["prep"]), **ctx)
