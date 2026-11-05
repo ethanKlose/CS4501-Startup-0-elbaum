@@ -18,7 +18,10 @@ def timed_sessions(sessions, cooking_windows=None, meal_times=None, earliest_day
     groups = defaultdict(list)
     for session in sessions:
         s = dict(session)
-        s['deadline'] = min([meal_times.get(e['slot'], EAT[e['slot']][0]) for e in s['eats'] if e['day'] == s['cook_day']] or [COOK_END])
+        prep_deadline=min(1440,meal_times.get('dinner',EAT['dinner'][0])-15)
+        window=cooking_windows.get(str(s['cook_day']),cooking_windows.get('6') if s['cook_day']<0 else None)
+        if window is not None or (s['cook_day']==earliest_day and earliest_minute):prep_deadline=1440
+        s['deadline'] = min([meal_times.get(e['slot'], EAT[e['slot']][0]) for e in s['eats'] if e['day'] == s['cook_day']] or [prep_deadline])
         groups[s['cook_day']].append(s)
     out = []
     for day, group in sorted(groups.items()):
@@ -32,7 +35,8 @@ def timed_sessions(sessions, cooking_windows=None, meal_times=None, earliest_day
                 s['start'], s['deadline'] = cursor, 24 * 60
                 cursor += max(s['minutes'], MIN_VISUAL)
         else:
-            cursor = COOK_END
+            # Start from the real latest deadline, not a fixed 18:15 cutoff.
+            cursor = 1440 if day<0 else max(s['deadline'] for s in group) if explicit is not None or meal_times else COOK_END
             for s in reversed(group):
                 deadline=1440 if day<0 else s['deadline']
                 s['deadline']=deadline
