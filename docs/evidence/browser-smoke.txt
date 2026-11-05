@@ -1,0 +1,16 @@
+
+> test:e2e
+> node tests/e2e/smoke.cjs
+
+PASS signup, survey, automatic generation, demo label
+PASS agenda persistence, quick view, pin preservation, cancel/confirm regeneration
+PASS completed history protected; planned meal swap works
+PASS skip and restore day
+PASS grocery persistence and complete rollback on failed save
+PASS pantry editing and survey validation
+PASS theme, tablet and phone layouts, mobile dialog
+PASS history, undo, price provenance, kitchen/windows forms, CSRF, feedback and calendar export
+PASS explicit next-week action advances the calendar
+PASS check-in closes inventory once, logout/login, no browser exceptions
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.

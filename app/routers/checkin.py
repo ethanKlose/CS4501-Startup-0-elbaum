@@ -57,6 +57,10 @@ def checkin_submit(
         return RedirectResponse("/", 303)
     if plan_id is not None and plan_id != plan.id:
         raise HTTPException(409, "This check-in is for an older plan. Reload before saving.")
+    if overall not in OVERALL or cook_time not in COOK_TIME or variety not in VARIETY:
+        raise HTTPException(422, "Choose check-in answers from the lists.")
+    if len(notes.strip()) > 500:
+        raise HTTPException(422, "Keep check-in notes to 500 characters or fewer.")
     row = db.scalar(select(CheckIn).where(CheckIn.plan_id == plan.id))
     first_time = row is None
     if first_time:
@@ -65,7 +69,7 @@ def checkin_submit(
     row.overall = overall if overall in OVERALL else "ok"
     row.cook_time = cook_time if cook_time in COOK_TIME else "right"
     row.variety = variety if variety in VARIETY else "right"
-    row.notes = notes.strip()[:500]
+    row.notes = notes.strip()
     row.created_at = dt.datetime.utcnow()
     if first_time:
         if bought_all and not inventory.closed(plan):

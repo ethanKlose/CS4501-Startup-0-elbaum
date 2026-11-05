@@ -53,7 +53,7 @@ Grocery check-offs record the quantity actually purchased. Check-offs capture wh
 
 The inventory ledger and week date live in plan settings JSON. Alembic adopts existing alpha tables and adds separate preference/security tables without deleting accounts or plans. Desktop users can switch between Calendar and Agenda. The header identifies offline demo mode when no API key is configured.
 
-## Features (GitHub issues #2-#27, #29-#32)
+## Features (GitHub issues #2-#32)
 Survey (budget, busy days/minutes, restrictions, goal, free text, pantry, edit later) - plan generation + verification -
 weekly calendar with a cooking plan (batch cooking) and meal detail - skip day / pin / regenerate / swap - consolidated grocery list
 (pantry-aware, grouped, check-offs) - cooked/skipped, ratings, weekly check-in, leftovers to pantry.
@@ -105,3 +105,15 @@ The live command requires your own API key and may incur charges. An absent key 
 ## Production configuration
 
 Set `APP_ENV=production`, an unpredictable `SECRET_KEY` of at least 32 characters, and an HTTPS `PUBLIC_BASE_URL`. Cookies become secure and default secrets are rejected. Configure SMTP credentials for real password recovery. `scripts.seed` does not create a demo account in production. Keep secrets in `.env`/the host secret store, not Git. Container access logs are disabled to avoid recording recovery tokens in URL queries. SQLite serializes writes; migrate to PostgreSQL before a larger multi-user rollout and load-test the deployment.
+
+## Story completion and manual acceptance tests
+
+See [STORY_COMPLETION.md](STORY_COMPLETION.md) for the six commit groups, automated results, and remaining external/manual checks. The 31 stories have individual acceptance evidence in [docs/acceptance](docs/acceptance/). [MANUAL_TESTS.md](MANUAL_TESTS.md) links 24 explicitly manual procedures and editable execution logs in four requested categories. Manual cases are not counted as automated passes or human study results.
+
+### Optional Instacart handoff (story #28)
+
+The grocery page offers **Send to Instacart**. It shares only unchecked, pantry-adjusted ingredients and creates a shopping-list link, not an order or automatic purchase. Configure `INSTACART_API_KEY` and `INSTACART_ENV=development` in your local `.env` for a development key; production keys use `INSTACART_ENV=production`. Restart the app after configuration. Never commit the key.
+
+Without a key, a clear message keeps your list available. Provider timeouts, HTTP errors, invalid JSON and untrusted links fail safely. Identical lists reuse their link for up to six days; changed quantities invalidate the cached link. The API requests seven-day links. Unknown ingredient units are included as display text without a measurement; review and adjust those quantities in Instacart. Its actual prices, product matches, labels and delivery availability require review there.
+
+Official API contract: https://docs.instacart.com/developer_platform_api/api/products/create_shopping_list_page . Live acceptance requires an Instacart development account/key and is not claimed by mocked tests.

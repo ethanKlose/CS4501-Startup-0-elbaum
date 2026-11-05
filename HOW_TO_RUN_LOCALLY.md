@@ -164,3 +164,20 @@ Stop the other running server, or append `--port 8001` to the Uvicorn command an
 ### Existing database reports missing columns
 
 Do not delete your database unless you intend to lose its accounts and saved plans. These fixes need no schema reset for a database compatible with the starting alpha version. A database from an older schema needs separate attention; back it up before making changes.
+
+
+## Import the story-completion commits on Windows Git Bash
+
+Extract the downloaded package to your Desktop so `KS_All_Stories.bundle` is directly on the Desktop. Keep your existing repository, virtual environment and database.
+
+```bash
+cd "$HOME/OneDrive/Desktop/KS_LLM" &&
+git switch KS_Work &&
+git fetch "$HOME/OneDrive/Desktop/KS_All_Stories.bundle" KS_Work &&
+git merge --ff-only FETCH_HEAD &&
+git push origin KS_Work
+```
+
+Then update development tools with `python -m pip install -r requirements-dev.txt` from the active environment. If Git reports uncommitted changes or that fast-forward is impossible, stop and resolve that message; these instructions do not discard local work or force-push.
+
+Run automated tests with `python -m pytest -q`. Measure Python application coverage with `python -m coverage run --source=app -m pytest -q` followed by `python -m coverage report`. Browser checks are `npm run test:e2e` and `npm run test:e2e:audit` after `npm ci` and `npx playwright install chromium`. Manual procedures and blank execution logs are in `MANUAL_TESTS.md`.

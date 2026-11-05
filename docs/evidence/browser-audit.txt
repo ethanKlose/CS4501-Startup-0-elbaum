@@ -1,0 +1,11 @@
+
+> test:e2e:audit
+> node tests/e2e/audit-regressions.cjs
+
+PASS original dietary note survives browser signup and generation
+PASS feasible $40 budget generates a checked plan
+PASS serialized Instacart unavailable handoff, input format errors and closed-history pin controls
+PASS outside-meal positions, early/late calendar bounds, phone and tablet widths
+PASS unmet goal label, correctness feedback and zero browser exceptions
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.

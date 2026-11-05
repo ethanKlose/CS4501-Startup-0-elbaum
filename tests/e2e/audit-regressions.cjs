@@ -4,7 +4,7 @@ const {spawn}=require('node:child_process');const {chromium}=require('playwright
 const repo=path.resolve(__dirname,'../..'),temp=fs.mkdtempSync(path.join(os.tmpdir(),'platejoy-audit-fixes-'));
 const base='http://127.0.0.1:8139';
 const python=process.env.PYTHON || path.join(repo,fs.existsSync(path.join(repo,'.venv/Scripts/python.exe'))?'.venv/Scripts/python.exe':'.venv/bin/python');
-const server=spawn(python,['-m','uvicorn','app.main:app','--host','127.0.0.1','--port','8139'],{cwd:repo,env:{...process.env,DATABASE_URL:'sqlite:///'+path.join(temp,'audit.db'),ANTHROPIC_API_KEY:'',SECRET_KEY:'audit-regressions-only'}});
+const server=spawn(python,['-m','uvicorn','app.main:app','--host','127.0.0.1','--port','8139'],{cwd:repo,env:{...process.env,DATABASE_URL:'sqlite:///'+path.join(temp,'audit.db'),ANTHROPIC_API_KEY:'',INSTACART_API_KEY:'',SECRET_KEY:'audit-regressions-only'}});
 let log='',browser;server.stdout.on('data',d=>log+=d);server.stderr.on('data',d=>log+=d);
 (async()=>{
   let healthy=false;for(let i=0;i<150;i++){try{if((await fetch(base+'/health')).ok){healthy=true;break}}catch{}await new Promise(r=>setTimeout(r,100));}assert.ok(healthy,log);
@@ -29,6 +29,17 @@ let log='',browser;server.stdout.on('data',d=>log+=d);server.stderr.on('data',d=
   assert.equal(await low.page.locator('a[data-meal]').count(),21);
   assert.match(await low.page.getByTestId('plan-verification').innerText(),/Checks passed/);
   console.log('PASS feasible $40 budget generates a checked plan');
+  await low.page.goto('/grocery');
+  await low.page.getByRole('button',{name:'Send to Instacart',exact:true}).click();
+  assert.match(await low.page.locator('.alert[role=status]').innerText(),/not configured yet/);
+  const reject=await low.post('/survey',{minutes_0:'15.9'});assert.equal(reject.status(),400);
+  const unknown=await low.post('/survey',{restrictions_present:'1',restrictions:'made_up'});assert.equal(unknown.status(),400);
+  await low.page.goto('/');
+  const recipeId=Object.keys(JSON.parse(await low.page.locator('#meals-data').textContent()))[0];
+  await low.post('/checkin',{});await low.page.goto('/meals/'+recipeId);
+  assert.equal(await low.page.locator('form[action$="/pin"]').count(),0);
+  assert.equal((await low.post('/meals/'+recipeId+'/pin',{})).status(),409);
+  console.log('PASS serialized Instacart unavailable handoff, input format errors and closed-history pin controls');
   const cal=await account('calendar');
   await cal.post('/preferences/lifestyle',{equipment:['stove','oven','fridge','freezer','toaster','blender'],external_0_lunch:'on'});
   await cal.post('/preferences/schedule',{time_breakfast:'06:00',time_lunch:'13:00',time_dinner:'22:00'});

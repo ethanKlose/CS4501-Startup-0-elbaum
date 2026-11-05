@@ -102,6 +102,8 @@ def set_status(meal_id: int, status: str = Form(...), next: str = Form("/"), use
     if status not in ("planned", "cooked", "skipped"):
         raise HTTPException(422, "status must be planned, cooked or skipped")
     meal.status = status
+    if status != "cooked":
+        meal.rating = None
     db.commit()
     return RedirectResponse(next if next.startswith("/") and not next.startswith("//") else "/", 303)
 

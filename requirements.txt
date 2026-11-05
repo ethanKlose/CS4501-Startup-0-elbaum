@@ -8,3 +8,6 @@ python-dotenv==1.0.1
 anthropic>=0.40.0
 tzdata>=2025.1
 alembic>=1.14,<2
+
+# Used directly by the optional Instacart shopping-list adapter.
+httpx==0.28.1
