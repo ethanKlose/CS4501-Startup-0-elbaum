@@ -77,13 +77,18 @@ def home(request: Request, user=Depends(current_user_optional), db: Session = De
     timing=dict(cooking_windows=st.get('cooking_windows',{}),meal_times=st.get('meal_times',{}),earliest_day=st.get('earliest_day',-1),earliest_minute=st.get('earliest_minute',0))
     start_hour = min([HOUR_START] + [max(0, s["start"] // 60) for s in timed_sessions(sessions,**timing)])
     columns = build_columns(cards, sessions, plan.days, start, hour_start=start_hour,external_slots=st.get('external_slots',[]),**timing)
+    from app.services.calview import grid_bounds
+    first_hour,end_hour=grid_bounds(columns)
+    if first_hour!=start_hour:
+        start_hour=first_hour
+        columns=build_columns(cards,sessions,plan.days,start,hour_start=start_hour,external_slots=st.get('external_slots',[]),**timing)
     active_days = {m.day for m in meals} or {0}
     n = len(active_days)
     stats = dict(calories=round(sum(m.calories for m in meals) / n), protein=round(sum(m.protein for m in meals) / n),
                  cooked=sum(m.status == "cooked" for m in meals), skipped=sum(m.status == "skipped" for m in meals), total=len(meals),
                  pct=min(100, round(plan.total_cost / plan.budget * 100)) if plan.budget else 0)
     from app.services.verification import summary
-    return render(request, "home.html", user, verification=summary(plan),columns=columns, hours=hour_labels(start_hour), hour_px=HOUR_PX, grid_px=(HOUR_END - start_hour) * HOUR_PX, week_title=week_title(start), stats=stats,
+    return render(request, "home.html", user, verification=summary(plan),columns=columns, hours=hour_labels(start_hour,hour_end=end_hour), hour_px=HOUR_PX, grid_px=(end_hour - start_hour) * HOUR_PX, week_title=week_title(start), stats=stats,
                   cook_plan=cook_plan, sharing=sharing_stats(m.as_dict() for m in meals), checkin_due=checkin_due(plan, done),
                   short=[w[:3] for w in WEEKDAYS], meals_json=meals_json(meals, inventory.closed(plan)), closed=inventory.closed(plan), prep_col=bool(columns and columns[0]["prep"]), **ctx)
 

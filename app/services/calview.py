@@ -1,6 +1,7 @@
 """Lay a plan out like a calendar week: events positioned on a time grid, with Google-Calendar-style lanes
 for overlaps. Pure functions (no DB, no HTTP) so the layout is easy to test."""
 import datetime as dt
+import math
 from typing import Dict, List, Optional, Sequence
 
 from app.services.schedule import PRE_WEEK, sessions_by_day
@@ -15,7 +16,7 @@ GRID_PX = (HOUR_END - HOUR_START) * HOUR_PX
 
 def fmt_time(minutes: int) -> str:
     h, m = divmod(int(minutes), 60)
-    return f"{(h % 12) or 12}:{m:02d} {'AM' if h < 12 else 'PM'}"
+    return f"{(h % 12) or 12}:{m:02d} {'AM' if h % 24 < 12 else 'PM'}" + (f' (+{h//24} day)' if h>=24 else '')
 
 
 def week_start_for(created: dt.date) -> dt.date:
@@ -94,8 +95,15 @@ def build_columns(meals: Sequence[dict], sessions: Sequence[dict], days: Sequenc
     return cols
 
 
-def hour_labels(hour_start: int = HOUR_START, cooking_windows=None, meal_times=None, external_slots=(), earliest_day=-1, earliest_minute=0) -> List[dict]:
-    return [dict(label=fmt_time(h * 60).replace(":00 ", " "), top=round((h - hour_start) * HOUR_PX, 1)) for h in range(hour_start, HOUR_END)]
+def grid_bounds(columns):
+    events=[e for c in columns for e in c['events']]
+    begin=min([HOUR_START]+[max(0,e['start']//60) for e in events])
+    end=max([HOUR_END]+[math.ceil((e['start']+e['visual'])/60) for e in events])
+    return begin,end
+
+
+def hour_labels(hour_start: int = HOUR_START, cooking_windows=None, meal_times=None, external_slots=(), earliest_day=-1, earliest_minute=0,hour_end=HOUR_END) -> List[dict]:
+    return [dict(label=fmt_time(h * 60).replace(":00 ", " "), top=round((h - hour_start) * HOUR_PX, 1)) for h in range(hour_start, hour_end)]
 
 
 def week_title(start: dt.date) -> str:

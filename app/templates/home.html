@@ -71,7 +71,7 @@
             <span class="e-title">{{ e.name }}</span>
             <span class="e-meta">${{ '%.2f' % e.cost }} · {{ e.note }}</span>
           </a>
-          {% elif e.kind == 'external' %}<div class="event {{ e.slot }}"><span class="e-time">{{ e.time }}</span><span class="e-title">{{ e.name }}</span></div>
+          {% elif e.kind == 'external' %}<div class="event {{ e.slot }}" data-testid="external-event" style="--top:{{ e.top }}px;--h:{{ e.height }}px;--lane:{{ e.lane }};--lanes:{{ e.lanes }};--i:{{ loop.index0 }}"><span class="e-time">{{ e.time }}</span><span class="e-title">{{ e.name }}</span></div>
           {% else %}
           <div class="event cook" data-testid="cook-event" style="--top:{{ e.top }}px;--h:{{ e.height }}px;--lane:{{ e.lane }};--lanes:{{ e.lanes }};--i:{{ loop.index0 }}" title="Cook {{ e.name }} ×{{ e.servings }}">
             <span class="e-time">{{ icon('chef', 12) }} {{ e.time }} · {{ e.minutes }} min</span>
