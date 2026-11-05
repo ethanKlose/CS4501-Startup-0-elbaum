@@ -3,6 +3,7 @@ import hashlib
 import hmac
 import json
 import secrets
+import math
 from sqlalchemy import select
 from app.db import SessionLocal
 from app.models import UserPreference
@@ -23,5 +24,25 @@ def export(db):
     return {'source':'consented student self-reports','results':rows}
 
 
+def correctness_summary(db,expected_participants=20):
+    """One latest consented observation per account, never count repeat forms as people."""
+    correct=reviewed=unreviewed=0
+    for profile in db.scalars(select(UserPreference)):
+        entries=[e for e in (profile.data or {}).get('study_entries',[]) if e.get('consent')]
+        if not entries:continue
+        outcome=entries[-1].get('plan_correct','not_reviewed')
+        if outcome not in {'yes','no'}:unreviewed+=1;continue
+        reviewed+=1;correct+=outcome=='yes'
+    complete=reviewed==expected_participants and unreviewed==0
+    return dict(source='consented student self-reviews; not independent reviewer judgments',
+                expected_participants=expected_participants,reviewed_accounts=reviewed,
+                unreviewed_accounts=unreviewed,correct_accounts=correct,
+                threshold_count=math.ceil(.75*expected_participants),
+                meets_threshold=(correct>=math.ceil(.75*expected_participants)) if complete else None,
+                status='complete' if complete else 'not_collected' if reviewed+unreviewed==0 else 'incomplete')
+
+
 if __name__=='__main__':
-    with SessionLocal() as db:print(json.dumps(export(db),indent=2))
+    import argparse
+    parser=argparse.ArgumentParser();parser.add_argument('--correctness-only',action='store_true');args=parser.parse_args()
+    with SessionLocal() as db:print(json.dumps(correctness_summary(db) if args.correctness_only else export(db),indent=2))

@@ -20,8 +20,8 @@ def feedback(request:Request,user=Depends(current_user),db=Depends(get_db)):
 
 
 @router.post('/feedback')
-def record_feedback(actual_spend:float=Form(...),actual_minutes:int=Form(...),baseline_minutes:int=Form(...),ease:int=Form(...),notes:str=Form(''),consent:bool=Form(False),plan_id:int=Form(None),plan_correct:str=Form('not_reviewed'),failed_constraints:list[str]=Form([]),user=Depends(current_user),db=Depends(get_db)):
-    if not math.isfinite(actual_spend) or not 0<=actual_spend<=10000 or not 0<=actual_minutes<=10080 or not 0<=baseline_minutes<=10080 or not 1<=ease<=5 or len(notes)>500:
+def record_feedback(actual_spend:float|None=Form(None),actual_minutes:int|None=Form(None),baseline_minutes:int|None=Form(None),ease:int|None=Form(None),notes:str=Form(''),consent:bool=Form(False),plan_id:int=Form(None),plan_correct:str=Form('not_reviewed'),failed_constraints:list[str]=Form([]),user=Depends(current_user),db=Depends(get_db)):
+    if (actual_spend is not None and (not math.isfinite(actual_spend) or not 0<=actual_spend<=10000)) or (actual_minutes is not None and not 0<=actual_minutes<=10080) or (baseline_minutes is not None and not 0<=baseline_minutes<=10080) or (ease is not None and not 1<=ease<=5) or len(notes)>500:
         raise HTTPException(400,'Use nonnegative spending/time, an ease score from 1 to 5, and notes under 500 characters.')
     if plan_correct not in {'yes','no','not_reviewed'} or set(failed_constraints)-CORRECTNESS_FIELDS or (plan_correct!='no' and failed_constraints):
         raise HTTPException(400,'Choose a valid correctness result and mark unmet constraints only when the plan did not meet them.')

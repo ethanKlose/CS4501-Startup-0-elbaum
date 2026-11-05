@@ -36,3 +36,23 @@ def test_other_accounts_plan_cannot_be_reviewed(client):
     with client.app.state.session_factory() as db:pid=db.scalar(select(Plan.id))
     client.post('/logout');signup(client,email='other-review@example.test')
     assert client.post('/feedback',data=dict(VALUES,plan_id=pid,plan_correct='yes')).status_code==404
+
+
+def test_correctness_summary_counts_accounts_once_and_keeps_missing_results_unknown(client):
+    from scripts.export_study import correctness_summary
+    signup(client);client.post('/survey',data={'budget':'150'});client.post('/plan/generate')
+    client.post('/feedback',data=dict(VALUES,plan_correct='yes',consent='true'))
+    client.post('/feedback',data=dict(VALUES,plan_correct='no',consent='true'))
+    with client.app.state.session_factory() as db:
+        summary=correctness_summary(db)
+        assert summary['reviewed_accounts']==1 and summary['correct_accounts']==0
+        assert summary['meets_threshold'] is None and summary['status']=='incomplete'
+
+
+def test_correctness_can_be_reviewed_without_collecting_times_or_spending(client):
+    signup(client);client.post('/survey',data={'budget':'150'});client.post('/plan/generate')
+    response=client.post('/feedback',data={'plan_correct':'yes','consent':'true'})
+    assert response.status_code==200
+    with client.app.state.session_factory() as db:
+        result=export(db)['results'][0]
+        assert result['plan_correct']=='yes' and result['actual_minutes'] is None and result['baseline_minutes'] is None
