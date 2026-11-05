@@ -136,7 +136,7 @@
   }
   function render(m) {
     var slotCls = { breakfast: 'breakfast', lunch: 'lunch', dinner: 'dinner' }[m.slot];
-    var actions = form('/meals/' + m.id + '/pin', { next: '/' }, m.pinned ? 'Unpin' : '📌 Pin', 'line');
+    var actions = m.closed ? '' : form('/meals/' + m.id + '/pin', { next: '/' }, m.pinned ? 'Unpin' : '📌 Pin', 'line');
     if (!m.closed && m.status === 'planned' && m.rating === null) actions +=
       form('/meals/' + m.id + '/swap', {}, '⇄ Swap meal', 'line', 'data-generate data-generate-title="Finding a replacement…"');
     if (!m.closed && m.status !== 'cooked') actions += form('/meals/' + m.id + '/status', { status: 'cooked', next: '/' }, '✓ Mark cooked', 'soft');

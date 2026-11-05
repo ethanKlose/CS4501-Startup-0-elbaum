@@ -23,6 +23,9 @@ async def save(request:Request,user=Depends(current_user),db=Depends(get_db)):
 
 
 def parse_clock(raw):
+    import re
+    if not isinstance(raw,str) or not re.fullmatch(r"[0-9]{2}:[0-9]{2}",raw):
+        raise ValueError("Use a 24-hour HH:MM time.")
     parts=raw.split(':')
     if len(parts)!=2 or not all(p.isdigit() for p in parts):raise ValueError('Use times such as 07:30.')
     hour,minute=map(int,parts)
@@ -39,6 +42,8 @@ async def schedule_preferences(request:Request,user=Depends(current_user),db=Dep
         for day in range(7):
             raw=form.get(f'windows_{day}','').strip()
             if not raw:continue
+            if len(raw)>127 or len(raw.split(","))>8:
+                raise ValueError("Use at most eight windows per day.")
             spans=[]
             for interval in raw.split(','):
                 begin,end=map(str.strip,interval.split('-'))

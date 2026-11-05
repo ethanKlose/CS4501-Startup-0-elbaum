@@ -52,8 +52,8 @@
 
       <section class="card"><h3>Change it up</h3>
         <div class="row">
-          <form method="post" action="/meals/{{ meal.id }}/pin" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="next" value="/meals/{{ meal.id }}">
-            <button class="btn sm line">{{ icon('pin', 15) }} {% if meal.pinned %}Unpin{% else %}Pin this meal{% endif %}</button></form>
+          {% if not closed %}<form method="post" action="/meals/{{ meal.id }}/pin" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="next" value="/meals/{{ meal.id }}">
+            <button class="btn sm line">{{ icon('pin', 15) }} {% if meal.pinned %}Unpin{% else %}Pin this meal{% endif %}</button></form>{% endif %}
           {% if not closed and meal.status == 'planned' and meal.rating is none %}
           <form method="post" action="/meals/{{ meal.id }}/swap" class="inline" data-generate data-generate-title="Finding a replacement…"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <button class="btn sm line">{{ icon('swap', 15) }} Swap meal</button></form>

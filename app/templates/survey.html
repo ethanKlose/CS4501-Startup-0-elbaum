@@ -132,7 +132,7 @@
 
 <section class="card pad-lg" id="schedule-windows" style="margin-top:20px"><h2>Cooking windows and meal times</h2><p>Optional windows use 24-hour times, for example 07:00-08:00, 17:00-19:00. Blank means flexible. Your daily minute limits still apply.</p>
 <form method="post" action="/preferences/schedule"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-{% for d in range(7) %}<label>{{ weekdays[d] }}<input name="windows_{{ d }}" placeholder="07:00-08:00,17:00-19:00" value="{% for a,b in lifestyle.get('cooking_windows',{}).get(d|string,[]) %}{{ '%02d:%02d' % (a//60,a%60) }}-{{ '%02d:%02d' % (b//60,b%60) }}{{ ',' if not loop.last }}{% endfor %}"></label>{% endfor %}
+{% for d in range(7) %}<label>{{ weekdays[d] }}<input name="windows_{{ d }}" maxlength="127" placeholder="07:00-08:00,17:00-19:00" value="{% for a,b in lifestyle.get('cooking_windows',{}).get(d|string,[]) %}{{ '%02d:%02d' % (a//60,a%60) }}-{{ '%02d:%02d' % (b//60,b%60) }}{{ ',' if not loop.last }}{% endfor %}"></label>{% endfor %}
 {% for slot,default in [('breakfast',480),('lunch',750),('dinner',1110)] %}{% set t=lifestyle.get('meal_times',{}).get(slot,default) %}<label>{{ slot|capitalize }} time<input type="time" name="time_{{ slot }}" value="{{ '%02d:%02d' % (t//60,t%60) }}" required></label>{% endfor %}<button class="btn primary">Save cooking windows</button></form></section>
 
 </div>
