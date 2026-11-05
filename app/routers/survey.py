@@ -158,7 +158,8 @@ def apply_prep(form, profile, errors, **_):
         errors["prep"] = "Pick a cooking style from the list."
         return
     try:
-        minutes = int(float(form.get("prep_minutes", "120")))
+        n = float(form.get("prep_minutes", "120"))
+        minutes = int(n) if math.isfinite(n) and n.is_integer() else 0
     except (TypeError, ValueError, OverflowError):
         minutes = 0
     if not 30 <= minutes <= MAX_MINUTES:
@@ -276,14 +277,18 @@ def pantry_add(
             qty = float(quantity)
         except ValueError:
             qty = -1
-        if qty < 0 or not math.isfinite(qty):
-            return RedirectResponse("/survey?pantry_error=Quantity+must+be+a+positive+number", 303)
-    unit = unit.lower().strip()[:20]
+        if qty < 0 or not math.isfinite(qty) or qty > 1_000_000:
+            return RedirectResponse("/survey?pantry_error=Quantity+must+be+between+0+and+1000000", 303)
+    unit = unit.lower().strip()
+    if len(unit) > 20:
+        return RedirectResponse("/survey?pantry_error=Unit+must+be+20+characters+or+fewer", 303)
     existing = db.scalar(select(PantryItem).where(PantryItem.user_id == user.id, PantryItem.name == name, PantryItem.unit == unit))
     if existing:
         existing.quantity, existing.unit = qty, unit.strip()[:20]
     else:
-        db.add(PantryItem(user_id=user.id, name=name, quantity=qty, unit=unit.strip()[:20]))
+        if len(list(db.scalars(select(PantryItem.id).where(PantryItem.user_id == user.id)))) >= 200:
+            return RedirectResponse("/survey?pantry_error=Pantry+limit+is+200+items", 303)
+        db.add(PantryItem(user_id=user.id, name=name, quantity=qty, unit=unit))
     db.commit()
     return RedirectResponse("/survey#pantry", 303)
 

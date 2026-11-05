@@ -1,17 +1,26 @@
 """Strict shape of an LLM-produced plan. Anything that doesn't parse never reaches the user."""
-from typing import List
+from typing import List, Annotated
 
 from pydantic import BaseModel, Field, field_validator
 
 from app.services.types import SECTIONS, SLOTS
 
 
+def nonblank(value):
+    value = value.strip()
+    if not value:
+        raise ValueError("must not be blank")
+    return value
+
+
 class IngredientIn(BaseModel):
     name: str = Field(min_length=1, max_length=100)
-    quantity: float = Field(gt=0, allow_inf_nan=False)
+    quantity: float = Field(gt=0, le=1_000_000, allow_inf_nan=False)
     unit: str = Field(default="", max_length=20)
     section: str = "other"
-    cost: float = Field(ge=0, allow_inf_nan=False)
+    cost: float = Field(ge=0, le=1_000_000, allow_inf_nan=False)
+
+    _name = field_validator("name")(nonblank)
 
     @field_validator("section")
     @classmethod
@@ -27,9 +36,16 @@ class MealIn(BaseModel):
     cook_minutes: int = Field(ge=0, le=600)
     calories: int = Field(ge=0, le=5000)
     protein: float = Field(ge=0, le=500, allow_inf_nan=False)
-    cost: float = Field(ge=0, allow_inf_nan=False)
-    steps: List[str] = Field(min_length=1)
-    ingredients: List[IngredientIn] = Field(min_length=1)
+    cost: float = Field(ge=0, le=1_000_000, allow_inf_nan=False)
+    steps: List[Annotated[str, Field(min_length=1, max_length=2000)]] = Field(min_length=1, max_length=30)
+    ingredients: List[IngredientIn] = Field(min_length=1, max_length=50)
+
+    _name = field_validator("name")(nonblank)
+
+    @field_validator("steps")
+    @classmethod
+    def _steps(cls, values):
+        return [nonblank(v) for v in values]
 
     @field_validator("slot")
     @classmethod
@@ -41,7 +57,7 @@ class MealIn(BaseModel):
 
 
 class PlanIn(BaseModel):
-    meals: List[MealIn]
+    meals: List[MealIn] = Field(max_length=21)
 
 
 def parse_plan(raw) -> "tuple[dict, list]":

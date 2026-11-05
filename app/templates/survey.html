@@ -116,9 +116,9 @@
       {% else %}<li class="muted">Nothing yet.</li>{% endfor %}
     </ul>
     <form method="post" action="/pantry/add" class="row pantry-add"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <input name="name" placeholder="item (e.g. rice)" required aria-label="Item name" style="flex:2;min-width:140px">
-      <input name="quantity" type="number" step="any" min="0" placeholder="qty" aria-label="Quantity" style="flex:1;min-width:70px">
-      <input name="unit" placeholder="unit" aria-label="Unit" style="flex:1;min-width:70px">
+      <input name="name" maxlength="100" placeholder="item (e.g. rice)" required aria-label="Item name" style="flex:2;min-width:140px">
+      <input name="quantity" type="number" step="any" min="0" max="1000000" placeholder="qty" aria-label="Quantity" style="flex:1;min-width:70px">
+      <input name="unit" maxlength="20" placeholder="unit" aria-label="Unit" style="flex:1;min-width:70px">
       <button class="btn soft">Add</button>
     </form>
   </section>
