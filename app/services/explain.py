@@ -43,5 +43,5 @@ def summarize_failure(ctx: PlanContext, errors: List[str]):
     conflicts = find_conflicts(ctx)
     if conflicts:
         return "We couldn't build a plan that meets all your constraints. Here's what to adjust:", conflicts
-    return ("We couldn't produce a plan that passed every check. Try regenerating, or relax a constraint.",
+    return ("The search did not find a plan that passed every check. This does not prove your constraints are impossible. Try regenerating or adjusting your choices.",
             [e for e in errors[:3]])

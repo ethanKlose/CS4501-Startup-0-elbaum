@@ -79,6 +79,10 @@ class FakeLLM:
                     best = (key, plan)
                 if not hard and not issues:
                     return plan
+        if best and check_checkout_budget(best[1],ctx):
+            from app.services.budget_search import affordable_fallback
+            fallback=affordable_fallback(ctx,RECIPES)
+            if fallback is not None:return fallback
         return best[1]
 
     def _pick(self, ctx: PlanContext, lam: float, seed: int = 0) -> Dict:
