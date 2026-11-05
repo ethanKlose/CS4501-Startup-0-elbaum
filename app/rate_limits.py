@@ -1,5 +1,6 @@
 """Bound abuse using counters shared through the application database."""
 import hashlib
+import math
 import os
 import time
 from sqlalchemy import delete
@@ -37,5 +38,7 @@ async def enforce(request):
     else:return True
     provider=request.app.dependency_overrides.get(get_db,get_db)
     gen=provider()
-    try:return hit(next(gen),bucket,identity,limit,window)
+    now=time.time()
+    request.state.rate_retry_after=max(1,math.ceil((int(now//window)+1)*window-now))
+    try:return hit(next(gen),bucket,identity,limit,window,now=now)
     finally:gen.close()

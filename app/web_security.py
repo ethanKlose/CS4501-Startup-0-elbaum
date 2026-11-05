@@ -20,7 +20,7 @@ class CSRFProtection(BaseHTTPMiddleware):
         if request.method == "POST":
             from app.rate_limits import enforce
             if not await enforce(request):
-                return PlainTextResponse("Too many attempts. Please try again later.", status_code=429, headers={"Retry-After":"900"})
+                return PlainTextResponse("Too many attempts. Please try again later.", status_code=429, headers={"Retry-After":str(request.state.rate_retry_after)})
         response = await call_next(request)
         # Login/logout can change session contents; keep the readable token aligned.
         token = request.session.setdefault('csrf_token', secrets.token_urlsafe(32))

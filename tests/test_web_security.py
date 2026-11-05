@@ -35,3 +35,14 @@ def test_auth_rate_limit_is_enforced_on_http_routes(client,monkeypatch):
     assert response.status_code==401
     blocked=client.post('/login',data={'email':'unknown@example.test','password':'bad'})
     assert blocked.status_code==429 and 'Retry-After' in blocked.headers
+
+
+def test_generation_retry_after_matches_its_hourly_bucket(client,monkeypatch):
+    from app import rate_limits
+    from tests.helpers import signup
+    monkeypatch.setenv('RATE_LIMIT_ENABLED','1');monkeypatch.setenv('GENERATION_RATE_LIMIT','1')
+    monkeypatch.setattr(rate_limits.time,'time',lambda:901)
+    signup(client);client.post('/survey',data={'budget':'150'})
+    assert client.post('/plan/generate',follow_redirects=False).status_code==303
+    blocked=client.post('/plan/generate',follow_redirects=False)
+    assert blocked.status_code==429 and blocked.headers['Retry-After']=='2699'
