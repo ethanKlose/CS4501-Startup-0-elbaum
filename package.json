@@ -1,6 +1,6 @@
 {
   "name": "platejoy-browser-checks",
   "private": true,
-  "scripts": {"test:e2e": "node tests/e2e/smoke.cjs"},
+  "scripts": {"test:e2e": "node tests/e2e/smoke.cjs", "test:e2e:audit": "node tests/e2e/audit-regressions.cjs"},
   "devDependencies": {"playwright": "1.62.1"}
 }
