@@ -101,6 +101,9 @@ def build_context(db: Session, user: User, llm, seed: int = 0, week_start=None) 
     else:profile_prep_style=profile.prep_style or 'auto'
     pantry = [dict(name=p.name, quantity=p.quantity, unit=p.unit)
               for p in db.scalars(select(PantryItem).where(PantryItem.user_id == user.id))]
+    inactive={(m['day'],m['slot']) for m in external_slots}
+    active_days={d.weekday for d in day_ctx if not d.skipped}
+    pinned=[p for p in pinned if p['day'] in active_days and (p['day'],p['slot']) not in inactive]
     return PlanContext(
         budget=profile.budget, days=day_ctx,
         preference_warnings=list(interp.get('warnings',[])),
