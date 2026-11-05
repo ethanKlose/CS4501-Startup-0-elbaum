@@ -178,6 +178,7 @@ def understood(profile: Profile, days) -> List[str]:
     if profile.restrictions:
         out.append("Diet: " + ", ".join(RESTRICTIONS[r] for r in profile.restrictions if r in RESTRICTIONS))
     interp = profile.interpreted or {}
+    out.extend(interp.get('warnings', []))
     if interp.get("excluded"):
         out.append("Never serving (from your note): " + ", ".join(interp["excluded"]))
     caps = {int(k): v for k, v in (interp.get("day_minutes_cap") or {}).items()}

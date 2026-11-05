@@ -36,10 +36,6 @@ def _recipe_to_meal(r: dict, day: int, slot: str) -> dict:
     return m
 
 
-_STOP = {"cooking", "cook", "time", "more", "too", "much", "spicy", "a", "the", "any", "all", "eating", "to", "of", "that", "it", "i", "me", "my"}
-_TRIGGER = re.compile(r"\b(?:no|without|avoid|skip|hate|dislike|allergic to|allergy to|cannot eat|can't eat|don't eat|do not eat|don't like|do not like|not a fan of|never)\s+(.+)", re.I)
-
-
 def normalize_preferences(raw):
     if not isinstance(raw,dict):raise ValueError('Preference extraction must return an object.')
     excluded=raw.get('excluded',[]);caps=raw.get('day_minutes_cap',{})
@@ -58,25 +54,8 @@ class FakeLLM:
 
     # -- preference interpretation ------------------------------------------------------
     def interpret_preferences(self, text: str) -> Dict:
-        excluded: List[str] = []
-        caps: Dict[str, int] = {}
-        for clause in re.split(r"[.;\n,]+", text or ""):
-            clause_l = clause.strip().lower()
-            if not clause_l:
-                continue
-            days = [i for i, d in enumerate(WEEKDAYS) if d.lower() in clause_l or d.lower()[:3] + "s" in clause_l]
-            if "cook" in clause_l and days:
-                cap = 0 if re.search(r"\bno cooking\b|\bnot cook|\bcan't cook|\bcannot cook", clause_l) else 15
-                for d in days:
-                    caps[str(d)] = cap
-                continue
-            m = _TRIGGER.search(clause_l)
-            if m:
-                for item in re.split(r"\band\b|/|&", m.group(1)):
-                    words = [w for w in re.findall(r"[a-z-]+", item) if w not in _STOP]
-                    if words:
-                        excluded.append(" ".join(words))
-        return {"excluded": sorted(set(excluded)), "day_minutes_cap": caps}
+        from app.services.preference_text import interpret
+        return interpret(text)
 
     # -- plan generation ----------------------------------------------------------------
     def generate_plan(self, ctx: PlanContext, feedback=()) -> Dict:
@@ -279,7 +258,8 @@ class AnthropicLLM:
         )
         try:
             out = self._ask(system, text, 500)
-            return normalize_preferences(out)
+            from app.services.preference_text import interpret,merge_extractions
+            return merge_extractions(interpret(text),normalize_preferences(out))
         except Exception:
             return FakeLLM().interpret_preferences(text)
 

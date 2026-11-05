@@ -47,6 +47,7 @@ class PlanContext:
     price_offers: Dict = field(default_factory=dict)
     checkout_budget: bool = False
     generation_trace: List[Dict] = field(default_factory=list)
+    preference_warnings: List[str] = field(default_factory=list)
     seed: int = 0
 
     def active_days(self) -> List[DayCtx]:

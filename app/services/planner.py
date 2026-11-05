@@ -103,6 +103,7 @@ def build_context(db: Session, user: User, llm, seed: int = 0, week_start=None) 
               for p in db.scalars(select(PantryItem).where(PantryItem.user_id == user.id))]
     return PlanContext(
         budget=profile.budget, days=day_ctx,
+        preference_warnings=list(interp.get('warnings',[])),
         price_offers=dict(lifestyle.get('price_offers',{})), checkout_budget=True, equipment=lifestyle.get('equipment'), cooking_skill=lifestyle.get('cooking_skill','any'),
         allow_freezer='freezer' in lifestyle.get('equipment',['freezer']),
         external_slots=external_slots, earliest_day=earliest_day, earliest_minute=earliest_minute, cooking_windows=dict(lifestyle.get('cooking_windows',{})),
@@ -182,9 +183,9 @@ def run_with_retries(llm, ctx: PlanContext):
             plan_dict, hard, soft = {}, [f"The generator failed: {e}"], []
         ctx.generation_trace.append(dict(attempt=attempt,seconds=round(time.perf_counter()-started,3),hard_errors=list(hard),soft_warnings=list(soft)))
         if not hard and not soft:
-            return plan_dict, attempt, []
+            return plan_dict, attempt, list(ctx.preference_warnings)
         if not hard and attempt == MAX_ATTEMPTS:
-            return plan_dict, attempt, soft
+            return plan_dict, attempt, soft + list(ctx.preference_warnings)
         errors = hard + soft
         feedback = errors  # self-correction: the validator's complaints go straight back to the LLM
     message, conflicts = summarize_failure(ctx, errors)
