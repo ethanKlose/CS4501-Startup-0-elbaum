@@ -16,6 +16,9 @@ def export(db):
         for entry in (profile.data or {}).get('study_entries',[]):
             if entry.get('consent'):
                 safe={k:entry.get(k) for k in ['actual_spend','actual_minutes','baseline_minutes','ease','planned_meals','cooked_meals','checkout_estimate']}
+                safe['plan_correct']=entry.get('plan_correct','not_reviewed')
+                safe['correctness_source']='student self-review'
+                safe['failed_constraints']=[v for v in entry.get('failed_constraints',[]) if v in {'budget','diet','schedule','equipment','nutrition','coverage','extra_notes'}]
                 rows.append(dict(participant=participant,**safe))
     return {'source':'consented student self-reports','results':rows}
 
