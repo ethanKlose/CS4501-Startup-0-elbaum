@@ -63,7 +63,7 @@ def parse_budget(raw: str):
     if v != v or v <= 0:
         return None, "Budget must be greater than zero."
     if v < MIN_BUDGET:
-        return None, f"Budget must be at least ${MIN_BUDGET} a week to cover three meals a day."
+        return None, f"Enter a weekly budget of at least ${MIN_BUDGET}; generation will check whether a plan fits."
     if v > 10000:
         return None, "Budget looks too large — enter a weekly amount."
     return round(v, 2), None
@@ -71,7 +71,10 @@ def parse_budget(raw: str):
 
 def parse_minutes(raw: str):
     try:
-        v = int(float(raw))
+        n = float(raw)
+        if not math.isfinite(n) or not n.is_integer():
+            return None
+        v = int(n)
     except (TypeError, ValueError, OverflowError):
         return None
     return v if 0 <= v <= MAX_MINUTES else None
@@ -101,11 +104,15 @@ def apply_days(form, errors, db, user, **_):
         d.busy = form.get(f"busy_{d.weekday}") is not None
 
 
-def apply_restrictions(form, profile, **_):
+def apply_restrictions(form, profile, errors, **_):
     # Hidden marker field tells us the section was actually on the submitted form.
     if "restrictions_present" not in form:
         return
-    chosen = [r for r in form.getlist("restrictions") if r in RESTRICTIONS]
+    submitted = form.getlist("restrictions")
+    if any(r not in RESTRICTIONS for r in submitted):
+        errors["restrictions"] = "Choose dietary restrictions from the list."
+        return
+    chosen = submitted
     profile.restrictions = sorted(set(chosen))
 
 
@@ -120,7 +127,8 @@ def apply_goal(form, profile, errors, **_):
     profile.calorie_target = None
     if goal == "calorie_target":
         try:
-            cal = int(float(form.get("calorie_target", "")))
+            n = float(form.get("calorie_target", ""))
+            cal = int(n) if math.isfinite(n) and n.is_integer() else 0
         except (TypeError, ValueError, OverflowError):
             cal = 0
         if not MIN_CALORIES <= cal <= MAX_CALORIES:

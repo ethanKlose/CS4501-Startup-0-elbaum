@@ -72,9 +72,9 @@ def test_budget_only_post_does_not_touch_days(client):
     assert day_rows(client)[0].minutes == 5
 
 
-def test_restrictions_saved_and_filtered(client):
+def test_known_restrictions_saved(client):
     signup(client)
-    client.post("/survey", data={"restrictions_present": "1", "restrictions": ["vegan", "nut_allergy", "bogus"]})
+    client.post("/survey", data={"restrictions_present": "1", "restrictions": ["vegan", "nut_allergy"]})
     assert profile(client).restrictions == ["nut_allergy", "vegan"]
     page = client.get("/survey").text
     import re

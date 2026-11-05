@@ -16,6 +16,7 @@ NUTS = ["peanut", "peanuts", "almond", "almonds", "walnut", "walnuts", "cashew",
 PORK_HALAL = ["pork", "bacon", "ham", "lard", "gelatin", "wine", "beer", "sausage"]
 
 GROUPS: Dict[str, List[str]] = {
+    "red meat": ["beef", "pork", "lamb", "veal", "steak", "sirloin", "bacon", "ham"],
     "meat": MEAT, "fish": FISH, "seafood": FISH + SHELLFISH, "shellfish": SHELLFISH,
     "dairy": DAIRY, "egg": EGG, "eggs": EGG, "gluten": GLUTEN, "nuts": NUTS, "nut": NUTS,
     "pork": PORK_HALAL, "honey": ["honey"],

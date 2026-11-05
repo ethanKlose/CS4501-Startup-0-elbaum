@@ -34,6 +34,11 @@ def interpret(text):
                 elif not re.fullmatch(r"i (?:can|will) cook on (?:[a-z ,]+)",clause):
                     warnings.append('Part of your cooking note was not applied. Set explicit days and minutes in the schedule.')
                 continue
+            # Explicit "only chicken" requests are constraints, not cuisine assumptions.
+            if re.search(r"\b(?:i\s+)?only eat chicken(?:\s+as\s+(?:a\s+)?meat)?\b|\bchicken is (?:my|the) only meat\b|\b(?:i\s+)?eat chicken as (?:my|the) only meat\b",clause):
+                excluded.update(['red meat','turkey','duck','goose','fish','shellfish','gelatin'])
+                food_list=False
+                continue
             trigger=TRIGGER.search(clause)
             if trigger or food_list:
                 items=clause[trigger.end():] if trigger else clause

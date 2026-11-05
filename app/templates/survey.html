@@ -44,9 +44,10 @@
       </label>
     </section>
 
-    <section class="wstep card pad-lg" data-step="1" data-has-error="{{ '1' if errors.free_text else '' }}">
+    <section class="wstep card pad-lg" data-step="1" data-has-error="{{ '1' if errors.free_text or errors.restrictions else '' }}">
       <h2>Any dietary restrictions or allergies?</h2>
       <p class="muted">We check every ingredient in every meal against these.</p>
+      {% if errors.restrictions %}<p class="error" role="alert">{{ errors.restrictions }}</p>{% endif %}
       <input type="hidden" name="restrictions_present" value="1">
       <div class="chips">
         {% for key, label in restriction_options.items() %}
