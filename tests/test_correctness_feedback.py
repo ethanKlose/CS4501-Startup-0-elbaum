@@ -51,7 +51,7 @@ def test_correctness_summary_counts_accounts_once_and_keeps_missing_results_unkn
 
 def test_correctness_can_be_reviewed_without_collecting_times_or_spending(client):
     signup(client);client.post('/survey',data={'budget':'150'});client.post('/plan/generate')
-    response=client.post('/feedback',data={'plan_correct':'yes','consent':'true'})
+    response=client.post('/feedback',data={'plan_correct':'yes','consent':'true','actual_spend':'','actual_minutes':'','baseline_minutes':'','ease':''})
     assert response.status_code==200
     with client.app.state.session_factory() as db:
         result=export(db)['results'][0]

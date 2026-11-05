@@ -20,7 +20,13 @@ def feedback(request:Request,user=Depends(current_user),db=Depends(get_db)):
 
 
 @router.post('/feedback')
-def record_feedback(actual_spend:float|None=Form(None),actual_minutes:int|None=Form(None),baseline_minutes:int|None=Form(None),ease:int|None=Form(None),notes:str=Form(''),consent:bool=Form(False),plan_id:int=Form(None),plan_correct:str=Form('not_reviewed'),failed_constraints:list[str]=Form([]),user=Depends(current_user),db=Depends(get_db)):
+def record_feedback(actual_spend:str=Form(''),actual_minutes:str=Form(''),baseline_minutes:str=Form(''),ease:str=Form(''),notes:str=Form(''),consent:bool=Form(False),plan_id:int=Form(None),plan_correct:str=Form('not_reviewed'),failed_constraints:list[str]=Form([]),user=Depends(current_user),db=Depends(get_db)):
+    try:
+        actual_spend=float(actual_spend) if actual_spend.strip() else None
+        actual_minutes=int(actual_minutes) if actual_minutes.strip() else None
+        baseline_minutes=int(baseline_minutes) if baseline_minutes.strip() else None
+        ease=int(ease) if ease.strip() else None
+    except (ValueError,TypeError):raise HTTPException(422,'Use numbers for spending and whole minutes or ease scores, or leave optional fields blank.')
     if (actual_spend is not None and (not math.isfinite(actual_spend) or not 0<=actual_spend<=10000)) or (actual_minutes is not None and not 0<=actual_minutes<=10080) or (baseline_minutes is not None and not 0<=baseline_minutes<=10080) or (ease is not None and not 1<=ease<=5) or len(notes)>500:
         raise HTTPException(400,'Use nonnegative spending/time, an ease score from 1 to 5, and notes under 500 characters.')
     if plan_correct not in {'yes','no','not_reviewed'} or set(failed_constraints)-CORRECTNESS_FIELDS or (plan_correct!='no' and failed_constraints):

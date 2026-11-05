@@ -48,8 +48,8 @@ let log='',browser;server.stdout.on('data',d=>log+=d);server.stderr.on('data',d=
   assert.match(await goal.page.getByTestId('plan-verification').innerText(),/Needs review/);
   await goal.page.goto('/feedback');await goal.page.locator('[name=plan_correct]').selectOption('no');
   await goal.page.locator('[name=failed_constraints][value=nutrition]').check();
-  for(const [key,value] of Object.entries({actual_spend:'40',actual_minutes:'10',baseline_minutes:'20',ease:'4'}))await goal.page.locator('[name='+key+']').fill(value);
   await goal.page.getByRole('button',{name:'Save feedback',exact:true}).click();
   assert.match(await goal.page.locator('body').innerText(),/Constraint review: no/);
+  assert.match(await goal.page.locator('body').innerText(),/Unrecorded planning minutes/);
   assert.deepEqual(errors,[]);console.log('PASS unmet goal label, correctness feedback and zero browser exceptions');
 })().catch(e=>{console.error(e);console.error(log.slice(-3000));process.exitCode=1}).finally(async()=>{if(browser)await browser.close();if(server.exitCode===null){const stopped=new Promise(r=>server.once('exit',r));server.kill('SIGTERM');await stopped;}fs.rmSync(temp,{recursive:true,force:true});});
