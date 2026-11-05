@@ -25,7 +25,7 @@
 {% else %}
 
 <div class="cal-top reveal">
-  <div><h1>{{ week_title }}</h1><div class="row"><span class="chip brand">{{ icon('shield', 14) }} Verified plan</span><span class="muted tiny">Tap a meal for the recipe</span></div></div>
+  <div><h1>{{ week_title }}</h1><div class="row"><a href="#plan-checks" class="chip {{ 'warn' if verification.needs_review else 'brand' }}" data-testid="plan-verification">{{ icon('shield', 14) }} {{ verification.label }}</a><span class="muted tiny">Tap a meal for the recipe</span></div></div>
   <div class="row">
     <a class="btn line" href="/plans/{{ plan.id }}/calendar.ics">Export calendar</a>
     <a class="btn line" href="/grocery">{{ icon('cart') }} Grocery list</a>
@@ -86,6 +86,11 @@
   </section>
 
   <aside class="cal-side">
+    <section class="card side-card" id="plan-checks" data-testid="plan-checks">
+      <h2>Plan checks</h2>
+      <p class="muted tiny">Checks use your saved rules and estimated prices. Review food labels for allergies and confirm any unmet goals.</p>
+      <ul class="plain">{% for check in verification.checks %}<li><strong>{{ check.label }}:</strong> {{ check.status }}{% if check.details %}<ul>{% for detail in check.details %}<li>{{ detail }}</li>{% endfor %}</ul>{% endif %}</li>{% endfor %}</ul>
+    </section>
     <section class="card side-card reveal" style="--i:1">
       <div class="sc-head"><span>{{ icon('dollar', 16) }} Weekly budget</span><strong>${{ '%.2f' % plan.total_cost }} <small class="muted">of ${{ '%.2f' % plan.budget }}</small></strong></div>
       <div class="meter" role="progressbar" aria-valuenow="{{ stats.pct }}" aria-valuemin="0" aria-valuemax="100"><span style="width:{{ stats.pct }}%"></span></div>

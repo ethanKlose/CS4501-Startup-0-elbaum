@@ -82,7 +82,8 @@ def home(request: Request, user=Depends(current_user_optional), db: Session = De
     stats = dict(calories=round(sum(m.calories for m in meals) / n), protein=round(sum(m.protein for m in meals) / n),
                  cooked=sum(m.status == "cooked" for m in meals), skipped=sum(m.status == "skipped" for m in meals), total=len(meals),
                  pct=min(100, round(plan.total_cost / plan.budget * 100)) if plan.budget else 0)
-    return render(request, "home.html", user, columns=columns, hours=hour_labels(start_hour), hour_px=HOUR_PX, grid_px=(HOUR_END - start_hour) * HOUR_PX, week_title=week_title(start), stats=stats,
+    from app.services.verification import summary
+    return render(request, "home.html", user, verification=summary(plan),columns=columns, hours=hour_labels(start_hour), hour_px=HOUR_PX, grid_px=(HOUR_END - start_hour) * HOUR_PX, week_title=week_title(start), stats=stats,
                   cook_plan=cook_plan, sharing=sharing_stats(m.as_dict() for m in meals), checkin_due=checkin_due(plan, done),
                   short=[w[:3] for w in WEEKDAYS], meals_json=meals_json(meals, inventory.closed(plan)), closed=inventory.closed(plan), prep_col=bool(columns and columns[0]["prep"]), **ctx)
 

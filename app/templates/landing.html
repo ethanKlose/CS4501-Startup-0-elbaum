@@ -21,7 +21,7 @@
       <div class="float-chip b">{{ icon('flame') }} 2,000 cal/day on target</div>
       <div class="float-chip c">{{ icon('snow') }} Cooked Sun · just reheat Wed</div>
       <div class="mock">
-        <div class="mock-bar"><i></i><i></i><i></i><b>This week</b><span class="chip brand">{{ icon('check', 14) }} Verified</span></div>
+        <div class="mock-bar"><i></i><i></i><i></i><b>This week</b><span class="chip brand">{{ icon('check', 14) }} Checked</span></div>
         <div class="mock-grid">
           {% for day, evs in [
             ('Mon', [('b','Overnight oats','8:00'),('l','Chicken rice bowl','12:30'),('d','Veggie chili','6:30')]),
@@ -43,7 +43,7 @@
   <div class="lp-stats">
     <div class="lp-stat reveal" style="--i:1"><b>$0</b><span>over budget, ever</span></div>
     <div class="lp-stat reveal" style="--i:2"><b>1 min</b><span>from survey to a full week</span></div>
-    <div class="lp-stat reveal" style="--i:3"><b>100%</b><span>of plans verified before you see them</span></div>
+    <div class="lp-stat reveal" style="--i:3"><b>Plan checks</b><span>See saved-rule checks and unmet goals</span></div>
   </div>
 </section>
 
@@ -51,7 +51,7 @@
   <header><span class="lp-eyebrow">How it works</span><h2>From “what do I eat?” to groceries in three steps</h2></header>
   <div class="steps">
     <div class="step reveal" style="--i:1"><div class="num">1</div><h3>Tell us your week</h3><p>Budget, allergies, goals, and how much time you really have each day. Busy Wednesday? Say so.</p></div>
-    <div class="step reveal" style="--i:2"><div class="num">2</div><h3>Get a verified plan</h3><p>An AI picks the meals, then our checks make sure budget, diet and schedule actually hold. Bad plans never reach you.</p></div>
+    <div class="step reveal" style="--i:2"><div class="num">2</div><h3>Review your plan checks</h3><p>The planner selects meals and checks your saved rules. Estimated costs and any unmet goals are shown for review.</p></div>
     <div class="step reveal" style="--i:3"><div class="num">3</div><h3>Cook smart, shop once</h3><p>Batch-cook on free days, reheat on busy ones, and shop from one list grouped by aisle.</p></div>
   </div>
 </section>
@@ -90,7 +90,7 @@
 </section>
 
 <section class="lp-section">
-  <header><span class="lp-eyebrow">Trust, built in</span><h2>No plan reaches you unverified</h2><p class="muted">Every AI-generated plan runs through a gauntlet. If it fails, it’s fed back to be fixed, never shown.</p></header>
+  <header><span class="lp-eyebrow">Trust, built in</span><h2>Know what your plan checks cover</h2><p class="muted">Plans are checked against your saved rules. Missing goals and uncertain notes are flagged so you can review them before relying on the plan.</p></header>
   <div class="features">
     <div class="feat"><div class="fi">{{ icon('shield', 22) }}</div><h3>Diet and allergens</h3><p>Every ingredient in every meal, checked against your restrictions.</p></div>
     <div class="feat"><div class="fi">{{ icon('dollar', 22) }}</div><h3>Budget and math</h3><p>Totals recomputed from ingredients, never taken on trust.</p></div>

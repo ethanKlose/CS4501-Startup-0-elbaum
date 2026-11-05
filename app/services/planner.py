@@ -119,7 +119,7 @@ def build_context(db: Session, user: User, llm, seed: int = 0, week_start=None) 
 
 
 def plan_settings(ctx: PlanContext) -> dict:
-    return dict(prep_style=ctx.prep_style, prep_days=list(ctx.prep_days), prep_minutes=ctx.prep_minutes,
+    return dict(restrictions=list(ctx.restrictions),excluded=list(ctx.excluded),pantry=list(ctx.pantry),preference_warnings=list(ctx.preference_warnings),prep_style=ctx.prep_style, prep_days=list(ctx.prep_days), prep_minutes=ctx.prep_minutes,
                 goal=ctx.goal, calorie_target=ctx.calorie_target, equipment=ctx.equipment, cooking_skill=ctx.cooking_skill,
                 allow_freezer=ctx.allow_freezer, price_offers=ctx.price_offers, checkout_budget=ctx.checkout_budget, earliest_day=ctx.earliest_day, earliest_minute=ctx.earliest_minute, external_slots=ctx.external_slots, cooking_windows=ctx.cooking_windows, meal_times=ctx.meal_times, week_start=ctx.week_start, allow_pre_week=ctx.allow_pre_week)
 
@@ -151,6 +151,7 @@ def plan_ctx(plan: Plan) -> PlanContext:
     """Rebuild a lightweight context from what was saved with the plan (no LLM or DB lookups)."""
     st = plan.settings or {}
     return PlanContext(budget=plan.budget, days=[DayCtx(d["weekday"], d["minutes"], d.get("busy", False), d.get("skipped", False)) for d in plan.days],
+                       restrictions=st.get('restrictions',[]),excluded=st.get('excluded',[]),pantry=st.get('pantry',[]),preference_warnings=st.get('preference_warnings',[]),
                        goal=st.get("goal", "none"), calorie_target=st.get("calorie_target"), prep_style=st.get("prep_style", "auto"),
                        prep_days=st.get("prep_days", []), prep_minutes=st.get("prep_minutes", 120),
                        price_offers=st.get('price_offers',{}), checkout_budget=st.get('checkout_budget',False), equipment=st.get('equipment'), cooking_skill=st.get('cooking_skill','any'), allow_freezer=st.get('allow_freezer',True),
@@ -165,7 +166,7 @@ def reschedule(plan: Plan) -> None:
     sched = schedule_for(pd, ctx)
     for m in plan.meals:
         m.cook_day, m.frozen = sched.assign[(m.day, m.slot)]
-    plan.warnings = [w for check in SOFT_CHECKS for w in check(pd, ctx)] if pd["meals"] else []
+    plan.warnings = ([w for check in SOFT_CHECKS for w in check(pd, ctx)] if pd["meals"] else []) + list(ctx.preference_warnings)
 
 
 def run_with_retries(llm, ctx: PlanContext):
