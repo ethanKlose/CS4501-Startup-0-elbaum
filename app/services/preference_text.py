@@ -13,10 +13,14 @@ def interpret(text):
     # Commas carry a food-list trigger; a sentence boundary ends that list.
     for sentence in re.split(r'[.;\n]+', text):
         food_list=False
-        for clause in sentence.split(','):
+        for clause in re.split(r",|\band\s+(?=i\b)",sentence):
             clause=clause.strip()
             if not clause:continue
             days=[i for i,d in enumerate(WEEKDAYS) if re.search(r'\b'+d.lower()+r's?\b|\b'+d[:3].lower()+r's?\b',clause)]
+            recognized=False
+            for pattern,key in DIETS.items():
+                if re.search(r'\b'+pattern+r'\b',clause) and not re.search(r"\b(?:not|no longer)\s+(?:a\s+)?"+pattern+r'\b',clause):
+                    excluded.add(key);recognized=True
             if 'cook' in clause:
                 food_list=False
                 zero=bool(re.search(r"\b(?:no cooking|not cook|can't cook|cannot cook|don't cook|do not cook)\b",clause))
@@ -30,10 +34,6 @@ def interpret(text):
                 elif not re.fullmatch(r"i (?:can|will) cook on (?:[a-z ,]+)",clause):
                     warnings.append('Part of your cooking note was not applied. Set explicit days and minutes in the schedule.')
                 continue
-            recognized=False
-            for pattern,key in DIETS.items():
-                if re.search(r'\b'+pattern+r'\b',clause) and not re.search(r"\b(?:not|no longer)\s+(?:a\s+)?"+pattern+r'\b',clause):
-                    excluded.add(key);recognized=True
             trigger=TRIGGER.search(clause)
             if trigger or food_list:
                 items=clause[trigger.end():] if trigger else clause

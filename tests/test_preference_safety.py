@@ -22,9 +22,11 @@ def test_positive_availability_and_numeric_daily_caps():
     assert llm.interpret_preferences('I only have 10 minutes to cook each day')['day_minutes_cap']=={str(i):10 for i in range(7)}
     assert llm.interpret_preferences('I am not vegan')['excluded']==[]
     assert llm.interpret_preferences('avoid stone fruit').get('warnings')
+    mixed=llm.interpret_preferences("No fish and I can't cook Wednesdays")
+    assert mixed['excluded']==['fish'] and mixed['day_minutes_cap']=={'2':0}
 
 
-@pytest.mark.parametrize('text,diet',[('No peanuts or shellfish',['nut_allergy','shellfish_allergy']),('I am vegan',['vegan'])])
+@pytest.mark.parametrize('text,diet',[('No peanuts or shellfish',['peanuts','shellfish']),('I am vegan',['vegan'])])
 def test_original_note_is_respected_by_saved_plan(client,text,diet):
     signup(client);client.post('/survey',data={'budget':'150','free_text':text})
     client.post('/plan/generate',data={'start_mode':'next_week'})

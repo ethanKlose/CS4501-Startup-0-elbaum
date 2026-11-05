@@ -40,9 +40,10 @@ def affordable_fallback(ctx, recipes):
     stock={};unlimited=set()
     for p in ctx.pantry:
         for key,offer in offers.items():
-            if grocery._same_food(p['name'],offer['name']):
+            name,unit=key.rsplit('|',1)
+            if grocery._same_food(p['name'],name):
                 if p.get('quantity') is None:unlimited.add(key)
-                elif (p.get('unit') or '').lower().strip()==offer['unit'].lower():stock[key]=stock.get(key,0)+p['quantity']
+                elif (p.get('unit') or '').lower().strip()==unit:stock[key]=stock.get(key,0)+p['quantity']
     options=[[(r,totals([(r,counts[s])])) for r in pool] for s,pool in zip(kinds,pools)]
     candidates=[]
     for combo in itertools.product(*options):
