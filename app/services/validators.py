@@ -40,7 +40,13 @@ def plan_total(plan: dict) -> float:
 
 
 def check_budget(plan: dict, ctx: PlanContext) -> List[str]:
-    total = plan_total(plan)
+    # Deduct owned stock before checking the cost of portions still needed.
+    # The separate whole-package check also rejects an unaffordable basket.
+    if ctx.checkout_budget:
+        from app.services.grocery import build_list,apply_pantry
+        total = round(sum(i["cost"] for i in apply_pantry(build_list(plan["meals"]),ctx.pantry)),2)
+    else:
+        total = plan_total(plan)
     if total > ctx.budget + 1e-9:
         return [f"Total cost ${total:.2f} exceeds the weekly budget of ${ctx.budget:.2f} by ${total - ctx.budget:.2f}. Choose cheaper meals or ingredients."]
     return []

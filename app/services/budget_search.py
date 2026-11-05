@@ -48,7 +48,7 @@ def affordable_fallback(ctx, recipes):
     candidates=[]
     for combo in itertools.product(*options):
         portion=sum(m['cost'] for m in pins.values())+sum(r['cost']*counts[s] for s,(r,_) in zip(kinds,combo))
-        if portion>ctx.budget+.001:continue
+        if not ctx.checkout_budget and portion>ctx.budget+.001:continue
         amounts=dict(opening)
         for _,vector in combo:
             for k,q in vector.items():amounts[k]=amounts.get(k,0)+q
