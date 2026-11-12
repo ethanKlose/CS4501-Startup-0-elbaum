@@ -263,10 +263,48 @@ class AnthropicLLM:
         payload = {"context": asdict(ctx), "cook_capacity_minutes": {str(k): v for k, v in sorted(caps.items())},
                    "feedback_from_previous_attempt": list(feedback)}
         from app.services.nutrition import catalog_plan
-        payload['approved_recipes']=[{k:v for k,v in r.items() if k in {'name','slots','calories','protein','cost','cook_minutes'}} for r in RECIPES]
-        payload['required_slots']=[{'day':d.weekday,'slot':slot} for d in ctx.active_days() for slot in ctx.slots_for(d.weekday)]
-        prompt=SYSTEM+"\nSelect ONLY names from approved_recipes. Return {\"meals\":[{\"day\":0,\"slot\":\"breakfast\",\"name\":\"approved recipe name\"}]}. Do not generate nutrition, ingredients or instructions; the server supplies those. Cover required_slots exactly."
-        return catalog_plan(self._ask(prompt,json.dumps(payload),int(os.environ.get("LLM_MAX_OUTPUT_TOKENS","5000"))),ctx)
+        self._tight = getattr(self, '_tight', False) or any('budget' in str(f).lower() for f in feedback)  # sticky for this generation
+        over_budget = self._tight  # retry after a budget miss: cheapest 2 recipes per slot
+        pool = sorted(RECIPES, key=lambda r: r['cost'])
+        by_slot = {sl: [r["name"] for r in pool if sl in r["slots"]][: 2 if over_budget else None] for sl in SLOTS}
+        allowed = {n for names in by_slot.values() for n in names}
+        payload['approved_recipes'] = [{k: v for k, v in r.items() if k in {'name', 'slots', 'calories', 'protein', 'cost', 'cook_minutes'}} for r in RECIPES if r['name'] in allowed]
+        payload['approved_names_by_slot'] = by_slot  # a recipe may only be used for a slot listed here
+        required = [{'day': d.weekday, 'slot': slot} for d in ctx.active_days() for slot in ctx.slots_for(d.weekday)]
+        payload['required_slots'] = required
+        prompt = SYSTEM + "\nSelect ONLY names from approved_names_by_slot[slot] for that slot. Return {\"meals\":[{\"day\":0,\"slot\":\"breakfast\",\"name\":\"approved recipe name\"}]}. Do not generate nutrition, ingredients or instructions; the server supplies those. Cover required_slots exactly. Groceries are bought in whole packages, so every distinct recipe adds shopping cost: choose only about 5-8 different recipes and repeat them across the week (batch cooking), keeping the total well under the weekly budget in context.budget. If feedback_from_previous_attempt mentions the budget, use fewer and cheaper recipes."
+        max_tokens = int(os.environ.get("LLM_MAX_OUTPUT_TOKENS", "5000"))
+        pinned = {(m['day'], m['slot']) for m in ctx.pinned}
+
+        def usable(raw):
+            """Keep picks that are real recipes for their slot; a bad pick should cost one meal, not the plan."""
+            good = []
+            for m in (raw.get('meals') if isinstance(raw, dict) else None) or []:
+                if not isinstance(m, dict):
+                    continue
+                if (m.get('day'), m.get('slot')) in pinned or m.get('name') in by_slot.get(m.get('slot'), ()):
+                    good.append(m)
+            return good
+
+        meals = usable(self._ask(prompt, json.dumps(payload), max_tokens))
+        for _ in range(2):  # small models drop or mis-slot a few picks; ask only for the gaps
+            have = {(m.get('day'), m.get('slot')) for m in meals}
+            missing = [x for x in required if (x['day'], x['slot']) not in have]
+            if not missing:
+                break
+            extra = dict(payload, required_slots=missing, already_planned=[{'day': m.get('day'), 'slot': m.get('slot'), 'name': m.get('name')} for m in meals],
+                         note="Return ONLY the missing meals, in the same JSON format.")
+            try:
+                meals += usable(self._ask(prompt, json.dumps(extra), max_tokens))
+            except Exception:
+                break
+        wanted, seen, final = {(x['day'], x['slot']) for x in required}, set(), []
+        for m in meals:  # one pick per required slot: drop duplicates and slots that aren't part of the plan
+            key = (m.get('day'), m.get('slot'))
+            if key in wanted and key not in seen:
+                seen.add(key)
+                final.append(m)
+        return catalog_plan({'meals': final}, ctx)
 
     def interpret_preferences(self, text: str) -> Dict:
         if not (text or "").strip():

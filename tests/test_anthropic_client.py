@@ -70,3 +70,20 @@ def test_invalid_preference_days_fall_back_instead_of_crashing_survey():
     llm=client_with('{"excluded":[],"day_minutes_cap":{"7":15}}')
     out=llm.interpret_preferences('No cooking on Wednesdays')
     assert out['day_minutes_cap']=={'2':0}
+
+
+def test_bad_picks_are_dropped_and_gaps_are_filled_instead_of_failing_the_plan():
+    from app.services.catalog import RECIPES
+
+    c = ctx()
+    good = FakeLLM().generate_plan(c)["meals"]
+    picks = [{"day": m["day"], "slot": m["slot"], "name": m["name"]} for m in good]
+    broken = [dict(picks[0], name="Not a real recipe")] + picks[1:5]  # one invented name, the rest of the plan missing
+    replies = [json.dumps({"meals": broken}), json.dumps({"meals": picks})]
+    llm = AnthropicLLM.__new__(AnthropicLLM)
+    llm.model = "test-model"
+    llm._ask = lambda system, user, max_tokens: json.loads(replies.pop(0))
+    plan = llm.generate_plan(c)
+    got = {(m["day"], m["slot"]) for m in plan["meals"]}
+    assert got == {(p["day"], p["slot"]) for p in picks}  # every slot filled, invented recipe never kept
+    assert all(m["name"] in {r["name"] for r in RECIPES} for m in plan["meals"])
