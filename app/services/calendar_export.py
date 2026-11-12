@@ -20,24 +20,35 @@ def fold(line):
     return '\r\n'.join(parts+[current])
 
 
-def export(plan):
-    st=plan.settings or {};start=plan_week_start(plan);zone=settings.timezone
-    rows=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//PlateJoy//Meal planner//EN','CALSCALE:GREGORIAN','X-WR-TIMEZONE:'+escape(zone)]
-    stamp=dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
-    def event(uid,day,minute,duration,title,description=''):
-        begins=dt.datetime.combine(start+dt.timedelta(days=day),dt.time())+dt.timedelta(minutes=minute)
-        ends=begins+dt.timedelta(minutes=duration)
-        rows.extend(['BEGIN:VEVENT','UID:'+uid+'@platejoy.local','DTSTAMP:'+stamp,'DTSTART;TZID='+zone+':'+begins.strftime('%Y%m%dT%H%M%S'),'DTEND;TZID='+zone+':'+ends.strftime('%Y%m%dT%H%M%S'),'SUMMARY:'+escape(title),'DESCRIPTION:'+escape(description),'END:VEVENT'])
-    for meal in plan.meals:
-        if meal.status=='skipped':continue
-        minute=st.get('meal_times',{}).get(meal.slot,EAT[meal.slot][0])
-        event(f'plan-{plan.id}-meal-{meal.id}',meal.day,minute,EAT[meal.slot][1],meal.name,'\n'.join(meal.steps))
-    saved=[dict(m.as_dict(),cook_day=m.cook_day,frozen=m.frozen) for m in plan.meals]
+def entries(plan):
+    """The same meals, outside meals and prep sessions for ICS and Google."""
+    st=plan.settings or {}; result=[]
+    def event(key,uid,day,minute,duration,title,description='',category='outside'):
+        result.append(dict(key=key,uid=uid,day=day,minute=minute,duration=duration,title=title,description=description,category=category))
+    active=[meal for meal in plan.meals if meal.status!='skipped']
+    for meal in active:
+        event(f'meal-{meal.day}-{meal.slot}',f'plan-{plan.id}-meal-{meal.id}',meal.day,
+              st.get('meal_times',{}).get(meal.slot,EAT[meal.slot][0]),EAT[meal.slot][1],meal.name,'\n'.join(meal.steps),category=meal.slot)
+    saved=[dict(m.as_dict(),cook_day=m.cook_day,frozen=m.frozen) for m in active]
     timing=dict(cooking_windows=st.get('cooking_windows',{}),meal_times=st.get('meal_times',{}),earliest_day=st.get('earliest_day',-1),earliest_minute=st.get('earliest_minute',0))
     for index,session in enumerate(timed_sessions(build_sessions(saved),**timing)):
-        if session['start']>=0:event(f'plan-{plan.id}-cook-{index}',session['cook_day'],session['start'],session['minutes'],'Cook '+session['name'],f"Prepare {session['servings']} serving(s).")
+        if session['start']>=0:
+            # Eating slots distinguish multiple batches of one dish on one day.
+            batch=','.join(f"{e['day']}-{e['slot']}" for e in session['eats'])
+            event(f"cook-{session['cook_day']}-{session['name']}-{batch}",f'plan-{plan.id}-cook-{index}',session['cook_day'],session['start'],session['minutes'],'Cook '+session['name'],f"Prepare {session['servings']} serving(s).",category='prep')
     for index,external in enumerate(st.get('external_slots',[])):
         if not external.get('past'):
-            event(f'plan-{plan.id}-external-{index}',external['day'],st.get('meal_times',{}).get(external['slot'],EAT[external['slot']][0]),EAT[external['slot']][1],external['source'])
+            event(f"external-{external['day']}-{external['slot']}",f'plan-{plan.id}-external-{index}',external['day'],st.get('meal_times',{}).get(external['slot'],EAT[external['slot']][0]),EAT[external['slot']][1],external['source'])
+    return result
+
+
+def export(plan):
+    start=plan_week_start(plan);zone=settings.timezone
+    rows=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//PlateJoy//Meal planner//EN','CALSCALE:GREGORIAN','X-WR-TIMEZONE:'+escape(zone)]
+    stamp=dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+    for entry in entries(plan):
+        begins=dt.datetime.combine(start+dt.timedelta(days=entry['day']),dt.time())+dt.timedelta(minutes=entry['minute'])
+        ends=begins+dt.timedelta(minutes=entry['duration'])
+        rows.extend(['BEGIN:VEVENT','UID:'+entry['uid']+'@platejoy.local','DTSTAMP:'+stamp,'DTSTART;TZID='+zone+':'+begins.strftime('%Y%m%dT%H%M%S'),'DTEND;TZID='+zone+':'+ends.strftime('%Y%m%dT%H%M%S'),'SUMMARY:'+escape(entry['title']),'DESCRIPTION:'+escape(entry['description']),'END:VEVENT'])
     rows.append('END:VCALENDAR')
     return '\r\n'.join(fold(row) for row in rows)+'\r\n'

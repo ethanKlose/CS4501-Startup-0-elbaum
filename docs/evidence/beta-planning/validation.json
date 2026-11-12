@@ -1,0 +1,28 @@
+{
+  "date_utc": "2026-11-12",
+  "python": {
+    "passed": 771,
+    "failed": 0,
+    "skipped": 0,
+    "warnings": 1106,
+    "seconds": 216.87,
+    "new_cases": 33
+  },
+  "coverage": {
+    "scope": "Python app/ only; excludes templates, CSS and JavaScript",
+    "covered": 3435,
+    "measured": 3597,
+    "percent": 95.5
+  },
+  "javascript_dom": {
+    "passed": 24,
+    "failed": 0,
+    "new_cases": 14,
+    "command": "npm run test:ui",
+    "scope": "Production JavaScript; planning HTML rendered by the actual route in an isolated in-memory app"
+  },
+  "migration": "Existing profile and saved plan preserved; upgrade can run twice; startup and restart integration checks pass",
+  "browser": "Native Chromium execution unavailable in this environment; updated smoke workflow was not run locally",
+  "static_layout": "Desktop and phone-width renders inspected; not a native browser result",
+  "live_services": "No paid model calls, user credentials, live cart writes or purchases used"
+}

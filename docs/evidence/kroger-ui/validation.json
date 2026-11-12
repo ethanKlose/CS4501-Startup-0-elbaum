@@ -1,0 +1,24 @@
+{
+  "date_utc": "2026-11-12",
+  "python": {
+    "passed": 738,
+    "failed": 0,
+    "warnings": 1071,
+    "seconds": 215.99
+  },
+  "coverage": {
+    "scope": "Python app/ statements; excludes templates/CSS/JavaScript",
+    "covered": 3376,
+    "measured": 3537,
+    "percent": 95.45
+  },
+  "javascript_dom": {
+    "passed": 10,
+    "failed": 0,
+    "command": "npm run test:ui",
+    "environment": "Node + jsdom; actual production JavaScript"
+  },
+  "browser": "Not executed: native Chromium launch blocked",
+  "layout_review": "Static desktop rendering inspected; not a browser test",
+  "external_requests": "Controlled provider responses; no paid model calls or live cart additions"
+}

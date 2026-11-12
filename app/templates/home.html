@@ -28,6 +28,7 @@
   <div><h1>{{ week_title }}</h1><div class="row"><a href="#plan-checks" class="chip {{ 'warn' if verification.needs_review else 'brand' }}" data-testid="plan-verification">{{ icon('shield', 14) }} {{ verification.label }}</a><span class="muted tiny">Tap a meal for the recipe</span></div></div>
   <div class="row">
     <a class="btn line" href="/plans/{{ plan.id }}/calendar.ics">Export calendar</a>
+    {% if not archived %}<a class="btn line" href="/integrations">Sync to Google Calendar</a>{% endif %}
     <a class="btn line" href="/grocery">{{ icon('cart') }} Grocery list</a>
     {% if not archived %}<form method="post" action="/plan/generate" class="inline" data-generate data-confirm="Replace this plan with meals for the rest of this week? Confirmed purchases update your pantry."><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="start_mode" value="today"><button class="btn line">Plan from today</button></form><form method="post" action="/plan/regenerate" class="inline" data-confirm="Replace the displayed plan? Pinned recipes stay. Cooking history is archived, confirmed purchases update your pantry, and the new plan starts with fresh check-offs." data-generate data-generate-title="Regenerating your week…"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <button class="btn primary">{{ icon('refresh') }} Regenerate week</button></form>

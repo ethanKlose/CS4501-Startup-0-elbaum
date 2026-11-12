@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Connected apps · PlateJoy{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Connected apps</h1><p class="muted">Take your plan and grocery list with you.</p></div><a class="btn line" href="/">Back to plan</a></div>
+{% if message %}<div class="alert info" role="status">{{ message }}</div>{% endif %}
+<section class="card pad-lg" style="margin-bottom:20px" data-testid="google-integration">
+  <h2>Google Calendar</h2>
+  <ul class="calendar-sync-legend" aria-label="Google Calendar event colors" data-testid="google-color-legend">
+    {% for style in calendar_styles %}<li><span class="calendar-sync-dot" style="background-color:{{ style.swatch }}" aria-hidden="true"></span>{{ style.label }}</li>{% endfor %}
+  </ul>
+  <p>Send meals, outside meals and scheduled prep blocks to your primary Google Calendar. Click Sync after changing a plan; syncing updates this week's PlateJoy events and removes obsolete ones. Other weeks and your personal events stay in place.</p>
+  <p class="muted">This is a one-way sync. Google edits do not change your plan and can be overwritten on the next sync. Nothing syncs in the background.</p>
+  {% if not google_configured %}<p class="alert info">Google Calendar setup is needed on this installation. Follow BETA_INTEGRATIONS.md in the repository. Calendar-file export works without setup.</p>{% endif %}
+  {% if google_configured and not google_connected %}
+  <form method="post" action="/integrations/google/connect"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn primary">Connect Google Calendar</button></form>
+  {% endif %}
+  {% if google_connected %}<p><strong>Connected</strong></p>
+  {% if plan and plan.status == 'ok' and google_configured %}<form method="post" action="/integrations/google/sync" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="plan_id" value="{{ plan.id }}"><button class="btn primary">Sync current week</button></form>{% else %}<p>Generate a current plan and complete setup before syncing.</p>{% endif %}
+  <form method="post" action="/integrations/google/disconnect" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn line">Disconnect Google</button></form>
+  {% endif %}
+  {% if last_sync %}<p class="muted tiny">Last successful sync: {{ last_sync.at }} · plan {{ last_sync.plan_id }}</p>{% endif %}
+  {% if plan %}<p><a href="/plans/{{ plan.id }}/calendar.ics">Download calendar file instead</a></p>{% endif %}
+</section>
+<section class="card pad-lg" style="margin-bottom:20px" data-testid="kroger-integration">
+  <h2>Kroger groceries</h2>
+  {% if kroger_message %}<p class="alert info" role="status">{{ kroger_message }}</p>{% endif %}
+  <p>Choose a store, find products for your unchecked ingredients, and review package quantities before adding them to your Kroger cart. Checkout happens on Kroger.</p>
+  {% if not kroger_configured %}<p class="alert info">Kroger setup is needed on this installation. Your existing grocery list stays available.</p>{% endif %}
+  {% if kroger_configured %}<form method="post" action="/integrations/kroger/connect" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn {{ 'line' if kroger_connected else 'primary' }}">{{ 'Reconnect Kroger' if kroger_connected else 'Connect Kroger' }}</button></form>{% endif %}
+  {% if kroger_connected %}<p><strong>Kroger connected</strong></p><a class="btn primary" href="/grocery/kroger">Shop groceries with Kroger</a>
+  <form method="post" action="/integrations/kroger/disconnect" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn line">Disconnect Kroger</button></form>{% endif %}
+</section>
+<section class="card pad-lg" data-testid="instacart-integration">
+  <h2>Instacart</h2>
+  <p>Transfer unchecked grocery items to an Instacart shopping page, choose your store, and review product matches, dietary labels, package sizes and current prices there. Sending a list never places an order.</p>
+  {% if instacart_configured %}<p><strong>Shopping-list handoff configured</strong></p>{% else %}<p class="alert info">An Instacart developer API key is needed on this installation. Your OpenAI key cannot be used here. See BETA_INTEGRATIONS.md.</p>{% endif %}
+  <a class="btn primary" href="/grocery">Open grocery list</a>
+</section>
+{% endblock %}

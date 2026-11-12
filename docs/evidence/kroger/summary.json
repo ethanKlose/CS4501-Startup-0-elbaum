@@ -1,0 +1,43 @@
+{
+  "full_suite": {
+    "passed": 724,
+    "failed": 0,
+    "warnings": 1063,
+    "seconds": 217.68
+  },
+  "count_breakdown": {
+    "beta_base": 653,
+    "optional_calendar_color_tests": 8,
+    "new_kroger_tests": 63,
+    "new_kroger_http_cases": 35,
+    "new_kroger_boundary_cases": 28
+  },
+  "python_app_line_coverage": {
+    "covered_lines": 3332,
+    "num_statements": 3493,
+    "percent_covered": 95.39078156312625,
+    "percent_covered_display": "95",
+    "missing_lines": 161,
+    "excluded_lines": 0,
+    "percent_statements_covered": 95.39078156312625,
+    "percent_statements_covered_display": "95"
+  },
+  "compatibility_without_calendar_colors": {
+    "focused_cases_passed": 84,
+    "seconds": 12.89
+  },
+  "actual_kroger_requests_made": 0,
+  "actual_openai_requests_made": 0,
+  "live_cases_default": {
+    "total": 6,
+    "skipped": 6,
+    "kroger_read_only_cases": 1
+  },
+  "new_manual_procedures": {
+    "written": 10,
+    "executed_by_human": 0
+  },
+  "environment": "Linux / Python 3.12.14; actual FastAPI HTTP/auth/CSRF, Alembic, SQLite and service code; controlled external HTTP",
+  "live_acceptance": "Requires owner-provided Kroger registration, shopper OAuth consent, and explicit real cart review; not verified here",
+  "browser_ui": "Not rerun in this update; use the manual checklist with the real account"
+}

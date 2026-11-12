@@ -74,51 +74,90 @@
   if (auto) setTimeout(function () { if (auto.requestSubmit) auto.requestSubmit(); else auto.submit(); }, 900);
 })();
 
-/* ---- survey wizard ---- */
+/* ---- planning preferences: native forms with progressive enhancement ---- */
 (function () {
   'use strict';
   var form = document.getElementById('wizard');
   if (!form) return;
-  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
-  var steps = $$('.wstep', form), tabs = $$('.wiz-tabs button', form), first = form.dataset.first === '1';
+  var page = form.closest('.planning-page') || document;
+  var $$ = function (s, r) { return Array.from((r || form).querySelectorAll(s)); };
+  var steps = $$('.wstep'), tabs = $$('.wiz-tabs button'), first = form.dataset.first === '1';
   var cur = 0;
-  function go(i) {
+  function go(i, scroll) {
     cur = Math.max(0, Math.min(steps.length - 1, i));
-    steps.forEach(function (s, k) { s.classList.toggle('on', k === cur); });
-    tabs.forEach(function (t, k) { t.classList.toggle('on', k === cur); t.classList.toggle('done', k < cur); });
-    document.getElementById('wiz-progress').style.width = ((cur + 1) / steps.length * 100) + '%';
-    form.classList.toggle('last', cur === steps.length - 1);
-    steps.forEach(function (_, k) { form.classList.remove('step' + k); }); form.classList.add('step' + cur);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    steps.forEach(function (section, index) { section.hidden=index!==cur;section.classList.toggle('on', index===cur); });
+    tabs.forEach(function (tab, index) {
+      tab.classList.toggle('on', index===cur);tab.classList.toggle('done',index<cur);
+      if(index===cur) tab.setAttribute('aria-current','step');else tab.removeAttribute('aria-current');
+    });
+    document.getElementById('wiz-progress').style.width=((cur+1)/steps.length*100)+'%';
+    var label=document.getElementById('planning-step-label');if(label) label.textContent='Step '+(cur+1)+' of '+steps.length;
+    form.classList.toggle('last',cur===steps.length-1);
+    steps.forEach(function (_,index) { form.classList.remove('step'+index); });form.classList.add('step'+cur);
+    if(scroll) form.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
   }
-  tabs.forEach(function (t, k) { t.addEventListener('click', function () { go(k); }); });
-  var next = form.querySelector('[data-next]'), prev = form.querySelector('[data-prev]');
-  if (next) next.addEventListener('click', function () {
-    var budget = form.elements.budget;  // step 1 requires a valid budget before moving on
-    if (cur === 0 && first && (!budget.value || parseFloat(budget.value) < 30)) { budget.focus(); budget.reportValidity && budget.reportValidity(); return; }
-    go(cur + 1);
+  function invalid(section) {
+    return Array.from(section.querySelectorAll('input,select,textarea')).find(function(input){return !input.disabled && !input.checkValidity();});
+  }
+  function reveal(input) {
+    var index=steps.findIndex(function(section){return section.contains(input);});
+    if(index>=0) go(index,true);
+    var details=input.closest('details');if(details) details.open=true;
+    input.focus();if(input.reportValidity) input.reportValidity();
+  }
+  tabs.forEach(function(tab,index){tab.addEventListener('click',function(){go(index,true);});});
+  var next=form.querySelector('[data-next]'),prev=form.querySelector('[data-prev]');
+  if(next) next.addEventListener('click',function(){var bad=invalid(steps[cur]);if(bad){reveal(bad);return;}go(cur+1,true);});
+  if(prev) prev.addEventListener('click',function(){go(cur-1,true);});
+  form.addEventListener('submit',function(event){var bad=invalid(form);if(bad){event.preventDefault();reveal(bad);}});
+  form.addEventListener('keydown',function(event){
+    if(first && event.key==='Enter' && event.target.tagName==='INPUT' && !['checkbox','radio','range','submit'].includes(event.target.type) && cur<steps.length-1){event.preventDefault();next.click();}
   });
-  if (prev) prev.addEventListener('click', function () { go(cur - 1); });
-  form.addEventListener('keydown', function (e) {   // Enter inside the wizard means "Next", not "submit"
-    if (first && e.key === 'Enter' && e.target.tagName === 'INPUT' && cur < steps.length - 1) { e.preventDefault(); next.click(); }
+  $$('.presets').forEach(function(box){
+    var input=form.elements.namedItem(box.getAttribute('data-target'));if(!input)return;
+    function sync(){box.querySelectorAll('.pill').forEach(function(button){var on=String(input.value)===button.dataset.set;button.classList.toggle('on',on);button.setAttribute('aria-pressed',String(on));});}
+    box.addEventListener('click',function(event){var button=event.target.closest('.pill');if(!button)return;input.value=button.dataset.set;input.dispatchEvent(new Event('input',{bubbles:true}));});
+    input.addEventListener('input',sync);sync();
   });
-  /* preset buttons fill their target input */
-  $$('.presets', form).forEach(function (box) {
-    var input = form.elements[box.getAttribute('data-target')];
-    function sync() { $$('.pill', box).forEach(function (b) { b.classList.toggle('on', String(input.value) === b.getAttribute('data-set')); }); }
-    box.addEventListener('click', function (e) { var b = e.target.closest('.pill'); if (!b) return; input.value = b.getAttribute('data-set'); sync(); input.dispatchEvent(new Event('input')); });
-    input.addEventListener('input', sync); sync();
-  });
-  /* calorie field only when relevant */
-  var cal = document.getElementById('cal-field');
-  function syncGoal() { var g = form.querySelector('input[name=goal]:checked'); cal.classList.toggle('show', !!g && g.value === 'calorie_target'); }
-  $$('input[name=goal]', form).forEach(function (r) { r.addEventListener('change', syncGoal); }); syncGoal();
-  /* busy toggle tints the row */
-  $$('.dayrow', form).forEach(function (row) { var cb = row.querySelector('input[type=checkbox]'); cb.addEventListener('change', function () { row.classList.toggle('is-busy', cb.checked); }); });
-  /* jump to the first step that has a server-side error, otherwise start at 0 */
-  var start = 0; steps.some(function (s, k) { if (s.getAttribute('data-has-error')) { start = k; return true; } });
-  go(start);
-  if (!first) form.classList.add('last');
+  var protein=form.elements.namedItem('protein_target'),slider=document.getElementById('protein-slider');
+  function summary(){
+    function write(selector,value){var target=page.querySelector(selector);if(target)target.textContent=value;}
+    var budget=form.elements.namedItem('budget');write('[data-summary-budget]',budget.value?'$'+budget.value:'Not set');
+    var selected=$$('input[name=goals]:checked').map(function(input){return input.value;});
+    write('[data-summary-protein]',selected.includes('high_protein')?(protein.value?protein.value+'g / day':'Enter a target'):'Not selected');
+    var calories=form.elements.namedItem('calorie_target');write('[data-summary-calories]',selected.includes('calorie_target')?(calories.value?calories.value+' kcal / day':'Enter a target'):'Not selected');
+  }
+  function dirty(){
+    var note=form.querySelector('[data-save-note]');if(note)note.textContent='Unsaved changes';
+    var saved=page.querySelector('[data-preferences-saved]');if(saved)saved.hidden=true;
+  }
+  function syncGoals(){
+    $$('input[name=goals]').forEach(function(check){
+      var panel=form.querySelector('[data-goal-fields="'+check.value+'"]');
+      if(!panel)return;panel.hidden=!check.checked;
+      panel.querySelectorAll('input').forEach(function(input){input.disabled=!check.checked;if(input.name)input.required=check.checked;});
+      check.closest('[data-nutrition-card]').classList.toggle('selected',check.checked);
+    });summary();
+  }
+  $$('input[name=goals]').forEach(function(check){check.addEventListener('change',syncGoals);});
+  var clear=form.querySelector('[data-clear-goals]');if(clear)clear.addEventListener('click',function(){$$('input[name=goals]').forEach(function(check){check.checked=false;});syncGoals();dirty();});
+  if(protein && slider){
+    slider.addEventListener('input',function(){protein.value=slider.value;slider.setAttribute('aria-valuetext',slider.value+' grams per day');summary();});
+    protein.addEventListener('input',function(){var value=Number(protein.value);if(protein.value && Number.isInteger(value) && value>=20 && value<=300){slider.value=protein.value;slider.setAttribute('aria-valuetext',protein.value+' grams per day');}});
+  }
+  form.addEventListener('input',summary);
+  form.addEventListener('input',dirty);form.addEventListener('change',dirty);
+  $$('.dayrow').forEach(function(row){var check=row.querySelector('input[type=checkbox]');check.addEventListener('change',function(){row.classList.toggle('is-busy',check.checked);});});
+  function openHash(){
+    var target=document.getElementById(location.hash.slice(1));if(!target || !page.contains(target))return;
+    var index=steps.findIndex(function(step){return step.contains(target);});if(index>=0)go(index,false);
+    if(target.tagName==='DETAILS')target.open=true;
+    target.scrollIntoView({block:'start'});
+  }
+  syncGoals();
+  var start=steps.findIndex(function(step){return step.dataset.hasError==='1';});go(start>=0?start:0,false);
+  if(start>=0){var bad=invalid(steps[start]);if(bad)reveal(bad);}else openHash();
+  window.addEventListener('hashchange',openHash);
 })();
 
 /* ---- calendar: meal quick-view dialog ---- */

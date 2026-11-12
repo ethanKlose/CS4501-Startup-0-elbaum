@@ -35,6 +35,12 @@ async def enforce(request):
     elif route in {'/plan/generate','/plan/regenerate','/plan/next-week'} or route.endswith('/swap'):
         bucket,limit,window='generation',int(os.environ.get('GENERATION_RATE_LIMIT','10')),3600
         identity=str(request.session.get('user_id') or (request.client.host if request.client else 'unknown'))
+    elif route in {'/grocery/kroger/locations','/grocery/kroger/search','/grocery/kroger/select'}:
+        bucket,limit,window='kroger-catalog',int(os.environ.get('KROGER_SEARCH_RATE_LIMIT','120')),3600
+        identity=str(request.session.get('user_id') or (request.client.host if request.client else 'unknown'))
+    elif route.startswith(('/integrations/google/','/integrations/kroger/','/grocery/kroger/')) or route == '/grocery/instacart':
+        bucket,limit,window='integration',int(os.environ.get('INTEGRATION_RATE_LIMIT','20')),3600
+        identity=str(request.session.get('user_id') or (request.client.host if request.client else 'unknown'))
     else:return True
     provider=request.app.dependency_overrides.get(get_db,get_db)
     gen=provider()

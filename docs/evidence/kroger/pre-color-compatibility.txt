@@ -1,0 +1,21 @@
+........................................................................ [ 85%]
+............                                                             [100%]
+=============================== warnings summary ===============================
+../platejoy-integration-venv/lib/python3.12/site-packages/starlette/testclient.py:40
+  /tmp/platejoy-integration-venv/lib/python3.12/site-packages/starlette/testclient.py:40: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = typing.Callable[[], typing.ContextManager[anyio.abc.BlockingPortal]]
+
+tests/integration/test_kroger.py: 64 warnings
+tests/integration/test_google_calendar.py: 35 warnings
+tests/test_calendar_export.py: 3 warnings
+  /tmp/platejoy-integration-venv/lib/python3.12/site-packages/sqlalchemy/sql/schema.py:3596: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return util.wrap_callable(lambda ctx: fn(), fn)  # type: ignore
+
+tests/integration/test_kroger.py: 27 warnings
+tests/integration/test_google_calendar.py: 13 warnings
+tests/test_calendar_export.py: 1 warning
+  /tmp/kroger-apply-before-calendar-colors-9wsmexv2/app/routers/checkin.py:27: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    now = now or dt.datetime.utcnow()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+84 passed, 144 warnings in 12.89s

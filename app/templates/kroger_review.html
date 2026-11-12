@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Review Kroger transfer · PlateJoy{% endblock %}
+{% block content %}
+<section class="card pad-lg" data-testid="kroger-review"><h1>Review before adding to Kroger</h1>
+<p><strong>{{ draft.store.name }}</strong> · {{ draft.store.address }} · {{ draft.store.modality|title }}</p>
+{% if missing %}<p class="alert info">{{ missing }} ingredient(s) have no selected product and will not be sent.</p>{% endif %}
+<div class="kroger-table-wrap"><table class="kroger-review-table"><thead><tr><th>Product</th><th>Ingredients covered</th><th>Packages to add</th><th>Listed price</th></tr></thead><tbody>{% for item in items %}<tr><td><strong>{{ item.name }}</strong><br><span class="muted">{{ item.size }}</span><br><a href="https://www.kroger.com/search?query={{ item.upc }}" target="_blank" rel="noopener noreferrer">Review product labels</a></td><td>{{ item.ingredients|join(', ') }}</td><td>{{ item.quantity }}</td><td>{{ '$%.2f' % item.price if item.price is not none else 'Unavailable' }}</td></tr>{% endfor %}</tbody></table></div>
+<p>Estimated selected-product subtotal: <strong>${{ '%.2f' % estimated_total }}</strong>{% if unknown_price %} <strong>+ products with unavailable prices</strong>{% endif %}. This excludes taxes, fees and existing cart items. Kroger determines the final total.</p>
+<p>Confirm the same store and fulfillment option on Kroger; this transfer does not change your Kroger account's preferred store.</p>
+<p>If the same product was selected for multiple ingredients, its package counts are combined above. Review those counts to avoid buying too much.</p>
+<form method="post" action="/grocery/kroger/cart"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="draft_id" value="{{ draft.id }}"><input type="hidden" name="review_token" value="{{ draft.review_token }}"><label><input type="checkbox" name="confirmed" value="true" required> I reviewed products, package sizes, dietary labels and quantities. Add these quantities to my existing Kroger cart.</label><p><button class="btn primary">Add reviewed products to Kroger cart</button></p></form>
+<a href="/grocery/kroger#products">Back to product choices</a><p class="muted">This adds products to your cart. It does not place an order or mark groceries as purchased in PlateJoy.</p></section>
+{% endblock %}

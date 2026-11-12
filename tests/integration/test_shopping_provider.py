@@ -89,3 +89,51 @@ def test_empty_list_and_missing_key_do_not_call_provider(application, web, monke
         assert post(web, "/grocery/toggle", {"key": item["key"], "checked": "true", "plan_id": saved["id"]}).status_code == 204
     response = post(web, "/grocery/instacart", {"plan_id": saved["id"]})
     assert response.status_code == 303 and response.headers["location"] == "/grocery?handoff=empty"
+
+
+def test_review_preview_shows_exact_unchecked_payload_without_external_requests(application, web, monkeypatch):
+    onboard(web); generate(web)
+    saved = snapshot(application); items = shopping(application, saved['id'])
+    assert post(web, '/grocery/toggle', {'plan_id': saved['id'], 'key': items[0]['key'], 'checked': 'true'}).status_code == 204
+    requests = []
+    attach_transport(monkeypatch, lambda request: (requests.append(request) or httpx.Response(200, json={'products_link_url': 'https://www.instacart.com/store/list/review'})))
+    page = web.get('/grocery/instacart/preview', params={'plan_id': saved['id']})
+    assert page.status_code == 200 and 'Review your Instacart list' in page.text
+    assert len(requests) == 0
+    assert f'{len(items)-1} unchecked item(s)' in page.text
+    from app.services.instacart import payload
+    body = payload(items[1:])
+    from html import escape
+    for line in body['line_items']:
+        assert escape(line['display_text']) in page.text
+    assert 'Sending this list does not place an order' in page.text
+    assert post(web, '/grocery/instacart', {'plan_id': saved['id']}).status_code == 303
+    assert json.loads(requests[0].content) == body
+
+
+def test_preview_missing_key_is_honest_and_foreign_stale_ids_are_rejected(application, web):
+    onboard(web); generate(web); saved = snapshot(application)
+    page = web.get('/grocery/instacart/preview', params={'plan_id': saved['id']})
+    assert page.status_code == 200 and 'needs a developer API key' in page.text
+    assert 'Send reviewed list to Instacart' not in page.text
+    assert web.get('/grocery/instacart/preview', params={'plan_id': saved['id']+99}).status_code == 409
+    with application.client() as other:
+        onboard(other, 'preview-other@example.test')
+        assert other.get('/grocery/instacart/preview', params={'plan_id': saved['id']}).status_code == 409
+
+
+def test_expired_instacart_link_is_regenerated_and_whole_list_is_unchanged(application, web, monkeypatch):
+    onboard(web); generate(web); saved = snapshot(application)
+    calls = []
+    attach_transport(monkeypatch, lambda request: (calls.append(request) or httpx.Response(200, json={'products_link_url': f'https://www.instacart.com/store/list/{len(calls)}'})))
+    post(web, '/grocery/instacart', {'plan_id': saved['id']})
+    from app.models import Plan
+    with application.sessions() as db:
+        plan = db.get(Plan, saved['id'])
+        cache = dict(plan.settings['instacart']); cache['created_at'] -= 7*86400
+        plan.settings = dict(plan.settings, instacart=cache); db.commit()
+    response = post(web, '/grocery/instacart', {'plan_id': saved['id']})
+    assert response.headers['location'].endswith('/2') and len(calls) == 2
+    after = snapshot(application)
+    assert after['meals'] == saved['meals']
+    assert shopping(application, saved['id'])

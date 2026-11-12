@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block title %}Shop with Kroger · PlateJoy{% endblock %}
+{% block content %}
+<div class="kroger-page" data-kroger-shop>
+  <a class="kroger-back" href="/grocery">← Back to your grocery list</a>
+  <header class="kroger-hero">
+    <div class="kroger-hero-copy"><p class="kroger-eyebrow">YOUR WEEK, READY TO SHOP</p><h1>Good food.<br>One organized basket.</h1><p>Turn your ingredients into groceries you actually want. Pick your products, check the quantities, then review it all together.</p>
+      <ol class="kroger-steps" aria-label="Shopping steps"><li class="{{ 'done' if store else 'current' }}"><b>{{ '✓' if store else '1' }}</b>Choose a store</li><li class="{{ 'current' if draft and draft.state == 'editing' else '' }}"><b>2</b>Match ingredients</li><li><b>3</b>Review &amp; send</li></ol>
+    </div>
+    <img class="kroger-hero-art" src="/static/images/grocery-basket.webp" width="600" height="400" alt="" aria-hidden="true">
+  </header>
+  {% if message %}<p class="alert info" role="status">{{ message }}</p>{% endif %}
+  {% if blocked %}<section class="card pad-lg" data-testid="kroger-transfer-blocked"><h2>Check your Kroger cart first</h2><p>A transfer is pending or its result could not be confirmed. Products may already be in your cart. Check their quantities before allowing another transfer.</p><a class="btn line" href="https://www.kroger.com/cart" target="_blank" rel="noopener noreferrer">Open Kroger cart</a>
+    <form method="post" action="/grocery/kroger/acknowledge"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><label><input type="checkbox" name="checked_cart" value="true" required> I checked my Kroger cart and want to allow a new transfer.</label><button class="btn line">Allow a new review</button></form></section>{% endif %}
+  {% if last_transfer and not blocked %}<p class="alert info">Last transfer: {{ last_transfer.products }} product(s), {{ last_transfer.packages }} package(s) · {{ last_transfer.state }}. <a href="https://www.kroger.com/cart" target="_blank" rel="noopener noreferrer">Review your Kroger cart</a>.</p>{% endif %}
+  {% if not configured %}<section class="card pad-lg"><h2>Let's connect your store</h2><p>Kroger developer credentials must be configured on this installation before shopping. Your grocery list stays available.</p><a class="btn primary" href="/integrations">Connected apps</a></section>
+  {% elif not connected %}<section class="card pad-lg"><h2>Connect your Kroger account</h2><p>Sign in on Kroger to allow product search and cart additions. PlateJoy never receives your Kroger password.</p><form method="post" action="/integrations/kroger/connect"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn primary">Connect Kroger</button></form></section>
+  {% else %}
+  <details class="kroger-store-panel" id="stores" {{ 'open' if not store or locations else '' }}>
+    <summary><span class="kroger-store-symbol" aria-hidden="true">{{ icon('cart',22) }}</span><span><small>YOUR STORE</small><strong>{{ store.name if store else 'Find a store near you' }}</strong>{% if store %}<span class="muted">{{ store.address }} · {{ store.modality|title }}</span>{% endif %}</span><span class="kroger-change">{{ 'Change store' if store else 'Choose store' }} <span aria-hidden="true">⌄</span></span></summary>
+    <div class="kroger-store-content"><p class="muted">This store controls product search. Confirm the same store and fulfillment option on Kroger before checkout.</p>
+      <form method="post" action="/grocery/kroger/locations" class="kroger-store-search"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><label>US ZIP code<input name="zip_code" inputmode="numeric" pattern="[0-9]{5}" maxlength="5" placeholder="22903" required></label><button class="btn line">Find nearby stores</button></form>
+      {% if location_search_done and not locations %}<p class="alert info">No Kroger-family stores were returned within 20 miles of that ZIP code. Try another ZIP or use your grocery list directly.</p>{% endif %}
+      {% for location in locations %}<form method="post" action="/grocery/kroger/store" class="kroger-store"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="location_id" value="{{ location.id }}"><div><strong>{{ location.name }}</strong><p class="muted">{{ location.address }}</p></div><label>Fulfillment<select name="modality"><option value="PICKUP">Pickup</option><option value="DELIVERY">Delivery</option></select></label><button class="btn line">Choose this store</button></form>{% endfor %}
+    </div>
+  </details>
+  {% if store and plan and not blocked %}
+  {% if not draft or draft.state != 'editing' %}<section class="kroger-start card pad-lg"><span class="kroger-start-symbol" aria-hidden="true">🧺</span><h2>Your grocery list, made shoppable.</h2><p>Start with your unchecked ingredients. Pantry stock and confirmed purchases are already excluded.</p><form method="post" action="/grocery/kroger/start"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="plan_id" value="{{ plan.id }}"><button class="btn primary">Start a new product review</button></form></section>
+  {% else %}
+  <div class="kroger-workspace">
+    <section class="kroger-matches" id="products" aria-label="Match ingredients to Kroger products">
+      <div class="kroger-section-head"><div><p class="kroger-eyebrow">BUILD YOUR BASKET</p><h2>Choose what goes in.</h2><p class="muted">Your recipe amount is a guide. Check each product's size before choosing its package count.</p></div><span class="kroger-count">{{ progress.total }} ingredients</span></div>
+      <div class="kroger-filters" role="group" aria-label="Filter ingredients"><button type="button" data-kroger-filter="all" aria-pressed="true">All ingredients <b>{{ progress.total }}</b></button><button type="button" data-kroger-filter="remaining" aria-pressed="false">Still to choose <b>{{ progress.remaining }}</b></button></div>
+      {% for row in draft.rows %}{% set row_index=loop.index0 %}
+      <details class="kroger-ingredient {{ 'has-choice' if row.selection else '' }}" id="ingredient-{{ row_index }}" data-ingredient data-selected="{{ 'true' if row.selection else 'false' }}" {{ 'open' if loop.first and not row.selection else '' }}>
+        <summary><span class="kroger-food-icon" aria-hidden="true">{{ ingredient_icon(row.name) }}</span><span class="kroger-ingredient-title"><strong>{{ row.name|capitalize }}</strong><small>Recipe amount needed: <b>{{ '%g' % row.quantity }} {{ row.unit }}</b></small>{% if row.selection %}<small class="kroger-choice-name">{{ row.selection.name }}</small>{% endif %}</span><span class="kroger-status {{ 'chosen' if row.selection else '' }}">{{ '✓ Selected' if row.selection else 'Choose product' }}</span><span class="kroger-chevron" aria-hidden="true">⌄</span></summary>
+        <div class="kroger-ingredient-body">
+          {% if row.selection %}<div class="kroger-selected-note"><span>Selected: <strong>{{ row.selection.name }}</strong> · {{ row.selection.size }} · <strong>{{ row.selection.packages }} package(s)</strong></span><form method="post" action="/grocery/kroger/select"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="draft_id" value="{{ draft.id }}"><input type="hidden" name="row_index" value="{{ row_index }}"><button class="kroger-text-button">Remove selection</button></form></div>{% endif %}
+          <form method="post" action="/grocery/kroger/search" class="kroger-product-search"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="draft_id" value="{{ draft.id }}"><input type="hidden" name="row_index" value="{{ row_index }}"><label for="search-{{ row_index }}">Find a product<span class="sr"> for {{ row.name }}</span></label><div><input id="search-{{ row_index }}" name="term" value="{{ row.name }}" maxlength="100" required><button class="btn line">{{ icon('search',17) }} Search Kroger</button></div></form>
+          {% if row.searched and not row.candidates %}<div class="kroger-empty"><span aria-hidden="true">🔎</span><h3>No matching products returned</h3><p>Try another search or leave this ingredient unselected. Results depend on this store and fulfillment type.</p></div>{% elif not row.candidates %}<div class="kroger-empty"><span aria-hidden="true">{{ ingredient_icon(row.name) }}</span><p>Search your store to compare products for {{ row.name }}.</p></div>{% endif %}
+          <div class="kroger-products">
+          {% for product in row.candidates %}{% set is_selected=row.selection and row.selection.upc==product.upc %}
+            <form method="post" action="/grocery/kroger/select" class="kroger-product {{ 'is-selected' if is_selected else '' }} {{ 'unavailable' if not product.available else '' }}" data-testid="kroger-product-card">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="draft_id" value="{{ draft.id }}"><input type="hidden" name="row_index" value="{{ row_index }}"><input type="hidden" name="upc" value="{{ product.upc }}">
+              <div class="kroger-product-visual {{ 'no-photo' if not product.image_url else '' }}">
+                {% if is_selected %}<span class="kroger-product-check" aria-label="Selected product">✓</span>{% endif %}
+                <span class="kroger-photo-fallback" aria-hidden="true">{{ icon('cart',38) }}<small>Product photo unavailable</small></span>
+                {% if product.image_url %}<img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-product-photo>{% endif %}
+              </div>
+              <div class="kroger-product-info"><p class="kroger-product-brand">{{ product.brand or 'Kroger listing' }}</p><h3 title="{{ product.name }}">{{ product.name }}</h3><p class="kroger-product-size">{{ product.size }}</p><div class="kroger-product-price">{% if product.price is not none %}<strong>${{ '%.2f' % product.price }}</strong><small>retailer-listed estimate</small>{% else %}<strong class="kroger-price-unknown">Price unavailable</strong>{% endif %}</div>
+              <a class="kroger-product-link" href="https://www.kroger.com/search?query={{ product.upc }}" target="_blank" rel="noopener noreferrer">Product &amp; dietary labels {{ icon('arrow',13) }}</a>
+              {% if product.available %}<label class="kroger-quantity-label" for="quantity-{{ row_index }}-{{ loop.index0 }}">Packages to add</label><div class="kroger-quantity" data-quantity><button type="button" data-quantity-step="-1" aria-label="Decrease packages for {{ product.name }}">−</button><input id="quantity-{{ row_index }}-{{ loop.index0 }}" type="number" name="packages" min="1" max="99" step="1" value="{{ row.selection.packages if is_selected else 1 }}" required><button type="button" data-quantity-step="1" aria-label="Increase packages for {{ product.name }}">+</button></div><button class="btn {{ 'primary' if is_selected else 'line' }} kroger-choose">{{ '✓ Update selected product' if is_selected else 'Choose product' }}</button>{% else %}<p class="kroger-stock-warning">Reported out of stock. Choose another product.</p>{% endif %}
+              </div>
+            </form>
+          {% endfor %}
+          </div>
+        </div>
+      </details>
+      {% endfor %}
+      <p class="kroger-disclaimer">Review product labels for allergies and dietary restrictions. Search matches are suggestions and are not verified dietary substitutions. Prices, stock, taxes and delivery fees can change.</p>
+    </section>
+    <aside class="kroger-basket" aria-label="Your selected groceries" data-testid="kroger-basket-summary">
+      <div class="kroger-basket-top"><span aria-hidden="true">{{ icon('cart',24) }}</span><h2>Your basket</h2><span class="kroger-count">{{ progress.products }}</span></div>
+      <p class="kroger-progress-label"><strong>{{ progress.selected }} of {{ progress.total }}</strong> ingredients matched</p><progress max="{{ progress.total or 1 }}" value="{{ progress.selected }}" aria-label="Ingredients with selected products"></progress>
+      {% if progress.preview %}<ul class="kroger-basket-list">{% for item in progress.preview %}<li><span>{{ item.name }}</span><b>× {{ item.packages }}</b></li>{% endfor %}</ul>{% if progress.more %}<p class="muted tiny">+ {{ progress.more }} more product(s) in your review</p>{% endif %}{% else %}<div class="kroger-basket-empty"><span aria-hidden="true">🧺</span><p>Your choices will appear here.</p><small>Nothing is added to Kroger until you review and confirm.</small></div>{% endif %}
+      <div class="kroger-basket-total"><span>Estimated subtotal</span><strong>${{ '%.2f' % progress.known_total }}</strong></div>{% if progress.unknown_prices %}<p class="kroger-price-note">+ {{ progress.unknown_prices }} selection(s) without a listed price</p>{% endif %}
+      <p class="kroger-price-note">Excludes taxes, fees and existing cart items.</p>
+      {% if progress.products %}<a class="btn primary kroger-review-button" href="/grocery/kroger/review?draft_id={{ draft.id }}">Review selected products {{ icon('arrow',16) }}</a>{% else %}<span class="btn line kroger-review-button" aria-disabled="true">Choose a product to continue</span>{% endif %}
+      <p class="kroger-basket-foot">{{ progress.remaining }} ingredient(s) still to choose. Unselected ingredients will not be sent.</p>
+    </aside>
+  </div>
+  <div class="kroger-mobile-review"><span><strong>{{ progress.products }} product(s)</strong><small>${{ '%.2f' % progress.known_total }} estimated{{ ' + unpriced items' if progress.unknown_prices else '' }}</small></span>{% if progress.products %}<a class="btn primary" href="/grocery/kroger/review?draft_id={{ draft.id }}">Review basket</a>{% else %}<a class="btn line" href="#products">Choose products</a>{% endif %}</div>
+  {% endif %}
+  {% endif %}
+  {% endif %}
+  <p class="kroger-footer-note">Adding to a cart does not purchase groceries. Checkout and final prices stay on Kroger.</p>
+</div>
+<script src="/static/kroger.js" defer></script>
+{% endblock %}

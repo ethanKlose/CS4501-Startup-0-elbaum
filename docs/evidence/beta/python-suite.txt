@@ -1,0 +1,98 @@
+........................................................................ [ 11%]
+........................................................................ [ 22%]
+........................................................................ [ 33%]
+........................................................................ [ 44%]
+........................................................................ [ 55%]
+........................................................................ [ 66%]
+........................................................................ [ 77%]
+........................................................................ [ 88%]
+........................................................................ [ 99%]
+.....                                                                    [100%]
+=============================== warnings summary ===============================
+../platejoy-integration-venv/lib/python3.12/site-packages/starlette/testclient.py:40
+  /tmp/platejoy-integration-venv/lib/python3.12/site-packages/starlette/testclient.py:40: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = typing.Callable[[], typing.ContextManager[anyio.abc.BlockingPortal]]
+
+tests/integration/test_google_calendar.py: 35 warnings
+tests/integration/test_identity_and_persistence.py: 59 warnings
+tests/integration/test_inventory_and_feedback.py: 22 warnings
+tests/integration/test_llm_boundary.py: 20 warnings
+tests/integration/test_password_recovery.py: 7 warnings
+tests/integration/test_planning_workflows.py: 30 warnings
+tests/integration/test_shopping_provider.py: 23 warnings
+tests/integration/test_windows_event_loop.py: 2 warnings
+tests/test_auth.py: 4 warnings
+tests/test_calendar.py: 27 warnings
+tests/test_calendar_bounds.py: 2 warnings
+tests/test_calendar_export.py: 3 warnings
+tests/test_checkin.py: 40 warnings
+tests/test_conflicts.py: 1 warning
+tests/test_correctness_feedback.py: 12 warnings
+tests/test_day_controls.py: 62 warnings
+tests/test_diet_regressions.py: 1 warning
+tests/test_feedback.py: 1 warning
+tests/test_grocery.py: 12 warnings
+tests/test_history_undo.py: 4 warnings
+tests/test_inventory.py: 23 warnings
+tests/test_inventory_concurrency.py: 2 warnings
+tests/test_lifestyle.py: 4 warnings
+tests/test_password_recovery.py: 2 warnings
+tests/test_past_pins.py: 6 warnings
+tests/test_plan.py: 19 warnings
+tests/test_plan_weeks.py: 8 warnings
+tests/test_preference_safety.py: 4 warnings
+tests/test_reverify.py: 21 warnings
+tests/test_start_today.py: 2 warnings
+tests/test_story_calendar_controls.py: 3 warnings
+tests/test_story_checkin_handoff.py: 14 warnings
+tests/test_story_plan_limits.py: 2 warnings
+tests/test_story_survey_acceptance.py: 2 warnings
+tests/test_survey.py: 54 warnings
+tests/test_user_scenario.py: 6 warnings
+tests/test_verification_status.py: 8 warnings
+tests/test_web_security.py: 3 warnings
+  /tmp/platejoy-integration-venv/lib/python3.12/site-packages/sqlalchemy/sql/schema.py:3596: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return util.wrap_callable(lambda ctx: fn(), fn)  # type: ignore
+
+tests/integration/test_google_calendar.py: 13 warnings
+tests/integration/test_identity_and_persistence.py: 31 warnings
+tests/integration/test_inventory_and_feedback.py: 12 warnings
+tests/integration/test_llm_boundary.py: 16 warnings
+tests/integration/test_password_recovery.py: 1 warning
+tests/integration/test_planning_workflows.py: 23 warnings
+tests/integration/test_shopping_provider.py: 11 warnings
+tests/integration/test_windows_event_loop.py: 1 warning
+tests/test_calendar.py: 22 warnings
+tests/test_calendar_bounds.py: 1 warning
+tests/test_calendar_export.py: 1 warning
+tests/test_checkin.py: 64 warnings
+tests/test_correctness_feedback.py: 6 warnings
+tests/test_day_controls.py: 61 warnings
+tests/test_grocery.py: 6 warnings
+tests/test_history_undo.py: 3 warnings
+tests/test_inventory.py: 38 warnings
+tests/test_lifestyle.py: 2 warnings
+tests/test_past_pins.py: 7 warnings
+tests/test_plan.py: 9 warnings
+tests/test_plan_weeks.py: 7 warnings
+tests/test_preference_safety.py: 2 warnings
+tests/test_reverify.py: 27 warnings
+tests/test_start_today.py: 1 warning
+tests/test_story_calendar_controls.py: 1 warning
+tests/test_story_checkin_handoff.py: 9 warnings
+tests/test_user_scenario.py: 5 warnings
+tests/test_verification_status.py: 7 warnings
+  /tmp/platejoy-beta-update/app/routers/checkin.py:27: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    now = now or dt.datetime.utcnow()
+
+tests/integration/test_inventory_and_feedback.py: 7 warnings
+tests/test_checkin.py: 9 warnings
+tests/test_history_undo.py: 1 warning
+tests/test_inventory.py: 8 warnings
+tests/test_story_calendar_controls.py: 1 warning
+  /tmp/platejoy-beta-update/app/routers/checkin.py:73: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    row.created_at = dt.datetime.utcnow()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+-- generated xml file: /tmp/platejoy-beta-update/test-results/beta-python.xml --
+653 passed, 964 warnings in 184.84s (0:03:04)

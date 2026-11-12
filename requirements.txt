@@ -12,3 +12,6 @@ openai>=1.50.0
 
 # Used directly by the optional Instacart shopping-list adapter.
 httpx==0.28.1
+
+# Encrypt Google OAuth credentials in server-side storage.
+cryptography>=44,<52

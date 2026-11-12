@@ -49,6 +49,7 @@ class PlanContext:
     generation_trace: List[Dict] = field(default_factory=list)
     preference_warnings: List[str] = field(default_factory=list)
     seed: int = 0
+    protein_target: Optional[int] = None
 
     def active_days(self) -> List[DayCtx]:
         return [d for d in self.days if not d.skipped]

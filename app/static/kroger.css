@@ -1,0 +1,127 @@
+/* Grocery matching workspace. All styles stay scoped to the Kroger UI. */
+.kroger-page { --shop-accent:#1d7355; --shop-soft:#edf5ee; padding-bottom:20px; }
+.kroger-back { display:inline-flex; margin:0 0 16px; font-size:.87rem; font-weight:700; text-decoration:none; }
+.kroger-hero { position:relative; display:flex; align-items:center; justify-content:space-between; gap:24px; overflow:hidden; padding:30px 36px; margin-bottom:24px; border:1px solid var(--line); border-radius:24px; background:linear-gradient(115deg,var(--surface) 3%,var(--surface-2) 100%); }
+.kroger-hero-copy { position:relative; z-index:1; max-width:650px; }
+.kroger-eyebrow { color:var(--brand-600); font-size:.68rem; font-weight:800; letter-spacing:.14em; margin:0 0 10px; }
+.kroger-hero h1 { font-size:clamp(1.9rem,3vw,2.7rem); line-height:1.08; letter-spacing:-.045em; margin-bottom:12px; }
+.kroger-hero-copy > p:not(.kroger-eyebrow) { max-width:530px; font-size:.92rem; color:var(--muted); }
+.kroger-hero-art { width:290px; height:194px; flex:0 0 auto; object-fit:contain; }
+.kroger-steps { display:flex; flex-wrap:wrap; list-style:none; padding:0; margin:22px 0 0; gap:12px 22px; }
+.kroger-steps li { display:flex; gap:7px; align-items:center; font-size:.75rem; font-weight:700; color:var(--muted); }
+.kroger-steps b { width:23px; height:23px; display:grid; place-items:center; border-radius:50%; background:var(--surface); border:1px solid var(--line); }
+.kroger-steps .done b,.kroger-steps .current b { background:var(--brand-50); color:var(--brand-600); border-color:var(--brand); }
+.kroger-steps .current { color:var(--text); }
+.kroger-store-panel { border:1px solid var(--line); border-radius:16px; background:var(--surface); margin-bottom:26px; }
+.kroger-store-panel > summary { display:flex; list-style:none; align-items:center; gap:12px; cursor:pointer; padding:16px 20px; }
+.kroger-store-panel > summary::-webkit-details-marker,.kroger-ingredient > summary::-webkit-details-marker { display:none; }
+.kroger-store-symbol { width:42px; height:42px; flex-shrink:0; display:grid; place-items:center; color:var(--brand-600); background:var(--brand-50); border-radius:12px; }
+.kroger-store-panel summary > span:nth-child(2) { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.kroger-store-panel summary small { font-size:.6rem; color:var(--muted); font-weight:800; letter-spacing:.12em; }
+.kroger-store-panel summary .muted { font-size:.76rem; overflow-wrap:anywhere; }
+.kroger-change { margin-left:auto; flex:0 0 auto; font-size:.78rem; color:var(--brand-600); font-weight:700; }
+.kroger-store-content { padding:6px 20px 20px; border-top:1px solid var(--line); }
+.kroger-store-content > p { font-size:.83rem; margin-top:14px; }
+.kroger-store-search { display:flex; align-items:end; flex-wrap:wrap; gap:10px; }
+.kroger-store-search input { max-width:160px; }
+.kroger-store { display:flex; flex-wrap:wrap; align-items:end; gap:12px; padding:16px 0; border-top:1px solid var(--line); margin-top:12px; }
+.kroger-store > div { flex:1 1 220px; }
+.kroger-workspace { display:grid; grid-template-columns:minmax(0,1fr) 270px; gap:24px; align-items:start; }
+.kroger-matches { min-width:0; }
+.kroger-section-head { display:flex; gap:14px; justify-content:space-between; align-items:start; margin-bottom:18px; }
+.kroger-section-head h2 { font-size:1.55rem; letter-spacing:-.035em; margin-bottom:6px; }
+.kroger-section-head p.muted { font-size:.84rem; margin:0; max-width:540px; }
+.kroger-count { flex:0 0 auto; display:inline-flex; white-space:nowrap; align-items:center; justify-content:center; padding:4px 9px; font-size:.72rem; font-weight:800; background:var(--surface-2); color:var(--muted); border-radius:8px; }
+.kroger-filters { display:flex; gap:5px; padding:4px; width:fit-content; max-width:100%; background:var(--surface-2); border-radius:12px; margin-bottom:18px; }
+.kroger-filters button { display:flex; gap:8px; align-items:center; padding:8px 12px; background:transparent; border:0; border-radius:9px; font:inherit; font-size:.78rem; font-weight:700; color:var(--muted); cursor:pointer; }
+.kroger-filters button[aria-pressed=true] { color:var(--text); background:var(--surface); box-shadow:var(--shadow-sm); }
+.kroger-filters b { padding:1px 5px; background:var(--surface-2); border-radius:5px; font-size:.68rem; }
+.kroger-ingredient { scroll-margin-top:110px; margin-bottom:14px; background:var(--surface); border:1px solid var(--line); border-radius:17px; overflow:hidden; }
+.kroger-ingredient[hidden] { display:none; }
+.kroger-ingredient > summary { list-style:none; display:flex; align-items:center; gap:12px; cursor:pointer; padding:16px 18px; }
+.kroger-food-icon { display:grid; place-items:center; font-size:1.65rem; background:var(--warn-bg); border-radius:13px; width:48px; height:48px; flex-shrink:0; }
+.kroger-ingredient-title { display:flex; flex-direction:column; gap:3px; min-width:0; flex:1; }
+.kroger-ingredient-title > strong { font-size:1rem; line-height:1.2; }
+.kroger-ingredient-title small { font-size:.74rem; color:var(--muted); }
+.kroger-ingredient-title .kroger-choice-name { color:var(--brand-600); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:390px; }
+.kroger-status { flex-shrink:0; font-size:.65rem; font-weight:800; color:var(--muted); background:var(--surface-2); border-radius:30px; padding:5px 9px; }
+.kroger-status.chosen { background:var(--brand-50); color:var(--brand-600); }
+.kroger-chevron { color:var(--muted); font-size:1.1rem; }
+.kroger-ingredient[open] .kroger-chevron { transform:rotate(180deg); }
+.kroger-ingredient-body { padding:0 18px 18px; border-top:1px solid var(--line); }
+.kroger-selected-note { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; margin:14px 0 0; padding:12px; border-radius:10px; background:var(--brand-50); color:var(--brand-600); font-size:.77rem; }
+.kroger-text-button { border:0; padding:3px 0; font:inherit; font-size:.75rem; font-weight:700; text-decoration:underline; color:inherit; background:transparent; cursor:pointer; }
+.kroger-product-search { margin:18px 0; }
+.kroger-product-search > label { display:block; margin-bottom:6px; font-size:.76rem; font-weight:700; }
+.kroger-product-search > div { display:flex; gap:8px; }
+.kroger-product-search input { flex:1; min-width:0; font-size:.86rem; }
+.kroger-product-search .btn { flex-shrink:0; padding:10px 13px; font-size:.78rem; }
+.kroger-products { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.kroger-product { display:flex; flex-direction:column; overflow:hidden; border:1px solid var(--line); border-radius:13px; background:var(--surface); transition:border-color .15s,box-shadow .15s; min-width:0; }
+.kroger-product:hover { border-color:var(--brand); box-shadow:var(--shadow-sm); }
+.kroger-product.is-selected { border-color:var(--brand); box-shadow:inset 0 0 0 1px var(--brand); }
+.kroger-product-visual { position:relative; height:145px; background:#fff; padding:16px; border-bottom:1px solid var(--line); display:grid; place-items:center; }
+.kroger-product-visual img { width:100%; height:100%; max-height:113px; object-fit:contain; }
+.kroger-product-visual img[hidden] { display:none; }
+.kroger-photo-fallback { display:none; flex-direction:column; align-items:center; gap:10px; color:var(--muted); }
+.kroger-photo-fallback small { font-size:.62rem; }
+.kroger-product-visual.no-photo { background:var(--surface-2); }
+.kroger-product-visual.no-photo .kroger-photo-fallback { display:flex; }
+.kroger-product-check { position:absolute; top:10px; right:10px; z-index:1; width:25px; height:25px; border-radius:50%; display:grid; place-items:center; background:var(--brand-600); color:#fff; font-weight:800; }
+.kroger-product-info { display:flex; flex-direction:column; flex:1; padding:13px; }
+.kroger-product-brand { font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:6px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.kroger-product-info h3 { font-size:.84rem; line-height:1.35; min-height:2.7em; display:block; margin:0 0 5px; overflow-wrap:anywhere; }
+.kroger-product-size { color:var(--muted); font-size:.7rem; margin:0 0 10px; }
+.kroger-product-price { margin-top:auto; display:flex; flex-direction:column; gap:2px; }
+.kroger-product-price > strong { font-size:1.5rem; letter-spacing:-.045em; line-height:1.2; }
+.kroger-product-price > strong.kroger-price-unknown { font-size:.85rem; letter-spacing:0; }
+.kroger-product-price > small { font-size:.59rem; color:var(--muted); }
+.kroger-product-link { display:inline-flex; align-items:center; gap:4px; font-size:.67rem; font-weight:700; text-decoration:none; margin:12px 0; }
+.kroger-quantity-label { font-size:.65rem; font-weight:700; margin-bottom:5px; }
+.kroger-quantity { display:grid; grid-template-columns:35px minmax(0,1fr) 35px; height:37px; border:1px solid var(--line); border-radius:9px; overflow:hidden; }
+.kroger-quantity input { width:100%; padding:4px 0; text-align:center; border:0; border-radius:0; box-shadow:none; -moz-appearance:textfield; font-size:.8rem; }
+.kroger-quantity input::-webkit-inner-spin-button { -webkit-appearance:none; }
+.kroger-quantity button { background:var(--surface-2); border:0; color:var(--text); font:inherit; font-size:1.1rem; cursor:pointer; }
+.kroger-product .kroger-choose { width:100%; margin-top:10px; padding:10px 4px; min-height:38px; font-size:.68rem; }
+.kroger-stock-warning { font-size:.75rem; color:var(--danger); margin:10px 0 0; }
+.kroger-basket { position:sticky; top:108px; padding:21px; background:var(--surface); border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow-sm); }
+.kroger-basket-top { display:flex; align-items:center; gap:9px; margin-bottom:20px; color:var(--brand-600); }
+.kroger-basket-top h2 { font-size:1.06rem; margin:0; color:var(--text); }
+.kroger-basket-top .kroger-count { margin-left:auto; }
+.kroger-progress-label { color:var(--muted); font-size:.73rem; margin-bottom:8px; }
+.kroger-progress-label strong { color:var(--text); }
+.kroger-basket progress { width:100%; height:7px; appearance:none; display:block; border:0; border-radius:20px; overflow:hidden; background:var(--surface-2); color:var(--brand); }
+.kroger-basket progress::-webkit-progress-bar { background:var(--surface-2); }
+.kroger-basket progress::-webkit-progress-value { background:var(--brand); border-radius:20px; }
+.kroger-basket progress::-moz-progress-bar { background:var(--brand); }
+.kroger-basket-list { list-style:none; padding:0; margin:22px 0; }
+.kroger-basket-list li { display:flex; justify-content:space-between; align-items:start; gap:12px; padding:10px 0; font-size:.74rem; border-bottom:1px solid var(--line); }
+.kroger-basket-list b { white-space:nowrap; color:var(--muted); }
+.kroger-basket-empty { text-align:center; padding:24px 0; color:var(--muted); }
+.kroger-basket-empty > span { font-size:2rem; }
+.kroger-basket-empty p { font-size:.8rem; margin:8px 0 3px; }
+.kroger-basket-empty small { font-size:.7rem; line-height:1.5; display:block; }
+.kroger-basket-total { display:flex; justify-content:space-between; align-items:center; gap:10px; border-top:1px solid var(--line); padding-top:16px; margin-bottom:5px; }
+.kroger-basket-total span { font-size:.74rem; }
+.kroger-basket-total strong { font-size:1.5rem; letter-spacing:-.04em; }
+.kroger-price-note,.kroger-basket-foot { color:var(--muted); font-size:.64rem; line-height:1.6; }
+.kroger-review-button { width:100%; margin-top:14px; font-size:.77rem; padding:12px 8px; }
+.kroger-review-button[aria-disabled=true] { opacity:.65; cursor:default; }
+.kroger-basket-foot { text-align:center; margin:10px 0 0; }
+.kroger-disclaimer,.kroger-footer-note { font-size:.75rem; color:var(--muted); margin:24px 0 0; line-height:1.7; }
+.kroger-start { text-align:center; padding:40px 24px; }
+.kroger-start > p { max-width:520px; margin:0 auto 22px; color:var(--muted); }
+.kroger-start-symbol { display:block; font-size:2.4rem; margin-bottom:14px; }
+.kroger-empty { text-align:center; padding:18px 20px 24px; color:var(--muted); }
+.kroger-empty > span { display:block; font-size:1.8rem; margin-bottom:10px; }
+.kroger-empty h3 { color:var(--text); font-size:1rem; }
+.kroger-empty p { margin:0; font-size:.8rem; }
+.kroger-mobile-review { display:none; }
+.kroger-table-wrap { overflow-x:auto; }
+.kroger-review-table { width:100%; border-collapse:collapse; margin:16px 0; text-align:left; }
+.kroger-review-table th,.kroger-review-table td { padding:12px; border-bottom:1px solid var(--line); vertical-align:top; }
+@media (max-width:1050px) { .kroger-workspace { grid-template-columns:minmax(0,1fr) 250px; gap:18px; } .kroger-products { grid-template-columns:repeat(2,minmax(0,1fr)); } .kroger-hero-art { width:240px; height:160px; } }
+@media (max-width:800px) { .kroger-page { padding-bottom:90px; } .kroger-workspace { grid-template-columns:1fr; } .kroger-basket { display:none; } .kroger-mobile-review { display:flex; position:fixed; bottom:0; left:0; right:0; z-index:50; gap:14px; align-items:center; justify-content:space-between; padding:12px 20px calc(12px + env(safe-area-inset-bottom)); background:var(--surface); border-top:1px solid var(--line); box-shadow:0 -6px 28px rgba(0,0,0,.06); } .kroger-mobile-review > span { display:flex; flex-direction:column; gap:1px; font-size:.83rem; } .kroger-mobile-review small { color:var(--muted); font-size:.68rem; } .kroger-mobile-review .btn { font-size:.8rem; } .kroger-hero { padding:25px; gap:10px; } .kroger-hero-art { width:180px; height:130px; } .kroger-steps { gap:8px 14px; } }
+@media (max-width:540px) { .kroger-hero { padding:23px 20px; } .kroger-hero-art { position:absolute; width:135px; height:100px; right:8px; top:15px; opacity:.3; } .kroger-hero-copy > p:not(.kroger-eyebrow) { max-width:290px; font-size:.8rem; } .kroger-hero h1 { font-size:2rem; } .kroger-steps { margin-top:18px; } .kroger-steps li { font-size:.63rem; gap:5px; } .kroger-steps b { width:20px; height:20px; } .kroger-store-panel > summary { padding:13px; gap:10px; } .kroger-change { font-size:.65rem; } .kroger-store-panel summary .muted { max-width:220px; font-size:.66rem; } .kroger-store-symbol { display:none; } .kroger-section-head h2 { font-size:1.35rem; } .kroger-section-head p.muted { font-size:.76rem; } .kroger-section-head .kroger-count { font-size:.65rem; } .kroger-ingredient > summary { padding:13px 12px; gap:9px; } .kroger-food-icon { width:39px; height:39px; font-size:1.35rem; border-radius:10px; } .kroger-ingredient-title > strong { font-size:.91rem; } .kroger-ingredient-title small { font-size:.63rem; } .kroger-status { font-size:.57rem; padding:4px 7px; } .kroger-ingredient-body { padding:0 12px 12px; } .kroger-products { gap:9px; } .kroger-product-info { padding:10px; } .kroger-product-visual { height:115px; padding:10px; } .kroger-product-visual img { max-height:95px; } .kroger-product-info h3 { font-size:.74rem; } .kroger-product-price > strong { font-size:1.3rem; } .kroger-product-brand { font-size:.56rem; } .kroger-product-link { font-size:.59rem; } .kroger-product-search > div { gap:6px; } .kroger-product-search .btn { padding:10px; font-size:.7rem; } .kroger-filters button { font-size:.69rem; padding:8px 10px; } }
+@media (prefers-reduced-motion:reduce) { .kroger-product { transition:none; } }
+@media (max-width:540px) { .kroger-quantity input,.kroger-product-search input,.kroger-store-search input { font-size:16px; } }

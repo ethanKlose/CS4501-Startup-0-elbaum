@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Review Instacart list · PlateJoy{% endblock %}
+{% block content %}
+<section class="card pad-lg" data-testid="instacart-preview">
+<h1>Review your Instacart list</h1>
+<p>{{ lines|length }} unchecked item(s) will be shared. Pantry stock and items already checked off are excluded.</p>
+{% if lines %}<ul>{% for line in lines %}<li>{{ line.display_text }}{% if not line.line_item_measurements %} <small class="muted">Quantity stays in the item description; review the product size on Instacart.</small>{% endif %}</li>{% endfor %}</ul>{% else %}<p>Nothing left to send.</p>{% endif %}
+<p>Instacart selects product matches and current prices after you choose a store. Review dietary labels, package sizes and quantities there. PlateJoy's prices are estimates. Sending this list does not place an order.</p>
+{% if not configured %}<p class="alert info">Instacart needs a developer API key on this installation. <a href="/integrations">Check connection status</a>.</p>{% endif %}
+{% if lines and configured %}<form method="post" action="/grocery/instacart"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="plan_id" value="{{ plan.id }}"><button class="btn primary">Send reviewed list to Instacart</button></form>{% endif %}
+<p><a href="/grocery">Back to grocery list</a></p>
+</section>
+{% endblock %}

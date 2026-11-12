@@ -69,3 +69,22 @@ def instacart_handoff(plan_id: int = Form(...), user: User = Depends(current_use
     plan.settings=dict(plan.settings or {},instacart=cache)
     db.commit()
     return RedirectResponse(cache['url'],303)
+
+
+@router.get('/grocery/instacart/preview')
+def instacart_preview(request: Request, plan_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    import os
+    from fastapi import HTTPException
+    from app.services.instacart import payload, HandoffError
+    plan = planner.latest_plan(db, user)
+    if not plan or plan.id != plan_id or inventory.closed(plan):
+        raise HTTPException(409, 'The shopping list changed. Return to Grocery before sending it.')
+    items = inventory.shopping_items(db, plan)
+    checked = inventory.checked_keys(plan, items)
+    unchecked = [item for item in items if item['key'] not in checked]
+    try:
+        lines = payload(unchecked)['line_items'] if unchecked else []
+    except HandoffError:
+        raise HTTPException(422, 'This list cannot be sent. Check quantities and the 200-item limit.') from None
+    return render(request, 'instacart_preview.html', user, plan=plan, lines=lines,
+                  configured=bool(os.environ.get('INSTACART_API_KEY', '').strip()))

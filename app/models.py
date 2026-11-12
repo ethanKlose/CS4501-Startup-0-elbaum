@@ -25,8 +25,9 @@ class Profile(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
     budget: Mapped[Optional[float]] = mapped_column(default=None)
     restrictions: Mapped[list] = mapped_column(JSON, default=list)
-    goal: Mapped[str] = mapped_column(String(32), default="none")  # none | high_protein | calorie_target
+    goal: Mapped[str] = mapped_column(String(32), default="none")  # none | high_protein | calorie_target | protein_calorie
     calorie_target: Mapped[Optional[int]] = mapped_column(default=None)
+    protein_target: Mapped[Optional[int]] = mapped_column(default=None)  # grams per day; null preserves legacy defaults
     onboarded: Mapped[bool] = mapped_column(default=False)
     prep_style: Mapped[str] = mapped_column(String(16), default="auto")  # auto | daily | sessions | one_session
     prep_days: Mapped[list] = mapped_column(JSON, default=list)  # preferred cook days, 0=Mon..6=Sun

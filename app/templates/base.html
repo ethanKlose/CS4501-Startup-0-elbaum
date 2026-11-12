@@ -12,6 +12,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/kroger.css">
+  {% if path.startswith('/survey') %}<link rel="stylesheet" href="/static/planning.css">{% endif %}
   <script>try{var t=localStorage.getItem('pj-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
   <script src="/static/app.js" defer></script>
 </head>
@@ -20,7 +22,7 @@
 {% block header %}
 <header class="topbar">
   <div class="topbar-in">
-    <a class="brand" href="/">{{ icon('utensils', 22) }}<span>PlateJoy</span><em>alpha</em></a>
+    <a class="brand" href="/">{{ icon('utensils', 22) }}<span>PlateJoy</span><em>beta</em></a>
     {% if user %}
     <nav class="mainnav" aria-label="Main">
       <a href="/" class="{{ 'on' if path == '/' or path.startswith('/meals') }}">{{ icon('calendar') }}<span>Plan</span></a>
@@ -33,7 +35,7 @@
       <button class="iconbtn theme-toggle" type="button" aria-label="Toggle dark mode" data-theme-toggle><span class="i-moon">{{ icon('moon') }}</span><span class="i-sun">{{ icon('sun') }}</span></button>
       <details class="usermenu">
         <summary aria-label="Account menu"><span class="avatar">{{ user.email[0]|upper }}</span></summary>
-        <div class="menu"><div class="menu-email">{{ user.email }}</div>
+        <div class="menu"><a class="menu-item" href="/integrations">Connected apps</a><div class="menu-email">{{ user.email }}</div>
           <form method="post" action="/logout"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="menu-item">{{ icon('logout') }} Log out</button></form></div>
       </details>
     </div>

@@ -31,7 +31,7 @@ def get_db():
 
 
 def check_schema(eng) -> None:
-    """Alpha has no migrations: fail loudly (not with a mysterious 500) when a local DB predates the models."""
+    """Fail clearly when the database schema still differs after migrations."""
     from sqlalchemy import inspect
 
     insp = inspect(eng)

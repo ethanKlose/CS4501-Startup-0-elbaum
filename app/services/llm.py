@@ -24,7 +24,8 @@ from app.services.lifestyle import violations as lifestyle_violations
 from app.services.pricing import apply_recipe_prices
 from app.services.schedule import capacities, storage_days
 from app.services.types import SLOTS, WEEKDAYS, PlanContext
-from app.services.validators import HIGH_PROTEIN_DAILY_G, SOFT_CHECKS, schedule_for, check_checkout_budget, check_cooking_deadlines
+from app.services.nutrition_goals import protein_target
+from app.services.validators import SOFT_CHECKS, schedule_for, check_checkout_budget, check_cooking_deadlines
 
 # ----------------------------------------------------------------------------- fake
 
@@ -106,6 +107,7 @@ class FakeLLM:
         open_slots = [(d.weekday, s) for d in ctx.active_days() for s in ctx.slots_for(d.weekday) if (d.weekday, s) not in pinned]
         slots_left = len(open_slots)
         target_cal = ctx.calorie_target
+        target_pro = protein_target(ctx)
 
         def fresh_ok(r, day):  # fresh dishes can't be cooked days ahead, so their cook day needs spare time
             if storage_days(r) != 1:
@@ -138,7 +140,7 @@ class FakeLLM:
                 n = times[r["name"]]  # a little repetition batches well; a lot is boring
                 v += 0.8 if 1 <= n <= 3 else (-2.5 * (n - 3) if n > 3 else 0)
                 v += rng.random() * 1.2
-                if ctx.goal == "high_protein":
+                if target_pro is not None:
                     v += r["protein"] / 15
                 if target_cal:
                     v -= abs(r["calories"] - target_cal / 3.0) / 100.0
@@ -163,8 +165,8 @@ class FakeLLM:
                 pro = base_pro + sum(r["protein"] for r in combo)
                 if target_cal:
                     val -= abs(cal - day_target) / 70.0
-                if ctx.goal == "high_protein":
-                    val -= max(0.0, HIGH_PROTEIN_DAILY_G + 15 - pro) / 8.0
+                if target_pro is not None:
+                    val -= max(0.0, target_pro + 15 - pro) / 8.0
                 if best_val is None or val > best_val:
                     best, best_val = combo, val
             if best is None:  # budget infeasible: return the cheapest anyway; the validators will reject it
@@ -200,7 +202,9 @@ HARD rules (a plan breaking any of these is thrown away):
 - keep pinned meals exactly as given; do not use the disliked meal names.
 
 BEST-EFFORT goals (misses are shown to the user as warnings, so try hard):
-- hit the calorie target (weekly average within 10%, each day within 30%) or the protein goal;
+- satisfy ALL selected nutrition goals together, not one instead of another;
+- hit the calorie target (weekly average within 10%, each day within 30%) AND, when selected,
+  reach at least protein_target grams each day. A legacy high_protein goal with no protein_target means 75g/day;
 - calorie_target is per DAY: the three meals of every day must add up to about that number (2000 kcal means
   ~650 per meal, not 300). Size portions up, and add rice, pasta, oil, nuts or sides to reach it;
 - variety: do not repeat a dish more than 3 times in the week unless batching helps the schedule;

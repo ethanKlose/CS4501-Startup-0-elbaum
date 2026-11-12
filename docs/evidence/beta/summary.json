@@ -1,0 +1,45 @@
+{
+  "base_commit": "a76de3706bbac7a56b906b06a3d96b74f0ceee16",
+  "base_tree": "0e324e15bc13f5da5a5f058e47fca2c5ecc53601",
+  "python_version": "Python 3.12.14",
+  "execution_environment": "Linux; real FastAPI HTTP, middleware, Alembic and SQLite; controlled external HTTP in regular integration tests",
+  "full_suite": {
+    "passed": 653,
+    "failed": 0,
+    "warnings": 964,
+    "seconds": 184.84
+  },
+  "count_breakdown": {
+    "baseline_tests": 581,
+    "new_free_openai_cost_guard_tests": 24,
+    "new_beta_tests": 48,
+    "new_beta_tests_by_area": {
+      "google_http_workflows": 20,
+      "calendar_and_instacart_boundaries": 25,
+      "instacart_preview_and_cache_workflows": 3
+    }
+  },
+  "python_app_line_coverage": {
+    "covered_lines": 2933,
+    "num_statements": 3056,
+    "percent_covered": 95.97513089005236,
+    "percent_covered_display": "96",
+    "missing_lines": 123,
+    "excluded_lines": 0,
+    "percent_statements_covered": 95.97513089005236,
+    "percent_statements_covered_display": "96"
+  },
+  "opt_in_cases": {
+    "openai": 3,
+    "google": 1,
+    "instacart": 1,
+    "default_execution": "all 5 skipped",
+    "actual_provider_requests_performed": 0
+  },
+  "browser_ui": "Not rerun in this update; browser startup is blocked in the current environment. Real-browser provider consent and Instacart rendering remain manual acceptance work.",
+  "manual_acceptance_procedures": {
+    "new": 10,
+    "executed_by_human": 0,
+    "path": "docs/manual/BETA_INTEGRATIONS_MANUAL.md"
+  }
+}

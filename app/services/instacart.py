@@ -23,7 +23,11 @@ def payload(items):
         raise HandoffError('invalid')
     lines=[]
     for item in items:
-        name=item['name'].strip();q=item['quantity'];unit=item.get('unit','').strip().lower()
+        if not isinstance(item,dict) or not isinstance(item.get('name'),str) or not isinstance(item.get('unit',''),str):
+            raise HandoffError('invalid')
+        name=item['name'].strip();q=item.get('quantity');unit=item.get('unit','').strip().lower()
+        if isinstance(q,bool) or not isinstance(q,(int,float)):
+            raise HandoffError('invalid')
         if not name or len(name)>100 or not math.isfinite(q) or not 0<q<=1_000_000:
             raise HandoffError('invalid')
         line={'name':name,'display_text':f'{q:g} {unit} {name}'.strip()}

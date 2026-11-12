@@ -1,0 +1,176 @@
+/* Planning preferences: shared alignment, restrained buttons, native form controls. */
+.planning-page { --planning-accent:var(--brand-600); padding-bottom:28px; }
+.planning-heading { margin:10px 0 25px; max-width:720px; }
+.planning-heading h1 { margin:0 0 10px; font-size:clamp(1.9rem,3vw,2.5rem); letter-spacing:-.04em; }
+.planning-heading > p:last-child { margin:0; font-size:.94rem; line-height:1.7; }
+.planning-eyebrow { font-size:.65rem; font-weight:800; letter-spacing:.13em; color:var(--brand-600); margin:0 0 7px; }
+.planning-page .wiz-layout { grid-template-columns:minmax(0,1fr) 260px; gap:24px; }
+.planning-page .wiz { margin:0; gap:13px; }
+.planning-page .wiz-side { top:108px; }
+.planning-page .wiz-side > .card { padding:22px; border-radius:18px; }
+.planning-page .wiz-tabs { display:none; }
+.js .planning-page .wiz-tabs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px; }
+.planning-page .wiz-tabs button { width:100%; min-height:62px; flex-direction:column; justify-content:center; gap:5px; padding:10px 5px; border-radius:12px; font-size:.68rem; line-height:1.3; }
+.planning-page .wiz-tabs button span { display:block; }
+.planning-page .wiz-tabs button b { width:23px; height:23px; }
+.planning-page .wiz-tabs button.on { border-color:var(--brand); background:var(--brand-50); box-shadow:none; }
+.planning-page .wiz-tabs button.on b { background:var(--brand-600); }
+.planning-step-caption { display:flex; justify-content:space-between; gap:10px; color:var(--muted); font-size:.67rem; }
+.planning-step-caption > span:first-child { font-weight:700; color:var(--text); }
+.planning-page .wiz-bar { height:4px; margin-bottom:6px; }
+.planning-page .wstep { padding:26px; border-radius:19px; box-shadow:var(--shadow-sm); }
+.planning-page [hidden] { display:none!important; }
+.planning-section-title { display:flex; gap:12px; align-items:center; margin-bottom:26px; }
+.planning-section-title .planning-eyebrow { font-size:.6rem; margin-bottom:5px; }
+.planning-section-title h2 { font-size:1.35rem; line-height:1.3; letter-spacing:-.035em; margin:0; }
+.planning-section-icon { flex-shrink:0; width:44px; height:44px; border-radius:13px; display:grid; place-items:center; color:var(--brand-600); background:var(--brand-50); }
+.planning-page h3 { font-size:1rem; letter-spacing:-.02em; margin:0 0 6px; }
+.planning-page h3 .muted,.planning-page legend .muted { font-size:.75rem; font-weight:500; margin-left:5px; }
+.planning-help { color:var(--muted); font-size:.78rem; line-height:1.65; margin:5px 0 12px; }
+.planning-page small.planning-help { display:block; }
+.planning-page label { font-size:.83rem; gap:7px; }
+.planning-page input,.planning-page select,.planning-page textarea { font-size:.88rem; min-height:44px; border-width:1px; }
+.planning-page input[aria-invalid=true] { border-color:var(--danger); }
+.planning-required { color:var(--brand-600); font-size:.65rem; font-weight:700; margin-left:8px; }
+.planning-budget { display:grid; grid-template-columns:1fr 190px; align-items:center; gap:18px; }
+.planning-budget > div > label { font-size:.95rem; font-weight:700; }
+.planning-budget .planning-help { max-width:340px; margin-bottom:0; }
+.planning-page .money-in { padding:0 12px; border-width:1px; border-radius:12px; }
+.planning-page .money-in input { font-size:1.7rem; padding:10px 6px; min-width:0; }
+.planning-page .money-in i { font-size:1.3rem; }
+.planning-page .planning-budget-presets { justify-content:flex-end; margin:12px 0 0; gap:6px; }
+.planning-page .pill { min-height:40px; min-width:48px; border-radius:9px; font-size:.76rem; padding:7px 11px; box-shadow:none; }
+.planning-page .pill.on { box-shadow:inset 0 0 0 1px var(--brand); }
+.planning-subheading { display:flex; justify-content:space-between; align-items:start; gap:12px; border-top:1px solid var(--line); padding-top:26px; margin-top:25px; }
+.planning-text-button { padding:4px 0; border:0; background:none; color:var(--brand-600); font:inherit; font-size:.72rem; font-weight:700; white-space:nowrap; cursor:pointer; min-height:32px; }
+.planning-goals { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:14px; }
+.nutrition-card { min-width:0; border:1px solid var(--line); border-radius:14px; overflow:hidden; background:var(--surface); }
+.nutrition-card.selected,.nutrition-card:has(.goal-toggle input:checked) { border-color:var(--brand); }
+.planning-page .goal-toggle { position:relative; display:flex; flex-direction:row; justify-content:space-between; padding:17px; min-height:110px; align-items:start; margin:0; cursor:pointer; }
+.goal-toggle-copy { display:flex; flex-direction:column; align-items:start; gap:4px; min-width:0; }
+.goal-toggle-copy > b { font-size:.9rem; }
+.goal-toggle-copy > small { color:var(--muted); font-size:.72rem; font-weight:500; }
+.goal-symbol { display:flex; color:var(--brand-600); margin-bottom:5px; }
+.goal-check { border:1.5px solid var(--line); border-radius:6px; width:22px; height:22px; display:grid; place-items:center; flex-shrink:0; color:transparent; }
+.goal-toggle input:checked ~ .goal-check { background:var(--brand-600); border-color:var(--brand-600); color:#fff; }
+.goal-toggle:has(input:checked) { background:var(--brand-50); }
+.goal-toggle input,.meal-toggle input { position:absolute; width:1px!important; height:1px!important; min-height:0!important; padding:0; margin:-1px; clip:rect(0,0,0,0); overflow:hidden; }
+.goal-toggle input:focus-visible ~ .goal-check { box-shadow:var(--ring); }
+.goal-fields { padding:17px; border-top:1px solid var(--line); }
+.goal-fields > label { display:flex; flex-direction:row; align-items:center; justify-content:space-between; font-size:.72rem; }
+.goal-fields label .muted { font-size:.65rem; font-weight:500; }
+.target-number { display:flex; align-items:center; gap:10px; }
+.target-number input { font-weight:800; font-size:1.4rem; min-width:0; }
+.target-number > span { font-size:.72rem; color:var(--muted); }
+.goal-fields input[type=range] { display:block; padding:0; margin:15px 0 0; border:0; border-radius:0; accent-color:var(--brand-600); min-height:28px; background:transparent; box-shadow:none; cursor:pointer; }
+.goal-fields input[type=range]:focus-visible { outline:2px solid var(--brand); outline-offset:3px; }
+.range-ends { display:flex; justify-content:space-between; color:var(--muted); font-size:.62rem; margin-bottom:10px; }
+.goal-fields .planning-help { font-size:.68rem; margin:10px 0 0; }
+.planning-goal-note { color:var(--muted); background:var(--surface-2); border-radius:10px; padding:11px 13px; font-size:.72rem; line-height:1.7; margin:16px 0 0; }
+.planning-fieldset { min-width:0; border:0; padding:0; margin:0; }
+.planning-fieldset legend { font-size:.92rem; font-weight:700; margin-bottom:6px; padding:0; }
+.planning-choice-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin-top:12px; }
+.planning-page .chipcheck { margin:0; min-width:0; }
+.planning-page .chipcheck > span { display:flex; width:100%; min-height:46px; padding:11px 13px; border-width:1px; border-radius:10px; font-size:.78rem; box-shadow:none; }
+.planning-page .chipcheck input:checked + span { background:var(--brand-50); color:var(--brand-600); border-color:var(--brand); box-shadow:inset 0 0 0 1px var(--brand); }
+.planning-page .chipcheck span > i { font-style:normal; margin-left:auto; visibility:hidden; }
+.planning-page .chipcheck input:checked + span > i { visibility:visible; }
+.planning-divider { height:1px; background:var(--line); margin:25px 0; }
+.planning-page .days { gap:8px; margin-top:14px; }
+.planning-page .dayrow { grid-template-columns:86px 72px 91px minmax(0,1fr); gap:10px; padding:10px; border-radius:11px; }
+.planning-page .dn { font-size:.78rem; }
+.planning-page .switch { margin:0; font-size:.73rem; flex-direction:row; gap:6px; }
+.planning-page .sw { width:32px; height:20px; flex-shrink:0; }
+.planning-page .sw::after { width:14px; height:14px; }
+.planning-page .switch input:checked + .sw::after { transform:translateX(12px); }
+.planning-page .swl { font-size:.68rem; }
+.planning-page .mins { gap:5px; }
+.planning-page .mins input { min-height:40px; width:64px; padding:6px; font-size:.82rem; }
+.planning-page .mins em { font-size:.7rem; }
+.planning-page .dayrow .presets { grid-column:auto; flex-wrap:nowrap; justify-content:end; gap:4px; }
+.planning-page .dayrow .pill { min-width:31px; min-height:36px; font-size:.68rem; padding:5px; flex:1; }
+.planning-meal-scroll { overflow-x:auto; border:1px solid var(--line); border-radius:12px; margin-top:15px; }
+.planning-meal-grid { width:100%; min-width:400px; border-collapse:collapse; table-layout:fixed; }
+.planning-meal-grid th,.planning-meal-grid td { padding:8px; text-align:center; border-bottom:1px solid var(--line); }
+.planning-meal-grid thead th { font-size:.68rem; font-weight:700; background:var(--surface-2); padding:12px 8px; }
+.planning-meal-grid th:first-child { width:100px; text-align:left; }
+.planning-meal-grid tbody th { font-size:.76rem; padding-left:12px; }
+.planning-meal-grid tr:last-child th,.planning-meal-grid tr:last-child td { border-bottom:0; }
+.planning-page .meal-toggle { cursor:pointer; position:relative; display:block; margin:0; }
+.meal-toggle > span { display:flex; justify-content:center; align-items:center; gap:5px; width:100%; min-height:42px; border:1px solid var(--line); background:var(--surface); border-radius:8px; font-size:.68rem; color:var(--muted); }
+.meal-toggle i { display:none; font-style:normal; }
+.meal-toggle .meal-elsewhere { display:none; }
+.meal-toggle input:checked + span { background:var(--brand-50); border-color:var(--brand); color:var(--brand-600); }
+.meal-toggle input:checked + span .meal-elsewhere,.meal-toggle input:checked + span i { display:inline; }
+.meal-toggle input:checked + span .meal-at-home { display:none; }
+.meal-toggle input:focus-visible + span { box-shadow:var(--ring); }
+.planning-advanced { margin-top:24px; border:1px solid var(--line); border-radius:12px; }
+.planning-advanced > summary { cursor:pointer; display:flex; align-items:center; gap:8px; list-style:none; padding:15px; font-size:.8rem; font-weight:700; }
+.planning-advanced > summary::-webkit-details-marker { display:none; }
+.planning-advanced > summary::after { content:'+'; margin-left:auto; font-size:1.2rem; color:var(--brand-600); }
+.planning-advanced[open] > summary::after { content:'−'; }
+.planning-advanced > summary > span { color:var(--muted); font-size:.65rem; font-weight:500; }
+.planning-advanced > div { padding:0 16px 16px; }
+.planning-time-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin:14px 0 22px; }
+.planning-window-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.planning-window-grid input { font-size:.78rem; }
+.planning-equipment { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; }
+.planning-equipment .chipcheck > span { gap:7px; }
+.planning-page .planning-skill { margin-top:20px; }
+.planning-page .optcards { gap:10px; margin-top:10px; align-items:stretch; }
+.planning-page .optcard { margin:0; }
+.planning-page .optcard .oc { padding:16px; min-height:132px; box-shadow:none; border-radius:12px; border-width:1px; }
+.planning-page .optcard .oc b { font-size:.84rem; }
+.planning-page .optcard .oc small { font-size:.71rem; }
+.planning-page .optcard input:checked + .oc { box-shadow:inset 0 0 0 1px var(--brand); }
+.planning-prep-days { margin-top:23px; }
+.planning-day-buttons { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:6px; margin-top:8px; }
+.planning-day-buttons .chipcheck > span { justify-content:center; padding:10px 3px; font-size:.72rem; }
+.planning-page .planning-session-length { max-width:230px; margin-top:20px; }
+.planning-page .btn { min-height:44px; border-radius:10px; font-size:.8rem; box-shadow:none; }
+.planning-page .btn.primary { background:var(--brand-600); }
+.planning-page .btn.primary:hover { box-shadow:none; transform:none; filter:brightness(.95); }
+.planning-page .wiz-nav { display:grid; grid-template-columns:auto minmax(0,1fr) auto auto; padding:15px 0 0; gap:9px; align-items:center; }
+.planning-nav-note { font-size:.66rem; color:var(--muted); text-align:center; }
+.js .planning-page .wiz [data-prev],.js .planning-page .wiz [data-next] { display:inline-flex; }
+.js .planning-page .wiz.step0 [data-prev] { visibility:hidden; }
+.js .planning-page .wiz.last [data-next] { display:none; }
+.js .planning-page .wiz[data-first="1"] [data-save] { display:none; }
+.js .planning-page .wiz[data-first="1"].last [data-save] { display:inline-flex; }
+.js .planning-page .wiz[data-first="1"] [data-next] { background:var(--brand-600); color:#fff!important; border-color:var(--brand-600); }
+.planning-summary dl { margin:22px 0 16px; }
+.planning-summary dl > div { padding:12px 0; border-bottom:1px solid var(--line); }
+.planning-summary dt { font-size:.72rem; color:var(--muted); margin-bottom:5px; }
+.planning-summary dd { margin:0; font-size:.93rem; font-weight:800; }
+.planning-summary > .planning-help { font-size:.7rem; margin-bottom:0; }
+.planning-why h3 { font-size:.9rem; }
+.planning-page .understood { display:block; }
+.planning-page .understood > summary { cursor:pointer; font-size:.85rem; font-weight:700; }
+.planning-page .understood ul { margin-top:15px; }
+.planning-page .understood li { font-size:.75rem; }
+.planning-pantry { margin-top:26px; border-radius:16px; padding:20px; }
+.planning-pantry > summary { font-weight:700; cursor:pointer; font-size:.92rem; }
+.planning-pantry > summary > span { font-size:.72rem; font-weight:500; margin-left:8px; }
+.planning-pantry > div { margin-top:20px; }
+.planning-page .pantry-add { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) auto; gap:8px; }
+.planning-page .pantry-add input { min-width:0!important; }
+@media (max-width:1200px) { .planning-page .wiz-layout { grid-template-columns:minmax(0,1fr) 230px; gap:18px; } .planning-page .dayrow { grid-template-columns:86px 72px 1fr; } .planning-page .dayrow .presets { grid-column:1/-1; } }
+@media (max-width:980px) { .planning-page .wiz-layout { grid-template-columns:1fr; } .planning-page .wiz-side { position:static; order:initial; grid-template-columns:repeat(2,minmax(0,1fr)); margin-top:12px; } .planning-summary dl { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; } .planning-page .wiz-side > .planning-summary { grid-column:1/-1; } .planning-summary dl > div { padding:0; border:0; } }
+@media (max-width:600px) { .planning-page .wstep { padding:20px 16px; } .planning-page .wiz-tabs button { font-size:.61rem; min-height:66px; } .planning-section-title h2 { font-size:1.12rem; } .planning-section-icon { width:38px; height:38px; } .planning-budget { grid-template-columns:1fr; gap:12px; } .planning-budget .money-in { max-width:none; } .planning-page .planning-budget-presets { justify-content:start; } .planning-goals { grid-template-columns:1fr; } .planning-step-caption > span:last-child { display:none; } .planning-equipment { grid-template-columns:repeat(2,minmax(0,1fr)); } .planning-page .optcards.two { grid-template-columns:1fr; } .planning-page .optcard .oc { min-height:0; } .planning-day-buttons { gap:4px; } .planning-day-buttons .chipcheck > span { min-height:44px; font-size:.62rem; } .planning-page .dayrow { grid-template-columns:82px 72px 1fr; gap:8px; } .planning-page .mins { justify-content:end; } .planning-page .dayrow .presets { gap:6px; } .planning-page .dayrow .pill { min-height:42px; } .planning-time-grid,.planning-window-grid { grid-template-columns:1fr; } .planning-page input,.planning-page select,.planning-page textarea { font-size:16px; } .planning-page .wiz-nav { display:flex; flex-wrap:wrap; } .planning-page .wiz-nav .btn { flex:1; padding:10px 13px; } .planning-nav-note { order:5; flex-basis:100%; margin-top:4px; } .planning-page .wiz-side { grid-template-columns:1fr; } .planning-summary dl { grid-template-columns:1fr; } .planning-summary dl > div { display:flex; justify-content:space-between; gap:15px; } .planning-summary dd { font-size:.82rem; } .planning-page .pantry-add { grid-template-columns:repeat(2,minmax(0,1fr)); } .planning-pantry > summary > span { display:block; margin:5px 0 0; } }
+@media (prefers-reduced-motion:reduce) { .planning-page *, .planning-page *::before, .planning-page *::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
+
+/* Without JavaScript every section stays editable and the save button still works. */
+html:not(.js) .planning-step-caption,html:not(.js) .planning-page [data-next],html:not(.js) .planning-page [data-prev],html:not(.js) .planning-page [data-clear-goals] { display:none; }
+.planning-page button:focus-visible,.planning-page summary:focus-visible { outline:2px solid var(--brand); outline-offset:3px; }
+/* Equal-width budget presets and fixed navigation columns keep controls aligned. */
+.planning-page .planning-budget-presets { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); width:100%; gap:8px; }
+.planning-page .planning-budget-presets .pill { width:100%; min-width:0; }
+.planning-budget > div > label { flex-direction:row; flex-wrap:wrap; align-items:center; }
+.planning-goals { align-items:stretch; }
+.planning-page .wiz-nav [data-prev] { grid-column:1; }
+.planning-page .wiz-nav .planning-nav-note { grid-column:2; }
+.planning-page .wiz-nav [data-next] { grid-column:3; }
+.planning-page .wiz-nav [data-save] { grid-column:4; }
+
+.planning-page .wiz-layout > div,.planning-page .wstep { min-width:0; }
+.planning-page .chipcheck input,.planning-page .switch input,.planning-page .optcard input { width:1px; height:1px; min-height:0; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); }

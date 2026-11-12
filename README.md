@@ -124,3 +124,15 @@ The grocery page offers **Send to Instacart**. It shares only unchecked, pantry-
 Without a key, a clear message keeps your list available. Provider timeouts, HTTP errors, invalid JSON and untrusted links fail safely. Identical lists reuse their link for up to six days; changed quantities invalidate the cached link. The API requests seven-day links. Unknown ingredient units are included as display text without a measurement; review and adjust those quantities in Instacart. Its actual prices, product matches, labels and delivery availability require review there.
 
 Official API contract: https://docs.instacart.com/developer_platform_api/api/products/create_shopping_list_page . Live acceptance requires an Instacart development account/key and is not claimed by mocked tests.
+
+## Beta integrations and live tests
+
+See [BETA_INTEGRATIONS.md](BETA_INTEGRATIONS.md) for Google Calendar OAuth/sync,
+Instacart list review, separate credentials and opt-in real-provider tests.
+[BETA_TEST_RESULTS.md](BETA_TEST_RESULTS.md) records the current offline results.
+
+## Kroger grocery cart transfer
+
+See [KROGER_SETUP.md](KROGER_SETUP.md) for developer registration, local settings,
+product review and safe cart transfer. [KROGER_TEST_RESULTS.md](KROGER_TEST_RESULTS.md)
+records automated verification and the remaining live account checks.

@@ -11,6 +11,8 @@ from app.deps import current_user, render
 from app.services.llm import get_llm
 from app.services.preferences import get_preferences,save_preferences
 from app.services.lifestyle import EQUIPMENT
+from app.routers.lifestyle import lifestyle_fields, schedule_fields
+from app.services.nutrition_goals import DEFAULT_PROTEIN, MIN_PROTEIN, MAX_PROTEIN, MIN_CALORIES, MAX_CALORIES, selected_goals
 from app.services.schedule import PREP_STYLES
 from app.models import DaySetting, PantryItem, Profile, User
 
@@ -27,9 +29,8 @@ RESTRICTIONS = {
     "egg_free": "Egg-free",
     "halal": "Halal",
 }
-GOALS = {"none": "No specific goal", "high_protein": "High protein", "calorie_target": "Daily calorie target"}
+GOALS = {"none": "No specific goal", "high_protein": "High protein", "calorie_target": "Daily calorie target", "protein_calorie": "Protein and calorie targets"}
 MIN_BUDGET = 30
-MIN_CALORIES, MAX_CALORIES = 1200, 4500
 DEFAULT_MINUTES = 45
 MAX_MINUTES = 480
 
@@ -116,25 +117,44 @@ def apply_restrictions(form, profile, errors, **_):
     profile.restrictions = sorted(set(chosen))
 
 
+def integer_target(raw, lower, upper):
+    try:
+        number = float(raw)
+        if math.isfinite(number) and number.is_integer() and lower <= number <= upper:
+            return int(number)
+    except (ValueError, TypeError, OverflowError):
+        pass
+    return None
+
+
 def apply_goal(form, profile, errors, **_):
-    if "goal" not in form:
+    if 'goals_present' not in form and 'goal' not in form:
         return
-    goal = form.get("goal", "none")
-    if goal not in GOALS:
-        errors["goal"] = "Pick a goal from the list."
-        return
-    profile.goal = goal
-    profile.calorie_target = None
-    if goal == "calorie_target":
-        try:
-            n = float(form.get("calorie_target", ""))
-            cal = int(n) if math.isfinite(n) and n.is_integer() else 0
-        except (TypeError, ValueError, OverflowError):
-            cal = 0
-        if not MIN_CALORIES <= cal <= MAX_CALORIES:
-            errors["goal"] = f"Enter a daily calorie target between {MIN_CALORIES} and {MAX_CALORIES}."
+    if 'goals_present' in form:
+        chosen = set(form.getlist('goals'))
+        if chosen - {'high_protein', 'calorie_target'}:
+            errors['goal'] = 'Choose protein, calories, both, or neither.'
             return
-        profile.calorie_target = cal
+        goal = ('protein_calorie' if len(chosen) == 2 else next(iter(chosen), 'none'))
+    else:
+        goal = form.get('goal', 'none')
+        if goal not in GOALS:
+            errors['goal'] = 'Pick a goal from the list.'
+            return
+        chosen = set(selected_goals(goal))
+    protein = calories = None
+    if 'high_protein' in chosen:
+        # Legacy requests keep their 75g default; the Beta form always sends an exact amount.
+        raw = form.get('protein_target', '' if 'goals_present' in form else str(DEFAULT_PROTEIN))
+        protein = integer_target(raw, MIN_PROTEIN, MAX_PROTEIN)
+        if protein is None:
+            errors['protein_target'] = f'Enter a daily protein target between {MIN_PROTEIN} and {MAX_PROTEIN} grams, using a whole number.'
+    if 'calorie_target' in chosen:
+        calories = integer_target(form.get('calorie_target', ''), MIN_CALORIES, MAX_CALORIES)
+        if calories is None:
+            errors['calorie_target'] = f'Enter a daily calorie target between {MIN_CALORIES} and {MAX_CALORIES}, using a whole number.'
+    if not errors:
+        profile.goal, profile.protein_target, profile.calorie_target = goal, protein, calories
 
 
 MAX_FREE_TEXT = 500
@@ -202,9 +222,9 @@ def understood(profile: Profile, days) -> List[str]:
     style = PREP_STYLES.get(profile.prep_style or "auto", "")
     extra = f", preferring {', '.join(WEEKDAYS[d][:3] for d in profile.prep_days)} ({profile.prep_minutes} min sessions)" if profile.prep_days else ""
     out.append(f"Cooking style: {style}{extra}")
-    if profile.goal == "high_protein":
-        out.append("Goal: high protein")
-    elif profile.goal == "calorie_target" and profile.calorie_target:
+    if "high_protein" in selected_goals(profile.goal):
+        out.append(f"Goal: at least {profile.protein_target or DEFAULT_PROTEIN}g protein a day")
+    if "calorie_target" in selected_goals(profile.goal) and profile.calorie_target:
         out.append(f"Goal: about {profile.calorie_target} calories a day")
     return out
 
@@ -214,22 +234,36 @@ def field_values(profile: Profile, days, form=None) -> dict:
     if form is None:
         return dict(
             budget=profile.budget if profile.budget is not None else "", goal=profile.goal or "none",
+            goals=selected_goals(profile.goal), protein_target=profile.protein_target or DEFAULT_PROTEIN,
             calorie_target=profile.calorie_target or "", free_text=profile.free_text or "",
             restrictions=list(profile.restrictions or []), prep_style=profile.prep_style or "auto",
             prep_days=[str(d) for d in (profile.prep_days or [])], prep_minutes=profile.prep_minutes or 120,
             days=[dict(weekday=d.weekday, busy=d.busy, minutes=d.minutes) for d in days])
     return dict(
-        budget=form.get("budget", ""), goal=form.get("goal", profile.goal or "none"), calorie_target=form.get("calorie_target", ""),
+        budget=form.get("budget", ""), goal=form.get("goal", profile.goal or "none"),
+        goals=form.getlist("goals") if "goals_present" in form else selected_goals(form.get("goal", profile.goal)),
+        protein_target=form.get("protein_target", profile.protein_target or DEFAULT_PROTEIN), calorie_target=form.get("calorie_target", ""),
         free_text=form.get("free_text", ""), restrictions=form.getlist("restrictions"),
         prep_style=form.get("prep_style", profile.prep_style or "auto"), prep_days=form.getlist("prep_days"),
         prep_minutes=form.get("prep_minutes", profile.prep_minutes or 120),
         days=[dict(weekday=d.weekday, busy=form.get(f"busy_{d.weekday}") is not None, minutes=form.get(f"minutes_{d.weekday}", d.minutes)) for d in days])
 
 
-def survey_context(db, user):
+def survey_context(db, user, form=None):
     pantry = list(db.scalars(select(PantryItem).where(PantryItem.user_id == user.id).order_by(PantryItem.name)))
     profile, days = get_profile(db, user), get_days(db, user)
-    return dict(lifestyle=get_preferences(db,user.id), equipment_options=EQUIPMENT, pantry=pantry, profile=profile, days=days, understood=understood(profile, days), weekdays=WEEKDAYS, restriction_options=RESTRICTIONS, goal_options=GOALS, prep_styles=PREP_STYLES)
+    lifestyle = get_preferences(db,user.id)
+    if form is not None and 'lifestyle_present' in form:
+        lifestyle.update(lifestyle_fields(form))
+    window_values = {str(d): ', '.join(f'{a//60:02d}:{a%60:02d}-{b//60:02d}:{b%60:02d}'
+                      for a,b in lifestyle.get('cooking_windows',{}).get(str(d),[])) for d in range(7)}
+    time_values = {slot: f'{t//60:02d}:{t%60:02d}' for slot,t in
+                   ((slot,lifestyle.get('meal_times',{}).get(slot,default))
+                    for slot,default in [('breakfast',480),('lunch',750),('dinner',1110)])}
+    if form is not None and 'schedule_present' in form:
+        window_values = {str(d): form.get(f'windows_{d}', '') for d in range(7)}
+        time_values = {slot: form.get(f'time_{slot}', '') for slot in time_values}
+    return dict(lifestyle=lifestyle, window_values=window_values, time_values=time_values, equipment_options=EQUIPMENT, pantry=pantry, profile=profile, days=days, understood=understood(profile, days), weekdays=WEEKDAYS, restriction_options=RESTRICTIONS, goal_options=GOALS, prep_styles=PREP_STYLES)
 
 
 @router.post("/survey")
@@ -239,9 +273,17 @@ async def survey_submit(request: Request, user: User = Depends(current_user), db
     errors: Dict[str, str] = {}
     for fn in APPLIERS:
         fn(form=form, profile=profile, errors=errors, db=db, user=user)
+    extra = {}
+    if 'lifestyle_present' in form:
+        extra.update(lifestyle_fields(form))
+    if 'schedule_present' in form:
+        try:
+            extra.update(schedule_fields(form))
+        except (ValueError, TypeError):
+            errors['schedule'] = 'Check meal times and cooking windows: use ordered HH:MM-HH:MM windows without overlaps, and breakfast before lunch before dinner.'
     if errors:
         db.rollback()
-        ctx = survey_context(db, user)
+        ctx = survey_context(db, user, form)
         db.rollback()
         return render(request, "survey.html", user, 400, errors=errors, values=field_values(ctx["profile"], ctx["days"], form), **ctx)
     if "free_text" in form:  # remember how the note was understood, to show it back to the user
@@ -249,6 +291,10 @@ async def survey_submit(request: Request, user: User = Depends(current_user), db
             profile.interpreted = llm.interpret_preferences(profile.free_text) if profile.free_text else {}
         except Exception:
             profile.interpreted = {}
+    if extra:
+        preferences = get_preferences(db, user.id)
+        preferences.update(extra)
+        save_preferences(db, user.id, preferences)
     first_time = not profile.onboarded
     if profile.budget is not None:
         profile.onboarded = True

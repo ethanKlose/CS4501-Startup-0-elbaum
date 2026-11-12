@@ -1,5 +1,8 @@
 """Authentication, CSRF, ownership, shared rate counters and real startup migrations."""
 import pytest
+from alembic.config import Config
+from alembic.script import ScriptDirectory
+
 from sqlalchemy import inspect, select, text
 
 from app.models import PantryItem, Plan, Profile, SecurityCounter, User
@@ -27,7 +30,7 @@ def test_restart_preserves_accounts_profiles_plans_and_grocery_checks(applicatio
     with application.sessions() as db:
         assert db.query(User).count() == 1 and db.query(Plan).count() == 1
         assert db.scalar(select(Profile)).free_text == "no fish"
-        assert db.execute(text("SELECT version_num FROM alembic_version")).scalar() == "0001_baseline"
+        assert db.execute(text("SELECT version_num FROM alembic_version")).scalar() == ScriptDirectory.from_config(Config("alembic.ini")).get_current_head()
         assert verify_password(PASSWORD, db.scalar(select(User)).password_hash)
 
 

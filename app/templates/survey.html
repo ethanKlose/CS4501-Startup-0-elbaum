@@ -4,109 +4,59 @@
 {% block content %}
 {% set first = not profile.onboarded %}
 {% set ns = namespace(days_err=false) %}{% for k in errors %}{% if k[:8] == 'minutes_' %}{% set ns.days_err = true %}{% endif %}{% endfor %}
-<div class="wiz-layout">
-<div>
-  {% if first %}
-  <div class="auth-steps"><span><b>{{ icon('check', 12) }}</b> Account</span><span class="on"><b>2</b> Preferences</span><span><b>3</b> Your week</span></div>
-  <h1>Let’s set up your week</h1>
-  <p class="muted">About a minute. Only your <strong>budget</strong> is required; everything else can be skipped and edited later.</p>
-  {% else %}
-  <h1>Your preferences</h1>
-  <p class="muted">Your survey answers. Changes apply to the next plan you generate or regenerate.</p>
-  {% endif %}
-  {% if saved %}<div class="alert info" role="status">{{ icon('check-circle') }}<span>Saved. Regenerate your week to apply the changes.</span></div>{% endif %}
-  {% if errors %}<div class="alert error" role="alert">{{ icon('alert') }}<div>Please fix this first:<ul>{% for m in errors.values() %}<li>{{ m }}</li>{% endfor %}</ul></div></div>{% endif %}
-
-  <form method="post" id="wizard" class="wiz" data-first="{{ '1' if first else '' }}" novalidate><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    <nav class="wiz-tabs" aria-label="Survey sections">
-      <button type="button" data-goto="0"><b>1</b><span>Budget &amp; goal</span></button>
-      <button type="button" data-goto="1"><b>2</b><span>Food</span></button>
-      <button type="button" data-goto="2"><b>3</b><span>Your week</span></button>
-      <button type="button" data-goto="3"><b>4</b><span>Cooking</span></button>
-    </nav>
-    <div class="wiz-bar"><span id="wiz-progress"></span></div>
-
-    <section class="wstep card pad-lg" data-step="0" data-has-error="{{ '1' if errors.budget or errors.goal else '' }}">
-      <h2>What’s your weekly grocery budget?</h2>
-      <p class="muted">The estimated whole-package shopping total stays under this. Actual store prices can differ. Minimum $30.</p>
-      <label class="money"><span class="sr">Weekly grocery budget in dollars</span>
-        <span class="money-in"><i>$</i><input type="number" name="budget" step="0.01" min="30" required inputmode="decimal" placeholder="75" value="{{ '%g' % values.budget if values.budget is number else values.budget }}"></span>
-      </label>
-      <div class="presets" data-target="budget">{% for n in [40, 60, 80, 100, 150] %}<button type="button" class="pill" data-set="{{ n }}">${{ n }}</button>{% endfor %}</div>
-      <h2 style="margin-top:26px">Any nutrition goal? <span class="muted" style="font-weight:600">(optional)</span></h2>
-      <div class="optcards" data-goal>
-        {% for key, label, sub, ico in [('none','No specific goal','Just eat well','leaf'),('high_protein','High protein','75g+ a day','flame'),('calorie_target','Calorie target','Set a daily number','target')] %}
-        <label class="optcard"><input type="radio" name="goal" value="{{ key }}" {{ 'checked' if values.goal == key }}><span class="oc">{{ icon(ico, 20) }}<b>{{ label }}</b><small>{{ sub }}</small></span></label>
-        {% endfor %}
-      </div>
-      <label class="cal-field" id="cal-field">Daily calories
-        <input type="number" name="calorie_target" min="1200" max="4500" placeholder="2000" value="{{ values.calorie_target }}">
-      </label>
-    </section>
-
-    <section class="wstep card pad-lg" data-step="1" data-has-error="{{ '1' if errors.free_text or errors.restrictions else '' }}">
-      <h2>Any dietary restrictions or allergies?</h2>
-      <p class="muted">We check every ingredient in every meal against these.</p>
-      {% if errors.restrictions %}<p class="error" role="alert">{{ errors.restrictions }}</p>{% endif %}
-      <input type="hidden" name="restrictions_present" value="1">
-      <div class="chips">
-        {% for key, label in restriction_options.items() %}
-        <label class="chipcheck"><input type="checkbox" name="restrictions" value="{{ key }}" {{ 'checked' if key in values.restrictions }}><span>{{ label }}</span></label>
-        {% endfor %}
-      </div>
-      <h2 style="margin-top:26px">Anything else, in your own words? <span class="muted" style="font-weight:600">(optional)</span></h2>
-      <label><span class="sr">Extra preferences</span>
-        <textarea name="free_text" rows="3" maxlength="500" placeholder="e.g. no fish, no mushrooms, I can't cook on Wednesdays">{{ values.free_text }}</textarea>
-      </label>
-      {% if errors.free_text %}<p class="error">{{ errors.free_text }}</p>{% endif %}
-    </section>
-
-    <section class="wstep card pad-lg" data-step="2" data-has-error="{{ '1' if ns.days_err else '' }}">
-      <h2>How much time can you cook each day?</h2>
-      <p class="muted">Busy days don’t mean skipped meals. We’ll have you cook ahead on freer days and reheat. Use 0 for “no cooking”.</p>
-      <div class="days">
-        {% for d in values.days %}
-        <div class="dayrow {{ 'is-busy' if d.busy }}">
-          <span class="dn">{{ weekdays[d.weekday] }}</span>
-          <label class="switch"><input type="checkbox" name="busy_{{ d.weekday }}" {{ 'checked' if d.busy }}><span class="sw"></span><span class="swl">Busy</span></label>
-          <span class="mins"><input type="number" name="minutes_{{ d.weekday }}" min="0" max="480" required value="{{ d.minutes }}" aria-label="{{ weekdays[d.weekday] }} cooking minutes"><em>min</em></span>
-          <span class="presets" data-target="minutes_{{ d.weekday }}">{% for n in [0, 15, 30, 60, 90] %}<button type="button" class="pill sm" data-set="{{ n }}">{{ n }}</button>{% endfor %}</span>
-        </div>
-        {% if errors.get('minutes_' ~ d.weekday) %}<p class="error">{{ errors.get('minutes_' ~ d.weekday) }}</p>{% endif %}
-        {% endfor %}
-      </div>
-    </section>
-
-    <section class="wstep card pad-lg" data-step="3" data-has-error="{{ '1' if errors.prep else '' }}">
-      <h2>How do you like to cook?</h2>
-      <input type="hidden" name="prep_present" value="1">
-      <div class="optcards two">
-        {% for key, label in prep_styles.items() %}
-        <label class="optcard"><input type="radio" name="prep_style" value="{{ key }}" {{ 'checked' if values.prep_style == key }}><span class="oc">
-          {{ icon({'auto':'sparkles','daily':'flame','sessions':'calendar','one_session':'chef'}[key], 20) }}<b>{{ label }}</b>
-          <small>{{ {'auto':'We pick the best cooking days','daily':'Fresh meals, little batching','sessions':'2–3 cooking days a week','one_session':'One big session, then reheat'}[key] }}</small></span></label>
-        {% endfor %}
-      </div>
-      <h3 style="margin-top:22px">Preferred cooking days <span class="muted" style="font-weight:600">(optional)</span></h3>
-      <div class="chips">
-        {% for i in range(7) %}<label class="chipcheck"><input type="checkbox" name="prep_days" value="{{ i }}" {{ 'checked' if i|string in values.prep_days }}><span>{{ weekdays[i][:3] }}</span></label>{% endfor %}
-      </div>
-      <label style="max-width:260px;margin-top:14px">Length of a cooking session (minutes)
-        <input type="number" name="prep_minutes" min="30" max="480" value="{{ values.prep_minutes }}">
-      </label>
-      {% if errors.prep %}<p class="error">{{ errors.prep }}</p>{% endif %}
-    </section>
-
-    <div class="wiz-nav">
-      <button type="button" class="btn line" data-prev>{{ icon('back', 16) }} Back</button>
-      <span class="grow"></span>
-      <button type="button" class="btn primary" data-next>Next {{ icon('arrow', 16) }}</button>
-      <button class="btn primary" data-save>{% if first %}{{ icon('sparkles', 16) }} Build my week{% else %}Save changes{% endif %}</button>
+<div class="planning-page">
+<header class="planning-heading"><p class="planning-eyebrow">MAKE THE WEEK YOURS</p><h1>{{ 'Let’s set up your week' if first else 'Your preferences' }}</h1><p class="muted">Budget, food, schedule and cooking — all in one place. Changes apply when you generate or regenerate a plan.</p></header>
+{% if saved %}<div class="alert info" role="status" data-preferences-saved>{{ icon('check-circle') }}<span>Saved. Regenerate your week to apply the changes.</span></div>{% endif %}
+{% if errors %}<div class="alert error" role="alert" id="survey-errors">{{ icon('alert') }}<div>Please fix this first:<ul>{% for m in errors.values() %}<li>{{ m }}</li>{% endfor %}</ul></div></div>{% endif %}
+<div class="wiz-layout"><div>
+<form method="post" id="wizard" class="wiz" data-first="{{ '1' if first else '' }}" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <nav class="wiz-tabs" aria-label="Planning sections">
+  {% for label in ['Budget & goals','Food preferences','Your week','Your kitchen'] %}<button type="button" data-goto="{{ loop.index0 }}" aria-controls="planning-step-{{ loop.index0 }}"><b>{{ loop.index }}</b><span>{{ label }}</span></button>{% endfor %}
+  </nav>
+  <div class="planning-step-caption"><span id="planning-step-label">Step 1 of 4</span><span>Optional settings can stay as they are</span></div><div class="wiz-bar"><span id="wiz-progress"></span></div>
+  <section class="wstep card pad-lg" id="planning-step-0" data-step="0" data-has-error="{{ '1' if errors.budget or errors.goal or errors.protein_target or errors.calorie_target else '' }}" aria-labelledby="budget-title">
+    <div class="planning-section-title"><span class="planning-section-icon">{{ icon('dollar',22) }}</span><div><p class="planning-eyebrow">01 · BUDGET & GOALS</p><h2 id="budget-title">A plan that fits your priorities.</h2></div></div>
+    <div class="planning-budget"><div><label for="weekly-budget">Weekly grocery budget <span class="planning-required">Required</span></label><p class="planning-help" id="budget-help">Estimated whole-package shopping total. Store prices can differ. Minimum $30.</p></div><label class="money"><span class="sr">Weekly grocery budget in dollars</span><span class="money-in"><i>$</i><input id="weekly-budget" type="number" name="budget" step="0.01" min="30" max="10000" required inputmode="decimal" placeholder="75" aria-describedby="budget-help" {{ 'aria-invalid=true' if errors.budget }} value="{{ '%g' % values.budget if values.budget is number else values.budget }}"></span></label></div>
+    <div class="presets planning-budget-presets" data-target="budget" aria-label="Budget presets">{% for n in [40,60,80,100,150] %}<button type="button" class="pill" data-set="{{ n }}">${{ n }}</button>{% endfor %}</div>
+    <div class="planning-subheading"><div><h3>Nutrition goals <span class="muted">Optional</span></h3><p class="planning-help">Choose either goal, both, or neither. Your targets are checked together.</p></div><button type="button" class="planning-text-button" data-clear-goals>Clear goals</button></div>
+    <input type="hidden" name="goals_present" value="1">
+    <div class="planning-goals">
+      <section class="nutrition-card" data-nutrition-card="high_protein">
+        <label class="goal-toggle"><input type="checkbox" name="goals" value="high_protein" {{ 'checked' if 'high_protein' in values.goals }} aria-controls="protein-fields"><span class="goal-toggle-copy"><span class="goal-symbol">{{ icon('flame',22) }}</span><b>Protein target</b><small>Set your daily amount</small></span><span class="goal-check" aria-hidden="true">{{ icon('check',14) }}</span></label>
+        <div class="goal-fields" id="protein-fields" data-goal-fields="high_protein"><label for="protein-target">Daily protein <span class="muted">g / day</span></label><div class="target-number"><input id="protein-target" type="number" name="protein_target" min="20" max="300" step="1" inputmode="numeric" value="{{ values.protein_target }}" aria-describedby="protein-help" {{ 'aria-invalid=true' if errors.protein_target }}><span>grams</span></div><label class="sr" for="protein-slider">Adjust daily protein in grams</label><input id="protein-slider" type="range" min="20" max="300" step="1" value="{{ values.protein_target }}" aria-valuetext="{{ values.protein_target }} grams per day"><div class="range-ends"><span>20g</span><span>300g</span></div><p class="planning-help" id="protein-help">Aim for at least this amount each day. Set your own target.</p>{% if errors.protein_target %}<p class="error">{{ errors.protein_target }}</p>{% endif %}</div>
+      </section>
+      <section class="nutrition-card" data-nutrition-card="calorie_target">
+        <label class="goal-toggle"><input type="checkbox" name="goals" value="calorie_target" {{ 'checked' if 'calorie_target' in values.goals }} aria-controls="calorie-fields"><span class="goal-toggle-copy"><span class="goal-symbol">{{ icon('target',22) }}</span><b>Calorie target</b><small>Plan around your daily energy goal</small></span><span class="goal-check" aria-hidden="true">{{ icon('check',14) }}</span></label>
+        <div class="goal-fields" id="calorie-fields" data-goal-fields="calorie_target"><label for="calorie-target">Daily calories <span class="muted">kcal / day</span></label><div class="target-number"><input id="calorie-target" type="number" name="calorie_target" min="1200" max="4500" step="1" inputmode="numeric" placeholder="2000" value="{{ values.calorie_target }}" aria-describedby="calorie-help" {{ 'aria-invalid=true' if errors.calorie_target }}><span>kcal</span></div><p class="planning-help" id="calorie-help">1,200–4,500 kcal. Aim within 10% over the week and 30% on each day.</p>{% if errors.calorie_target %}<p class="error">{{ errors.calorie_target }}</p>{% endif %}</div>
+      </section>
     </div>
-  </form>
-
-  <section class="card pad-lg" id="pantry" style="margin-top:20px">
-    <h2>Pantry <span class="muted" style="font-weight:600">(optional)</span></h2>
+    <p class="planning-goal-note" data-goal-note>Nutrition goals guide the plan. Misses are shown for review; meals eaten elsewhere cannot be fully verified.</p>
+  </section>
+  <section class="wstep card pad-lg" id="planning-step-1" data-step="1" data-has-error="{{ '1' if errors.free_text or errors.restrictions else '' }}" aria-labelledby="food-title">
+    <div class="planning-section-title"><span class="planning-section-icon">{{ icon('leaf',22) }}</span><div><p class="planning-eyebrow">02 · FOOD PREFERENCES</p><h2 id="food-title">Food that works for you.</h2></div></div>
+    <fieldset class="planning-fieldset"><legend>Dietary restrictions & allergies</legend><p class="planning-help">Select all that apply. Every planned ingredient is checked against these restrictions.</p><input type="hidden" name="restrictions_present" value="1"><div class="planning-choice-grid">{% for key,label in restriction_options.items() %}<label class="chipcheck"><input type="checkbox" name="restrictions" value="{{ key }}" {{ 'checked' if key in values.restrictions }}><span>{{ label }}<i aria-hidden="true">✓</i></span></label>{% endfor %}</div>{% if errors.restrictions %}<p class="error">{{ errors.restrictions }}</p>{% endif %}</fieldset>
+    <div class="planning-divider"></div><label for="extra-preferences">Anything else? <span class="muted">Optional</span></label><p class="planning-help">Ingredients to avoid, foods you enjoy, or anything your week needs.</p><textarea id="extra-preferences" name="free_text" rows="4" maxlength="500" placeholder="e.g. Chicken is my only meat. No fish or mushrooms.">{{ values.free_text }}</textarea><small class="planning-help">Up to 500 characters. Check the saved interpretation before generating.</small>{% if errors.free_text %}<p class="error">{{ errors.free_text }}</p>{% endif %}
+  </section>
+  <section class="wstep card pad-lg" id="planning-step-2" data-step="2" data-has-error="{{ '1' if ns.days_err or errors.schedule else '' }}" aria-labelledby="week-title">
+    <div class="planning-section-title"><span class="planning-section-icon">{{ icon('calendar',22) }}</span><div><p class="planning-eyebrow">03 · YOUR WEEK</p><h2 id="week-title">Make room for real life.</h2></div></div>
+    <h3>Daily cooking time</h3><p class="planning-help">Use 0 for no cooking. Busy days still get meals: cook ahead and reheat when possible.</p>
+    <div class="days">{% for d in values.days %}<div class="dayrow {{ 'is-busy' if d.busy }}"><span class="dn">{{ weekdays[d.weekday] }}</span><label class="switch"><input type="checkbox" name="busy_{{ d.weekday }}" {{ 'checked' if d.busy }} aria-label="{{ weekdays[d.weekday] }} is busy"><span class="sw"></span><span class="swl">Busy</span></label><span class="mins"><input type="number" name="minutes_{{ d.weekday }}" min="0" max="480" step="1" required value="{{ d.minutes }}" aria-label="{{ weekdays[d.weekday] }} cooking minutes"><em>min</em></span><span class="presets" data-target="minutes_{{ d.weekday }}" aria-label="{{ weekdays[d.weekday] }} minute presets">{% for n in [0,15,30,60,90] %}<button type="button" class="pill sm" data-set="{{ n }}">{{ n }}</button>{% endfor %}</span></div>{% if errors.get('minutes_' ~ d.weekday) %}<p class="error">{{ errors.get('minutes_' ~ d.weekday) }}</p>{% endif %}{% endfor %}</div>
+    <div class="planning-divider"></div><section id="lifestyle"><h3>Meals you’ll eat elsewhere</h3><p class="planning-help">Tap a meal to mark it “Elsewhere”. Dining hall and eating-out meals are excluded from recipes and groceries. Their nutrition is not counted.</p>
+    <input type="hidden" name="lifestyle_present" value="1"><div class="planning-meal-scroll"><table class="planning-meal-grid"><caption class="sr">Weekly meals eaten at home or elsewhere</caption><thead><tr><th scope="col">Day</th>{% for slot in ['breakfast','lunch','dinner'] %}<th scope="col">{{ slot|capitalize }}</th>{% endfor %}</tr></thead><tbody>{% for d in range(7) %}<tr><th scope="row">{{ weekdays[d] }}</th>{% for slot in ['breakfast','lunch','dinner'] %}{% set selected=namespace(value=false) %}{% for m in lifestyle.get('external_slots',[]) %}{% if m.day == d and m.slot == slot %}{% set selected.value=true %}{% endif %}{% endfor %}<td><label class="meal-toggle"><input type="checkbox" name="external_{{ d }}_{{ slot }}" {{ 'checked' if selected.value }} aria-label="{{ weekdays[d] }} {{ slot }} eaten elsewhere"><span><i aria-hidden="true">✓</i><b class="meal-at-home">At home</b><b class="meal-elsewhere">Elsewhere</b></span></label></td>{% endfor %}</tr>{% endfor %}</tbody></table></div></section>
+    <details class="planning-advanced" id="schedule-windows" {{ 'open' if errors.schedule else '' }}><summary>{{ icon('clock',18) }} Meal times & cooking windows <span>Optional</span></summary><div><input type="hidden" name="schedule_present" value="1"><p class="planning-help">Meal times are used for cooking deadlines and calendar exports.</p><div class="planning-time-grid">{% for slot in ['breakfast','lunch','dinner'] %}<label>{{ slot|capitalize }}<input type="time" name="time_{{ slot }}" value="{{ time_values[slot] }}" required></label>{% endfor %}</div><h4>When can you cook?</h4><p class="planning-help">Leave blank for flexible timing. Use 24-hour ranges, such as 07:00-08:00, 17:00-19:00. Daily minute limits still apply.</p><div class="planning-window-grid">{% for d in range(7) %}<label>{{ weekdays[d] }}<input name="windows_{{ d }}" maxlength="127" placeholder="Flexible" value="{{ window_values[d|string] }}" aria-label="{{ weekdays[d] }} cooking windows"></label>{% endfor %}</div>{% if errors.schedule %}<p class="error">{{ errors.schedule }}</p>{% endif %}</div></details>
+  </section>
+  <section class="wstep card pad-lg" id="planning-step-3" data-step="3" data-has-error="{{ '1' if errors.prep else '' }}" aria-labelledby="kitchen-title">
+    <div class="planning-section-title"><span class="planning-section-icon">{{ icon('chef',22) }}</span><div><p class="planning-eyebrow">04 · YOUR KITCHEN</p><h2 id="kitchen-title">Cook your way.</h2></div></div>
+    <fieldset class="planning-fieldset"><legend>Available equipment</legend><p class="planning-help">Keep only the equipment you can use.</p><div class="planning-equipment">{% for key,label in equipment_options.items() %}<label class="chipcheck"><input type="checkbox" name="equipment" value="{{ key }}" {{ 'checked' if key in lifestyle.get('equipment',equipment_options.keys()) }}><span>{{ icon({'stove':'flame','oven':'chef','microwave':'clock','toaster':'utensils','blender':'sparkles','fridge':'snow','freezer':'snow'}[key],18) }}{{ label }}<i aria-hidden="true">✓</i></span></label>{% endfor %}</div></fieldset>
+    <label class="planning-skill">Cooking confidence<select name="cooking_skill"><option value="any">Comfortable with any recipe</option><option value="beginner" {{ 'selected' if lifestyle.get('cooking_skill') == 'beginner' }}>Beginner · recipes up to 25 minutes</option></select></label>
+    <div class="planning-divider"></div><fieldset class="planning-fieldset"><legend>How do you like to cook?</legend><input type="hidden" name="prep_present" value="1"><div class="optcards two">{% for key,label in prep_styles.items() %}<label class="optcard"><input type="radio" name="prep_style" value="{{ key }}" {{ 'checked' if values.prep_style == key }}><span class="oc">{{ icon({'auto':'sparkles','daily':'flame','sessions':'calendar','one_session':'chef'}[key],20) }}<b>{{ label }}</b><small>{{ {'auto':'We choose the cooking days','daily':'Fresh meals, less batching','sessions':'A few sessions during the week','one_session':'One bigger session, then reheat'}[key] }}</small></span></label>{% endfor %}</div></fieldset>
+    <fieldset class="planning-fieldset planning-prep-days"><legend>Preferred cooking days <span class="muted">Optional</span></legend><div class="planning-day-buttons">{% for i in range(7) %}<label class="chipcheck"><input type="checkbox" name="prep_days" value="{{ i }}" {{ 'checked' if i|string in values.prep_days }}><span>{{ weekdays[i][:3] }}</span></label>{% endfor %}</div></fieldset><label class="planning-session-length">Session length <span class="muted">minutes</span><input type="number" name="prep_minutes" min="30" max="480" step="1" value="{{ values.prep_minutes }}"></label>{% if errors.prep %}<p class="error">{{ errors.prep }}</p>{% endif %}
+  </section>
+  <div class="wiz-nav"><button type="button" class="btn line" data-prev>{{ icon('back',16) }} Back</button><span class="planning-nav-note" data-save-note>Changes are saved together.</span><button type="button" class="btn line" data-next>Next {{ icon('arrow',16) }}</button><button class="btn primary" data-save>{{ icon('check',16) }} {{ 'Save & build my week' if first else 'Save changes' }}</button></div>
+</form>
+  <details class="planning-pantry card pad-lg" id="pantry"><summary>Pantry <span class="muted">Optional · add what you already have</span></summary><div>
+    <p class="planning-help">Save your preferences above before editing pantry items. Pantry changes save separately.</p>
     <p class="muted">What you already have. Plans use these first and your grocery list skips them.</p>
     {% if pantry_error %}<p class="error" role="alert">{{ pantry_error }}</p>{% endif %}
     <ul class="plain pantry">
@@ -121,39 +71,8 @@
       <input name="unit" maxlength="20" placeholder="unit" aria-label="Unit" style="flex:1;min-width:70px">
       <button class="btn soft">Add</button>
     </form>
-  </section>
-<section class="card pad-lg" id="lifestyle" style="margin-top:20px"><h2>Your kitchen and campus meals</h2>
-<form method="post" action="/preferences/lifestyle"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-<p>Available equipment</p><div class="chips">{% for key,label in equipment_options.items() %}<label class="chipcheck"><input type="checkbox" name="equipment" value="{{ key }}" {{ 'checked' if key in lifestyle.get('equipment',equipment_options.keys()) }}><span>{{ label }}</span></label>{% endfor %}</div>
-<label>Cooking skill<select name="cooking_skill"><option value="any">Comfortable with any recipe</option><option value="beginner" {{ 'selected' if lifestyle.get('cooking_skill') == 'beginner' }}>Beginner - recipes up to 25 minutes</option></select></label>
-<p>Meals already covered by a dining hall or eating out are excluded from recipes and shopping. Nutrition totals cover only meals planned here.</p>
-{% for d in range(7) %}<div class="row"><strong>{{ weekdays[d] }}</strong>{% for slot in ['breakfast','lunch','dinner'] %}{% set ns=namespace(selected=false) %}{% for m in lifestyle.get('external_slots',[]) %}{% if m.day == d and m.slot == slot %}{% set ns.selected=true %}{% endif %}{% endfor %}<label class="check"><input type="checkbox" name="external_{{ d }}_{{ slot }}" {{ 'checked' if ns.selected }}>{{ slot|capitalize }}</label>{% endfor %}</div>{% endfor %}
-<button class="btn primary" style="margin-top:12px">Save kitchen and campus meals</button></form></section>
+  </div></details>
 
-<section class="card pad-lg" id="schedule-windows" style="margin-top:20px"><h2>Cooking windows and meal times</h2><p>Optional windows use 24-hour times, for example 07:00-08:00, 17:00-19:00. Blank means flexible. Your daily minute limits still apply.</p>
-<form method="post" action="/preferences/schedule"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-{% for d in range(7) %}<label>{{ weekdays[d] }}<input name="windows_{{ d }}" maxlength="127" placeholder="07:00-08:00,17:00-19:00" value="{% for a,b in lifestyle.get('cooking_windows',{}).get(d|string,[]) %}{{ '%02d:%02d' % (a//60,a%60) }}-{{ '%02d:%02d' % (b//60,b%60) }}{{ ',' if not loop.last }}{% endfor %}"></label>{% endfor %}
-{% for slot,default in [('breakfast',480),('lunch',750),('dinner',1110)] %}{% set t=lifestyle.get('meal_times',{}).get(slot,default) %}<label>{{ slot|capitalize }} time<input type="time" name="time_{{ slot }}" value="{{ '%02d:%02d' % (t//60,t%60) }}" required></label>{% endfor %}<button class="btn primary">Save cooking windows</button></form></section>
-
-</div>
-
-<aside class="wiz-side">
-  {% if profile.onboarded %}
-  <section class="card understood" data-testid="understood">
-    <h3>{{ icon('eye', 18) }} What we understood</h3>
-    <ul class="plain">{% for line in understood %}<li>{{ line }}</li>{% endfor %}</ul>
-    <small class="muted">Not right? Edit the answers on the left.</small>
-  </section>
-  {% else %}
-  <section class="card">
-    <h3>{{ icon('shield', 18) }} Why we ask</h3>
-    <ul class="plain why">
-      <li><b>Budget</b> is a hard limit. Plans over it are rejected.</li>
-      <li><b>Restrictions</b> are checked ingredient by ingredient.</li>
-      <li><b>Time</b> decides when you cook. Busy days get reheated meals.</li>
-    </ul>
-  </section>
-  {% endif %}
-</aside>
-</div>
+</div><aside class="wiz-side"><section class="card planning-summary"><p class="planning-eyebrow">YOUR PLAN, AT A GLANCE</p><h3>{{ icon('sliders',19) }} Your priorities</h3><dl><div><dt>Weekly budget</dt><dd data-summary-budget>{{ ('$%g' % values.budget) if values.budget is number else (('$' ~ values.budget) if values.budget else 'Not set') }}</dd></div><div><dt>Protein target</dt><dd data-summary-protein>{{ (values.protein_target|string ~ 'g / day') if 'high_protein' in values.goals else 'Not selected' }}</dd></div><div><dt>Calorie target</dt><dd data-summary-calories>{{ (values.calorie_target|string ~ ' kcal / day') if 'calorie_target' in values.goals else 'Not selected' }}</dd></div></dl><p class="planning-help">Save to keep these settings. Regenerate your plan to apply them.</p></section>
+{% if profile.onboarded %}<details class="card understood" data-testid="understood"><summary>Saved interpretation</summary><ul class="plain">{% for line in understood %}<li>{{ line }}</li>{% endfor %}</ul><small class="muted">Based on your last save. Review after changing preferences.</small></details>{% else %}<section class="card planning-why"><h3>{{ icon('shield',18) }} Built around your week</h3><p class="planning-help">Budget and dietary restrictions are checked before a plan is shown. Nutrition and time goals that need attention are flagged for review.</p></section>{% endif %}</aside></div></div>
 {% endblock %}

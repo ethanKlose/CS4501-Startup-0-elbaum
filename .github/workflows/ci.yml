@@ -51,6 +51,7 @@ jobs:
         with: { node-version: "20", cache: npm }
       - run: pip install -r requirements-dev.txt
       - run: npm ci
+      - run: npm run test:ui
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
         env:

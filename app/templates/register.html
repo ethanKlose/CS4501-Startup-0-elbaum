@@ -12,7 +12,7 @@
       <span class="on"><b>1</b> Account</span><span><b>2</b> Preferences</span><span><b>3</b> Your week</span>
     </div>
     <h1>Create your account</h1>
-    <p class="muted">Free during alpha. Next you’ll tell us about your budget and schedule.</p>
+    <p class="muted">Free during beta. Next you’ll tell us about your budget and schedule.</p>
     {% if error %}<div class="alert error" role="alert" style="margin-top:14px">{{ icon('alert') }}<span>{{ error }}</span></div>{% endif %}
     <form method="post" class="stack"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <label>Email <input type="email" name="email" value="{{ email or '' }}" autocomplete="email" placeholder="you@virginia.edu" required autofocus></label>

@@ -12,6 +12,7 @@ from app.services.schedule import Schedule, capacities, overbook_messages, sched
 from app.services.schema import MealIn, parse_plan
 from app.services.types import SLOTS, WEEKDAYS, PlanContext
 from app.services.timing import deadline_errors
+from app.services.nutrition_goals import protein_target, selected_goals
 
 
 HIGH_PROTEIN_DAILY_G = 75
@@ -101,7 +102,7 @@ def check_goal(plan: dict, ctx: PlanContext) -> List[str]:
         return errors
     if ctx.external_slots and ctx.goal != "none":
         return ["Nutrition totals exclude meals eaten elsewhere; full-day nutrition goals cannot be verified."]
-    if ctx.goal == "calorie_target" and ctx.calorie_target:
+    if 'calorie_target' in selected_goals(ctx.goal) and ctx.calorie_target:
         t = ctx.calorie_target
         avg = sum(v["cal"] for v in days.values()) / len(days)
         if abs(avg - t) > t * WEEKLY_CAL_TOLERANCE:
@@ -109,10 +110,15 @@ def check_goal(plan: dict, ctx: PlanContext) -> List[str]:
         for day, v in sorted(days.items()):
             if abs(v["cal"] - t) > t * DAILY_CAL_TOLERANCE:
                 errors.append(f"{WEEKDAYS[day]} has {v['cal']} calories; the target is {t} (+/-{DAILY_CAL_TOLERANCE:.0%} per day).")
-    if ctx.goal == "high_protein":
+    target = protein_target(ctx)
+    if target is not None:
         avg = sum(v["pro"] for v in days.values()) / len(days)
-        if avg < HIGH_PROTEIN_DAILY_G:
-            errors.append(f"Average protein is {avg:.0f}g/day; a high-protein goal needs at least {HIGH_PROTEIN_DAILY_G}g/day.")
+        if avg < target:
+            errors.append(f"Average protein is {avg:.0f}g/day; your protein target is at least {target}g/day.")
+        if ctx.protein_target is not None:
+            for day, values in sorted(days.items()):
+                if values['pro'] < target:
+                    errors.append(f"{WEEKDAYS[day]} has {values['pro']:.0f}g protein; your target is at least {target}g/day.")
     return errors
 
 
