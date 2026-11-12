@@ -1,0 +1,230 @@
+[
+  {
+    "budget": 50,
+    "restrictions": [],
+    "seed": 1,
+    "checkout": 31.7,
+    "portion": 23.87,
+    "recipes": 3,
+    "ingredients": 8,
+    "max_repeats": 7,
+    "calories": 1297,
+    "protein": 47.6,
+    "hard": [],
+    "soft": [
+      "Average daily calories are 1297; the target is 2000 (+/-10% over the week).",
+      "Monday has 1297 calories; the target is 2000 (+/-30% per day).",
+      "Tuesday has 1297 calories; the target is 2000 (+/-30% per day).",
+      "Wednesday has 1297 calories; the target is 2000 (+/-30% per day).",
+      "Thursday has 1297 calories; the target is 2000 (+/-30% per day).",
+      "Friday has 1297 calories; the target is 2000 (+/-30% per day).",
+      "Saturday has 1297 calories; the target is 2000 (+/-30% per day).",
+      "Sunday has 1297 calories; the target is 2000 (+/-30% per day)."
+    ],
+    "seconds": 0.868
+  },
+  {
+    "budget": 50,
+    "restrictions": [],
+    "seed": 23,
+    "checkout": 31.7,
+    "portion": 23.87,
+    "recipes": 3,
+    "ingredients": 8,
+    "max_repeats": 7,
+    "calories": 1297,
+    "protein": 47.6,
+    "hard": [],
+    "soft": [
+      "Average daily calories are 1297; the target is 2000 (+/-10% over the week).",
+      "Monday has 1297 calories; the target is 2000 (+/-30% per day).",
+      "Tuesday has 1297 calories; the target is 2000 (+/-30% per day).",
+      "Wednesday has 1297 calories; the target is 2000 (+/-30% per day).",
+      "Thursday has 1297 calories; the target is 2000 (+/-30% per day).",
+      "Friday has 1297 calories; the target is 2000 (+/-30% per day).",
+      "Saturday has 1297 calories; the target is 2000 (+/-30% per day).",
+      "Sunday has 1297 calories; the target is 2000 (+/-30% per day)."
+    ],
+    "seconds": 0.795
+  },
+  {
+    "budget": 50,
+    "restrictions": [
+      "vegan"
+    ],
+    "seed": 1,
+    "checkout": 33.94,
+    "portion": 26.6,
+    "recipes": 3,
+    "ingredients": 9,
+    "max_repeats": 7,
+    "calories": 1173,
+    "protein": 41.3,
+    "hard": [],
+    "soft": [
+      "Average daily calories are 1173; the target is 2000 (+/-10% over the week).",
+      "Monday has 1173 calories; the target is 2000 (+/-30% per day).",
+      "Tuesday has 1173 calories; the target is 2000 (+/-30% per day).",
+      "Wednesday has 1173 calories; the target is 2000 (+/-30% per day).",
+      "Thursday has 1173 calories; the target is 2000 (+/-30% per day).",
+      "Friday has 1173 calories; the target is 2000 (+/-30% per day).",
+      "Saturday has 1173 calories; the target is 2000 (+/-30% per day).",
+      "Sunday has 1173 calories; the target is 2000 (+/-30% per day)."
+    ],
+    "seconds": 0.692
+  },
+  {
+    "budget": 50,
+    "restrictions": [
+      "vegan"
+    ],
+    "seed": 23,
+    "checkout": 33.94,
+    "portion": 26.6,
+    "recipes": 3,
+    "ingredients": 9,
+    "max_repeats": 7,
+    "calories": 1173,
+    "protein": 41.3,
+    "hard": [],
+    "soft": [
+      "Average daily calories are 1173; the target is 2000 (+/-10% over the week).",
+      "Monday has 1173 calories; the target is 2000 (+/-30% per day).",
+      "Tuesday has 1173 calories; the target is 2000 (+/-30% per day).",
+      "Wednesday has 1173 calories; the target is 2000 (+/-30% per day).",
+      "Thursday has 1173 calories; the target is 2000 (+/-30% per day).",
+      "Friday has 1173 calories; the target is 2000 (+/-30% per day).",
+      "Saturday has 1173 calories; the target is 2000 (+/-30% per day).",
+      "Sunday has 1173 calories; the target is 2000 (+/-30% per day)."
+    ],
+    "seconds": 0.691
+  },
+  {
+    "budget": 100,
+    "restrictions": [],
+    "seed": 1,
+    "checkout": 92.72,
+    "portion": 67.5,
+    "recipes": 6,
+    "ingredients": 16,
+    "max_repeats": 5,
+    "calories": 1998,
+    "protein": 107.0,
+    "hard": [],
+    "soft": [],
+    "seconds": 0.109
+  },
+  {
+    "budget": 100,
+    "restrictions": [],
+    "seed": 23,
+    "checkout": 91.92,
+    "portion": 69.2,
+    "recipes": 6,
+    "ingredients": 16,
+    "max_repeats": 4,
+    "calories": 1993,
+    "protein": 109.5,
+    "hard": [],
+    "soft": [],
+    "seconds": 0.053
+  },
+  {
+    "budget": 100,
+    "restrictions": [
+      "vegan"
+    ],
+    "seed": 1,
+    "checkout": 74.86,
+    "portion": 52.94,
+    "recipes": 6,
+    "ingredients": 21,
+    "max_repeats": 5,
+    "calories": 2018,
+    "protein": 116.9,
+    "hard": [],
+    "soft": [],
+    "seconds": 0.062
+  },
+  {
+    "budget": 100,
+    "restrictions": [
+      "vegan"
+    ],
+    "seed": 23,
+    "checkout": 74.86,
+    "portion": 52.94,
+    "recipes": 6,
+    "ingredients": 21,
+    "max_repeats": 5,
+    "calories": 2018,
+    "protein": 116.9,
+    "hard": [],
+    "soft": [],
+    "seconds": 0.064
+  },
+  {
+    "budget": 150,
+    "restrictions": [],
+    "seed": 1,
+    "checkout": 92.72,
+    "portion": 67.5,
+    "recipes": 6,
+    "ingredients": 16,
+    "max_repeats": 5,
+    "calories": 1998,
+    "protein": 107.0,
+    "hard": [],
+    "soft": [],
+    "seconds": 0.103
+  },
+  {
+    "budget": 150,
+    "restrictions": [],
+    "seed": 23,
+    "checkout": 91.92,
+    "portion": 69.2,
+    "recipes": 6,
+    "ingredients": 16,
+    "max_repeats": 4,
+    "calories": 1993,
+    "protein": 109.5,
+    "hard": [],
+    "soft": [],
+    "seconds": 0.052
+  },
+  {
+    "budget": 150,
+    "restrictions": [
+      "vegan"
+    ],
+    "seed": 1,
+    "checkout": 74.86,
+    "portion": 52.94,
+    "recipes": 6,
+    "ingredients": 21,
+    "max_repeats": 5,
+    "calories": 2018,
+    "protein": 116.9,
+    "hard": [],
+    "soft": [],
+    "seconds": 0.063
+  },
+  {
+    "budget": 150,
+    "restrictions": [
+      "vegan"
+    ],
+    "seed": 23,
+    "checkout": 74.86,
+    "portion": 52.94,
+    "recipes": 6,
+    "ingredients": 21,
+    "max_repeats": 5,
+    "calories": 2018,
+    "protein": 116.9,
+    "hard": [],
+    "soft": [],
+    "seconds": 0.062
+  }
+]

@@ -75,6 +75,8 @@ def build_context(db: Session, user: User, llm, seed: int = 0, week_start=None) 
     if checkin and checkin.variety == "repetitive":
         names = [m.name for m in db.scalars(select(Meal).where(Meal.plan_id == checkin.plan_id))]
         avoid = sorted({n for n in names if names.count(n) >= 2})
+    if prev and prev.status == 'ok':
+        avoid = sorted(set(avoid) | {meal.name for meal in prev.meals if not meal.pinned})
     pinned = []
     if same_week and prev.status == "ok":
         for m in prev.meals:
@@ -120,7 +122,7 @@ def build_context(db: Session, user: User, llm, seed: int = 0, week_start=None) 
 
 def plan_settings(ctx: PlanContext) -> dict:
     return dict(restrictions=list(ctx.restrictions),excluded=list(ctx.excluded),pantry=list(ctx.pantry),preference_warnings=list(ctx.preference_warnings),prep_style=ctx.prep_style, prep_days=list(ctx.prep_days), prep_minutes=ctx.prep_minutes,
-                goal=ctx.goal, calorie_target=ctx.calorie_target, protein_target=ctx.protein_target, equipment=ctx.equipment, cooking_skill=ctx.cooking_skill,
+                quality=dict(ctx.quality_metrics), goal=ctx.goal, calorie_target=ctx.calorie_target, protein_target=ctx.protein_target, equipment=ctx.equipment, cooking_skill=ctx.cooking_skill,
                 allow_freezer=ctx.allow_freezer, price_offers=ctx.price_offers, checkout_budget=ctx.checkout_budget, earliest_day=ctx.earliest_day, earliest_minute=ctx.earliest_minute, external_slots=ctx.external_slots, cooking_windows=ctx.cooking_windows, meal_times=ctx.meal_times, week_start=ctx.week_start, allow_pre_week=ctx.allow_pre_week)
 
 
@@ -243,6 +245,18 @@ def swap_meal(db: Session, user: User, llm, meal: Meal) -> Meal:
 
 def recompute_totals(plan: Plan) -> None:
     plan.total_cost = round(sum(m.cost for m in plan.meals), 2)
+    from app.services.planning_quality import metrics
+    context=plan_ctx(plan)
+    settings=dict(plan.settings or {})
+    try:
+        detail=metrics({'meals':[meal.as_dict() for meal in plan.meals]},context)
+        settings['checkout_total']=detail['checkout']
+        if settings.get('quality'):
+            settings['quality']=dict(settings['quality'],recipes=detail['recipes'],ingredients=detail['ingredients'],max_repeats=detail['max_repeats'],checkout=detail['checkout'])
+    except ValueError:
+        settings.pop('checkout_total',None)
+        settings.pop('quality',None)
+    plan.settings=settings
 
 
 def set_day_skipped(db: Session, plan: Plan, weekday: int, skipped: bool) -> None:

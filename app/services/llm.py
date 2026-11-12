@@ -60,10 +60,15 @@ class FakeLLM:
 
     # -- plan generation ----------------------------------------------------------------
     def generate_plan(self, ctx: PlanContext, feedback=()) -> Dict:
+        from app.services.planning_quality import improve_plan
+        return improve_plan(self._generate(ctx, feedback), ctx, RECIPES)
+
+    def _generate(self, ctx: PlanContext, feedback=()) -> Dict:
         """Pick meals ignoring *when* they are cooked, schedule the cooking, and judge the result by every soft goal
         (cooking time, calories, protein). If it isn't clean, weigh cooking time differently or re-roll the dice,
         and keep the best candidate seen."""
         best = None
+        fallback_tried = False
         for reroll in range(3):
             for lam in (0.0, 0.03, 0.08, 0.2, 0.5):
                 plan = self._pick(ctx, lam, ctx.seed + reroll * 7919)
@@ -80,7 +85,12 @@ class FakeLLM:
                     best = (key, plan)
                 if not hard and not issues:
                     return plan
-        if best and check_checkout_budget(best[1],ctx):
+            if reroll == 0 and best and check_checkout_budget(best[1],ctx):
+                from app.services.budget_search import affordable_fallback
+                fallback_tried = True
+                fallback = affordable_fallback(ctx,RECIPES)
+                if fallback is not None:return fallback
+        if not fallback_tried and best and check_checkout_budget(best[1],ctx):
             from app.services.budget_search import affordable_fallback
             fallback=affordable_fallback(ctx,RECIPES)
             if fallback is not None:return fallback
@@ -134,17 +144,17 @@ class FakeLLM:
             for r in allowed:
                 ings = [i["name"].lower() for i in r["ingredients"]]
                 v = 2.0 * sum(i in pantry for i in ings) + 1.5 * sum(i in leftovers for i in ings)
-                v += 0.8 * sum(1 for i in ings if used[i] > 0)
+                v += 0.35 * sum(1 for i in ings if used[i] > 0)
                 v += 3.0 if r["name"] in ctx.liked else 0
                 v -= 2.5 if r["name"] in ctx.avoid else 0
                 n = times[r["name"]]  # a little repetition batches well; a lot is boring
-                v += 0.8 if 1 <= n <= 3 else (-2.5 * (n - 3) if n > 3 else 0)
+                v += 1.2 if n == 0 else (-1.0 * n if n <= 3 else -3.5 * (n - 3))
                 v += rng.random() * 1.2
                 if target_pro is not None:
                     v += r["protein"] / 15
                 if target_cal:
                     v -= abs(r["calories"] - target_cal / 3.0) / 100.0
-                sc[r["name"]] = v - 0.25 * r["cost"] - lam * r["cook_minutes"]
+                sc[r["name"]] = v - lam * r["cook_minutes"]
 
             cands = []
             for slot in open_today:
@@ -188,16 +198,17 @@ def _day(ctx: PlanContext, weekday: int):
 # ----------------------------------------------------------------------------- real
 
 SYSTEM = """You are the planning engine of PlateJoy, a weekly meal planner for university students.
-Return ONLY a JSON object (no prose, no markdown fences) of the form:
-{"meals": [{"day": 0-6 (0=Monday), "slot": "breakfast"|"lunch"|"dinner", "name": str, "cook_minutes": int,
-  "calories": int, "protein": number (grams), "cost": number (USD, must equal the sum of ingredient costs),
-  "steps": [str], "ingredients": [{"name": str, "quantity": number, "unit": str,
-  "section": "produce"|"dairy"|"meat"|"seafood"|"bakery"|"pantry"|"frozen"|"other", "cost": number}]}]}
+Choose only the approved recipe names for each required slot. Return ONLY JSON:
+{"meals": [{"day": 0-6 (0=Monday), "slot": "breakfast"|"lunch"|"dinner", "name": "approved recipe name"}]}
+The server supplies trusted ingredients, quantities, costs, steps and nutrients.
+Do not invent recipes, edit portion sizes or supply your own nutrition values.
 
 HARD rules (a plan breaking any of these is thrown away):
 - exactly one meal per slot per active day: return every (day, slot) listed in required_meals, nothing
   missing, nothing extra (skipped days get no meals);
-- the sum of all ingredient costs must not exceed the weekly budget;
+- the estimated shopping total after pantry deductions must not exceed the weekly budget;
+  consider shopping_cost_once estimates and shared ingredients when checkout_budget is enabled;
+  these per-dish estimates are not additive basket totals, and portion costs are not shopping totals;
 - never use an ingredient that violates a restriction or an excluded ingredient;
 - keep pinned meals exactly as given; do not use the disliked meal names.
 
@@ -206,7 +217,7 @@ BEST-EFFORT goals (misses are shown to the user as warnings, so try hard):
 - hit the calorie target (weekly average within 10%, each day within 30%) AND, when selected,
   reach at least protein_target grams each day. A legacy high_protein goal with no protein_target means 75g/day;
 - calorie_target is per DAY: the three meals of every day must add up to about that number (2000 kcal means
-  ~650 per meal, not 300). Size portions up, and add rice, pasta, oil, nuts or sides to reach it;
+  ~650 per meal, not 300). Choose appropriately sized approved dishes to reach it;
 - variety: do not repeat a dish more than 3 times in the week unless batching helps the schedule;
 - prefer meals that share ingredients and use pantry items and leftovers first.
 
@@ -267,16 +278,34 @@ class AnthropicLLM:
         payload = {"context": asdict(ctx), "cook_capacity_minutes": {str(k): v for k, v in sorted(caps.items())},
                    "feedback_from_previous_attempt": list(feedback)}
         from app.services.nutrition import catalog_plan
-        self._tight = getattr(self, '_tight', False) or any('budget' in str(f).lower() for f in feedback)  # sticky for this generation
-        over_budget = self._tight  # retry after a budget miss: cheapest 2 recipes per slot
-        pool = sorted(RECIPES, key=lambda r: r['cost'])
-        by_slot = {sl: [r["name"] for r in pool if sl in r["slots"]][: 2 if over_budget else None] for sl in SLOTS}
-        allowed = {n for names in by_slot.values() for n in names}
-        payload['approved_recipes'] = [{k: v for k, v in r.items() if k in {'name', 'slots', 'calories', 'protein', 'cost', 'cook_minutes'}} for r in RECIPES if r['name'] in allowed]
-        payload['approved_names_by_slot'] = by_slot  # a recipe may only be used for a slot listed here
+        from app.services.planning_quality import eligible_recipes, candidate_pool, variety_target
+        pool = candidate_pool(ctx, eligible_recipes(ctx, RECIPES),
+                              retry_budget=any('budget' in str(item).lower() for item in feedback))
+        by_slot = {slot: [recipe['name'] for recipe in options] for slot, options in pool.items()}
+        for meal in ctx.pinned:
+            if meal['name'] not in by_slot[meal['slot']]:
+                by_slot[meal['slot']].append(meal['name'])
+        allowed = {name for names in by_slot.values() for name in names}
+        offered={recipe['name']:recipe for options in pool.values() for recipe in options}
+        from app.services.pricing import plan_checkout
+        payload['approved_recipes'] = []
+        for recipe in offered.values():
+            row={key:value for key,value in recipe.items()
+                 if key in {'name','slots','calories','protein','cost','cook_minutes'}}
+            row['ingredients']=[item['name'] for item in recipe['ingredients']]
+            # Useful basket context without transmitting complete recipe steps,
+            # nutrient tables or every package offer on every paid request.
+            row['shopping_cost_once']=plan_checkout([recipe],ctx.pantry,ctx.price_offers)[0]
+            payload['approved_recipes'].append(row)
+        payload['approved_names_by_slot'] = by_slot
+        payload['planning_objectives'] = dict(variety_target=variety_target(ctx),
+            preferred_checkout_range=[round(.75*ctx.budget,2),round(.95*ctx.budget,2)],
+            hard_budget=ctx.budget, seed=ctx.seed,
+            note='Use budget for varied, substantial meals and all selected nutrition goals. The range is a preference, not a minimum; pantry stock and partial weeks can make shopping cheaper.')
         required = [{'day': d.weekday, 'slot': slot} for d in ctx.active_days() for slot in ctx.slots_for(d.weekday)]
         payload['required_slots'] = required
-        prompt = SYSTEM + "\nSelect ONLY names from approved_names_by_slot[slot] for that slot. Return {\"meals\":[{\"day\":0,\"slot\":\"breakfast\",\"name\":\"approved recipe name\"}]}. Do not generate nutrition, ingredients or instructions; the server supplies those. Cover required_slots exactly. Groceries are bought in whole packages, so every distinct recipe adds shopping cost: choose only about 5-8 different recipes and repeat them across the week (batch cooking), keeping the total well under the weekly budget in context.budget. If feedback_from_previous_attempt mentions the budget, use fewer and cheaper recipes."
+        prompt = SYSTEM + "\nSelect ONLY names from approved_names_by_slot[slot]. Return {\"meals\":[{\"day\":0,\"slot\":\"breakfast\",\"name\":\"approved recipe name\"}]}. The server supplies trusted nutrition, ingredients and steps. Cover required_slots exactly. Prioritize every selected nutrition target, a variety of dishes and produce, preferences and workable prep. Use planning_objectives.variety_target as guidance; avoid repeating a dish more than three times unless the schedule, diet or a pin requires it. Use the available budget to improve variety and target fit; do not minimize spending or force needless spending. Whole-package shopping, after pantry deductions, must not exceed the hard budget; portion costs do not equal shopping totals. The preferred checkout range is a weak preference, not a required floor. On a budget retry reduce the package basket while preserving nutrition and variety. Use the supplied seed and changed shortlist to explore different recipes on regeneration."
+
         max_tokens = int(os.environ.get("LLM_MAX_OUTPUT_TOKENS", "5000"))
         pinned = {(m['day'], m['slot']) for m in ctx.pinned}
 
@@ -308,7 +337,8 @@ class AnthropicLLM:
             if key in wanted and key not in seen:
                 seen.add(key)
                 final.append(m)
-        return catalog_plan({'meals': final}, ctx)
+        from app.services.planning_quality import improve_plan
+        return improve_plan(catalog_plan({'meals': final}, ctx), ctx, RECIPES)
 
     def interpret_preferences(self, text: str) -> Dict:
         if not (text or "").strip():

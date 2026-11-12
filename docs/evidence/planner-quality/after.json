@@ -1,0 +1,194 @@
+[
+  {
+    "budget": 50,
+    "restrictions": [],
+    "seed": 1,
+    "checkout": 49.1,
+    "portion": 33.4,
+    "recipes": 4,
+    "ingredients": 13,
+    "max_repeats": 7,
+    "calories": 1991,
+    "protein": 82.2,
+    "hard": [],
+    "soft": [],
+    "seconds": 0.721
+  },
+  {
+    "budget": 50,
+    "restrictions": [],
+    "seed": 23,
+    "checkout": 49.27,
+    "portion": 35.49,
+    "recipes": 4,
+    "ingredients": 13,
+    "max_repeats": 7,
+    "calories": 2056,
+    "protein": 82.0,
+    "hard": [],
+    "soft": [],
+    "seconds": 0.61
+  },
+  {
+    "budget": 50,
+    "restrictions": [
+      "vegan"
+    ],
+    "seed": 1,
+    "checkout": 49.47,
+    "portion": 34.76,
+    "recipes": 5,
+    "ingredients": 17,
+    "max_repeats": 7,
+    "calories": 1861,
+    "protein": 68.9,
+    "hard": [],
+    "soft": [],
+    "seconds": 0.744
+  },
+  {
+    "budget": 50,
+    "restrictions": [
+      "vegan"
+    ],
+    "seed": 23,
+    "checkout": 49.28,
+    "portion": 34.21,
+    "recipes": 5,
+    "ingredients": 15,
+    "max_repeats": 7,
+    "calories": 1985,
+    "protein": 82.4,
+    "hard": [],
+    "soft": [],
+    "seconds": 0.819
+  },
+  {
+    "budget": 100,
+    "restrictions": [],
+    "seed": 1,
+    "checkout": 98.43,
+    "portion": 50.77,
+    "recipes": 9,
+    "ingredients": 27,
+    "max_repeats": 6,
+    "calories": 1803,
+    "protein": 82.4,
+    "hard": [],
+    "soft": [],
+    "seconds": 0.737
+  },
+  {
+    "budget": 100,
+    "restrictions": [],
+    "seed": 23,
+    "checkout": 97.32,
+    "portion": 53.11,
+    "recipes": 10,
+    "ingredients": 35,
+    "max_repeats": 3,
+    "calories": 1864,
+    "protein": 94.6,
+    "hard": [],
+    "soft": [],
+    "seconds": 0.845
+  },
+  {
+    "budget": 100,
+    "restrictions": [
+      "vegan"
+    ],
+    "seed": 1,
+    "checkout": 96.86,
+    "portion": 47.24,
+    "recipes": 12,
+    "ingredients": 34,
+    "max_repeats": 3,
+    "calories": 2003,
+    "protein": 80.5,
+    "hard": [],
+    "soft": [],
+    "seconds": 1.188
+  },
+  {
+    "budget": 100,
+    "restrictions": [
+      "vegan"
+    ],
+    "seed": 23,
+    "checkout": 98.76,
+    "portion": 53.03,
+    "recipes": 12,
+    "ingredients": 30,
+    "max_repeats": 3,
+    "calories": 2002,
+    "protein": 88.0,
+    "hard": [],
+    "soft": [],
+    "seconds": 1.051
+  },
+  {
+    "budget": 150,
+    "restrictions": [],
+    "seed": 1,
+    "checkout": 127.31,
+    "portion": 58.81,
+    "recipes": 14,
+    "ingredients": 42,
+    "max_repeats": 3,
+    "calories": 2005,
+    "protein": 76.3,
+    "hard": [],
+    "soft": [],
+    "seconds": 0.884
+  },
+  {
+    "budget": 150,
+    "restrictions": [],
+    "seed": 23,
+    "checkout": 118.9,
+    "portion": 58.45,
+    "recipes": 14,
+    "ingredients": 39,
+    "max_repeats": 2,
+    "calories": 1992,
+    "protein": 90.7,
+    "hard": [],
+    "soft": [],
+    "seconds": 0.665
+  },
+  {
+    "budget": 150,
+    "restrictions": [
+      "vegan"
+    ],
+    "seed": 1,
+    "checkout": 117.63,
+    "portion": 56.42,
+    "recipes": 14,
+    "ingredients": 39,
+    "max_repeats": 3,
+    "calories": 2002,
+    "protein": 77.8,
+    "hard": [],
+    "soft": [],
+    "seconds": 0.941
+  },
+  {
+    "budget": 150,
+    "restrictions": [
+      "vegan"
+    ],
+    "seed": 23,
+    "checkout": 127.35,
+    "portion": 57.33,
+    "recipes": 14,
+    "ingredients": 42,
+    "max_repeats": 3,
+    "calories": 1999,
+    "protein": 75.9,
+    "hard": [],
+    "soft": [],
+    "seconds": 0.873
+  }
+]

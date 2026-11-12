@@ -6,7 +6,7 @@ import pytest
 from app.models import Meal, Plan
 from app.services.llm import FakeLLM, get_llm
 from tests.helpers import signup
-from tests.test_plan import Scripted, ctx, scale_costs
+from tests.test_plan import Scripted, ctx, scale_costs, good_plan
 
 
 @pytest.fixture()
@@ -23,7 +23,7 @@ def plan_ids(client):
 
 
 def test_regenerate_over_budget_is_retried_then_accepted(planned):
-    good = FakeLLM().generate_plan(ctx())
+    good = good_plan()
     llm = Scripted(scale_costs(good, 10), good)
     planned.app.dependency_overrides[get_llm] = lambda: llm
     planned.post("/plan/regenerate")

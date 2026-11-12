@@ -86,7 +86,8 @@ def home(request: Request, user=Depends(current_user_optional), db: Session = De
     n = len(active_days)
     stats = dict(calories=round(sum(m.calories for m in meals) / n), protein=round(sum(m.protein for m in meals) / n),
                  cooked=sum(m.status == "cooked" for m in meals), skipped=sum(m.status == "skipped" for m in meals), total=len(meals),
-                 pct=min(100, round(plan.total_cost / plan.budget * 100)) if plan.budget else 0)
+                 checkout=st.get("checkout_total",plan.total_cost),checkout_known="checkout_total" in st,
+                 pct=min(100, round(st.get("checkout_total",plan.total_cost) / plan.budget * 100)) if plan.budget else 0)
     from app.services.verification import summary
     return render(request, "home.html", user, verification=summary(plan),columns=columns, hours=hour_labels(start_hour,hour_end=end_hour), hour_px=HOUR_PX, grid_px=(end_hour - start_hour) * HOUR_PX, week_title=week_title(start), stats=stats,
                   cook_plan=cook_plan, sharing=sharing_stats(m.as_dict() for m in meals), checkin_due=checkin_due(plan, done),

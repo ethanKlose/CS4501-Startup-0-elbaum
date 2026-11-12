@@ -83,6 +83,8 @@ class Scripted:
 
 
 def good_plan(**kw):
+    # This fixture is replayed through HTTP routes, which enforce whole packages.
+    kw.setdefault("checkout_budget", True)
     return FakeLLM().generate_plan(ctx(**kw))
 
 

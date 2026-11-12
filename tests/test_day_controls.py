@@ -140,6 +140,11 @@ def test_failed_regeneration_keeps_previous_valid_plan(planned):
 
 
 def test_swap_changes_only_one_meal(planned):
+    # This test checks isolation of a successful swap. A basket already near
+    # $100 may have no different recipe that fits while the other 20 stay pinned.
+    # Give the replacement headroom; separate tests enforce hard budget failure.
+    from tests.helpers import set_budget
+    set_budget(planned, 200)
     before = newest_meals(planned)
     target = before[(2, "dinner")]
     planned.post(f"/meals/{target.id}/swap")

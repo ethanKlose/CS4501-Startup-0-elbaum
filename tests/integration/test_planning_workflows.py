@@ -7,6 +7,7 @@ import pytest
 from sqlalchemy import select
 
 from app.models import DaySetting, Plan, Profile
+from app.services.diet import meal_violations
 from tests.integration.helpers import generate, onboard, post, shopping, snapshot
 
 pytestmark = pytest.mark.integration
@@ -58,8 +59,9 @@ def test_selected_diet_survives_survey_generation_and_regeneration(application, 
     saved = snapshot(application)
     assert saved["id"] != original["id"] and len(saved["meals"]) == 21
     assert saved["settings"]["restrictions"] == [restriction]
-    assert not any(term in ingredient["name"].lower() for m in saved["meals"]
-                   for ingredient in m["ingredients"] for term in forbidden)
+    # Whole-word dietary rules distinguish soy milk from dairy and eggplant
+    # from eggs. Literal substring checks falsely reject valid substitutes.
+    assert all(not meal_violations(m, [restriction]) for m in saved["meals"])
     assert web.get(f'/plans/{original["id"]}').status_code == 200
 
 

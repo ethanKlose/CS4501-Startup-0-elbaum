@@ -33,7 +33,7 @@ def message(text):
 def valid_choices(payload):
     # A controlled provider selects catalog names; the app must supply trusted details.
     names = {"breakfast": "Overnight oats with banana", "lunch": "Hummus veggie wrap", "dinner": "Hummus veggie wrap"}
-    return {"meals": [dict(slot, name=names[slot["slot"]], calories=999999, cost=0, steps=["untrusted provider step"])
+    return {"meals": [dict(slot, name=(names[slot["slot"]] if names[slot["slot"]] in payload["approved_names_by_slot"][slot["slot"]] else payload["approved_names_by_slot"][slot["slot"]][0]), calories=999999, cost=0, steps=["untrusted provider step"])
                       for slot in payload["required_slots"]]}
 
 
@@ -99,7 +99,7 @@ def test_invalid_pick_is_repaired_for_only_missing_slot_and_saved_once(applicati
         assert db.query(Plan).count() == 1
 
 
-def test_complete_but_diet_invalid_plan_uses_outer_validation_feedback(application, web, monkeypatch):
+def test_diet_incompatible_recipe_is_not_offered_and_is_repaired_before_save(application, web, monkeypatch):
     onboard(web, restrictions_present="1", restrictions=["vegan"])
     payloads = []
     def handler(request):
@@ -107,22 +107,21 @@ def test_complete_but_diet_invalid_plan_uses_outer_validation_feedback(applicati
         payload = json.loads(body["messages"][0]["content"])
         payloads.append(payload)
         choices = valid_choices(payload)
-        if len(payloads) > 1:
+        if len(payloads) == 1:
             for meal in choices["meals"]:
                 if meal["slot"] == "breakfast":
-                    meal["name"] = "Tofu scramble"
+                    meal["name"] = "Overnight oats with banana"  # milk: not offered for vegan
         return message(json.dumps(choices))
     attach_transport(monkeypatch, handler)
     generate(web)
     saved = snapshot(application)
-    assert len(payloads) == saved["attempts"] == 2
-    assert payloads[0]["feedback_from_previous_attempt"] == []
-    assert payloads[1]["feedback_from_previous_attempt"]
-    # Complete responses skip the adapter's gap repair and reach the validator.
-    assert all(len(payload["required_slots"]) == 21 and "already_planned" not in payload for payload in payloads)
-    trace = saved["settings"]["generation"]["trace"]
-    assert trace[0]["hard_errors"] and not trace[1]["hard_errors"]
-    assert saved["settings"]["restrictions"] == ["vegan"]
+    assert "Overnight oats with banana" not in payloads[0]["approved_names_by_slot"]["breakfast"]
+    assert len(payloads) == 2 and saved["attempts"] == 1
+    assert len(payloads[0]["required_slots"]) == 21
+    assert len(payloads[1]["required_slots"]) == 7
+    assert all(slot["slot"] == "breakfast" for slot in payloads[1]["required_slots"])
+    assert "already_planned" in payloads[1]
+    assert not saved["settings"]["generation"]["trace"][0]["hard_errors"]
     assert all(meal["name"] != "Overnight oats with banana" for meal in saved["meals"])
     with application.sessions() as db:
         assert db.query(Plan).count() == 1

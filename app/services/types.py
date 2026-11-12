@@ -50,6 +50,7 @@ class PlanContext:
     preference_warnings: List[str] = field(default_factory=list)
     seed: int = 0
     protein_target: Optional[int] = None
+    quality_metrics: Dict = field(default_factory=dict)
 
     def active_days(self) -> List[DayCtx]:
         return [d for d in self.days if not d.skipped]

@@ -177,8 +177,16 @@ def test_unused_ingredients_added_to_pantry_on_checkin(planned):
     r = planned.post("/checkin", data={"bought_all": "true"})
     assert 'data-testid="leftovers"' in r.text
     pantry = pantry_names(planned)
-    uncooked_ings = {i["name"].lower() for m in ms if m.day != 0 for i in m.ingredients}
-    assert pantry and set(pantry) <= uncooked_ings
+    # Whole-package purchases also leave remainders of ingredients cooked on
+    # Monday; every saved quantity must equal purchased minus consumed stock.
+    from app.services.grocery import build_list
+    with planned.app.state.session_factory() as db:
+        plan = db.query(Plan).first()
+        purchases = (plan.settings or {})['inventory']['purchases']
+    consumed = {i['key']: i['quantity'] for i in build_list(m.as_dict() for m in cooked_only)}
+    expected = {i['name']: round(i['quantity']-consumed.get(i['key'],0),2)
+                for i in purchases if i['quantity']-consumed.get(i['key'],0) > .005}
+    assert pantry and {name: item.quantity for name,item in pantry.items()} == pytest.approx(expected, abs=.01)
     assert set(last_checkin(planned).leftovers) == set(pantry)
 
 

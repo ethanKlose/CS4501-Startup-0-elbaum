@@ -93,10 +93,10 @@
       <ul class="plain">{% for check in verification.checks %}<li><strong>{{ check.label }}:</strong> {{ check.status }}{% if check.details %}<ul>{% for detail in check.details %}<li>{{ detail }}</li>{% endfor %}</ul>{% endif %}</li>{% endfor %}</ul>
     </section>
     <section class="card side-card reveal" style="--i:1">
-      <div class="sc-head"><span>{{ icon('dollar', 16) }} Weekly budget</span><strong>${{ '%.2f' % plan.total_cost }} <small class="muted">of ${{ '%.2f' % plan.budget }}</small></strong></div>
+      <div class="sc-head"><span>{{ icon('dollar', 16) }} Weekly budget</span><strong>${{ '%.2f' % stats.checkout }} <small class="muted">of ${{ '%.2f' % plan.budget }}</small></strong></div>
       <div class="meter" role="progressbar" aria-valuenow="{{ stats.pct }}" aria-valuemin="0" aria-valuemax="100"><span style="width:{{ stats.pct }}%"></span></div>
-      <p class="muted tiny" style="margin:8px 0 0">Estimated portion cost · <span class="{% if plan.total_cost <= plan.budget %}ok{% else %}error{% endif %}">${{ '%.2f' % (plan.budget - plan.total_cost) }} left this week</span></p>
-      <p class="muted tiny">Whole-package checkout at generation: ${{ '%.2f' % plan.settings.get('checkout_total',plan.total_cost) }}. <a href="/prices">Price sources</a></p><div class="statgrid">
+      <p class="muted tiny" style="margin:8px 0 0">{{ 'Estimated whole-package shopping total' if stats.checkout_known else 'Legacy portion estimate; shopping total not recorded' }} · <span class="{% if stats.checkout <= plan.budget %}ok{% else %}error{% endif %}">${{ '%.2f' % (plan.budget - stats.checkout) }} below budget</span></p>
+      <p class="muted tiny">Portions used in meals: ${{ '%.2f' % plan.total_cost }}. Pantry stock and package leftovers explain the difference. <a href="/prices">Price sources</a></p>{% if plan.settings.get("quality") %}<p class="muted tiny">{{ plan.settings.quality.recipes }} different recipes · {{ plan.settings.quality.ingredients }} ingredients. Budget is a ceiling; variety and nutrition guide the choices.</p>{% endif %}<div class="statgrid">
         <div><b>{{ '{:,}'.format(stats.calories) }}</b><span>cal / day</span></div>
         <div><b>{{ stats.protein }}g</b><span>protein / day</span></div>
         <div><b>{{ stats.cooked }}/{{ stats.total }}</b><span>meals cooked</span></div>

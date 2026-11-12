@@ -23,8 +23,16 @@ def affordable_fallback(ctx, recipes):
     counts=Counter(s for _,s in slots)
     allowed=[apply_recipe_prices(r,ctx.price_offers) for r in recipes
              if not meal_violations(r,ctx.restrictions,ctx.excluded) and not violations(r,ctx) and r['name'] not in ctx.disliked]
+    from app.services.planning_quality import candidate_pool
+    # Swapping one slot with 20 pins has a small search space. Search every
+    # eligible recipe; a general shortlist can omit the only basket-compatible
+    # replacement when the existing shopping total is close to the ceiling.
+    if len(slots)==1:
+        shortlist={slot:[recipe for recipe in allowed if slot in recipe['slots']] for slot in SLOTS}
+    else:
+        shortlist=candidate_pool(ctx,allowed,retry_budget=True,per_slot=14)
     kinds=[s for s in SLOTS if counts[s]]
-    pools=[[r for r in allowed if s in r['slots']] for s in kinds]
+    pools=[shortlist[s] for s in kinds]
     if any(not pool for pool in pools):return None
     offers=reference_offers();offers.update(ctx.price_offers)
 
@@ -59,10 +67,18 @@ def affordable_fallback(ctx, recipes):
             if not offer:cost=math.inf;break
             q=max(0,round(q,2)-stock.get(k,0))
             cost+=math.ceil((q-1e-9)/offer['package_quantity'])*offer['package_price']
-        if cost<=ctx.budget+.001:candidates.append((round(cost,2),combo))
-    candidates.sort(key=lambda item:item[0])
+        if cost<=ctx.budget+.001:
+            calories=sum(m['calories'] for m in pins.values())+sum(r['calories']*counts[s] for s,(r,_) in zip(kinds,combo))
+            protein=sum(m['protein'] for m in pins.values())+sum(r['protein']*counts[s] for s,(r,_) in zip(kinds,combo))
+            days=max(1,len(ctx.active_days()))
+            from app.services.nutrition_goals import protein_target
+            target=protein_target(ctx)
+            gap=(abs(calories/days-ctx.calorie_target)/ctx.calorie_target if ctx.calorie_target else 0)
+            gap+=(max(0,target-protein/days)/target if target else 0)
+            candidates.append((round(cost,2),combo,gap))
+    candidates.sort(key=lambda item:(item[2],item[0]))
     best=None
-    for _,combo in candidates:
+    for _,combo,_ in candidates:
         by_slot={s:r for s,(r,_) in zip(kinds,combo)}
         meals=copy.deepcopy(list(pins.values()))
         for day,slot in slots:

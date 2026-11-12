@@ -27,6 +27,22 @@ def ctx():
     return PlanContext(budget=150, days=[DayCtx(i, 0 if i in (2, 3) else 60) for i in range(7)], prep_days=[6], prep_minutes=150)
 
 
+def offered_plan(context):
+    """The provider can only choose recipes actually present in its payload."""
+    from unittest.mock import patch
+    from app.services.catalog import RECIPES
+    from app.services.planning_quality import candidate_pool, eligible_recipes
+    pools = candidate_pool(context, eligible_recipes(context, RECIPES))
+    recipes = {}
+    for slot,options in pools.items():
+        for recipe in options:
+            if recipe['name'] not in recipes:
+                recipes[recipe['name']] = dict(recipe, slots=[])
+            recipes[recipe['name']]['slots'].append(slot)
+    with patch('app.services.llm.RECIPES', list(recipes.values())):
+        return FakeLLM()._generate(context)
+
+
 def test_extract_json_handles_fences_and_chatter():
     assert _extract_json('```json\n{"a": 1}\n```') == {"a": 1}
     assert _extract_json('Sure! Here you go: {"a": {"b": 2}} Enjoy.') == {"a": {"b": 2}}
@@ -34,7 +50,7 @@ def test_extract_json_handles_fences_and_chatter():
 
 def test_generate_plan_sends_capacity_and_feedback_and_parses():
     c = ctx()
-    plan = FakeLLM().generate_plan(c)
+    plan = offered_plan(c)
     llm = client_with("```json\n" + json.dumps(plan) + "\n```")
     out = llm.generate_plan(c, ["Missing lunch on Monday."])
     sent = llm.client.calls[0]
@@ -76,7 +92,7 @@ def test_bad_picks_are_dropped_and_gaps_are_filled_instead_of_failing_the_plan()
     from app.services.catalog import RECIPES
 
     c = ctx()
-    good = FakeLLM().generate_plan(c)["meals"]
+    good = offered_plan(c)["meals"]
     picks = [{"day": m["day"], "slot": m["slot"], "name": m["name"]} for m in good]
     broken = [dict(picks[0], name="Not a real recipe")] + picks[1:5]  # one invented name, the rest of the plan missing
     replies = [json.dumps({"meals": broken}), json.dumps({"meals": picks})]
