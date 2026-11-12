@@ -7,11 +7,11 @@ import re
 from typing import Dict, Iterable, List
 
 MEAT = ["chicken", "beef", "pork", "turkey", "bacon", "sausage", "ham", "lamb", "steak", "veal", "meatball", "meatballs", "sirloin", "gelatin"]
-FISH = ["fish", "salmon", "tuna", "cod", "tilapia", "anchovy", "anchovies", "sardine", "sardines", "trout", "halibut", "mahi"]
+FISH = ["fish", "salmon", "tuna", "cod", "tilapia", "anchovy", "anchovies", "sardine", "sardines", "trout", "halibut", "mahi", "mackerel", "herring", "pollock", "haddock"]
 SHELLFISH = ["shrimp", "crab", "lobster", "clam", "clams", "mussel", "mussels", "scallop", "scallops", "prawn", "prawns", "oyster", "oysters"]
 DAIRY = ["milk", "cheese", "cheddar", "mozzarella", "parmesan", "feta", "yogurt", "butter", "cream", "whey", "paneer", "ghee", "cheeses"]
 EGG = ["egg", "eggs", "mayo", "mayonnaise"]
-GLUTEN = ["wheat", "bread", "pasta", "spaghetti", "flour", "tortilla", "tortillas", "couscous", "barley", "rye", "bun", "bagel", "noodle", "noodles", "pita", "naan", "seitan", "farro", "granola", "soy sauce"]
+GLUTEN = ["wheat", "bread", "pasta", "spaghetti", "flour", "tortilla", "tortillas", "couscous", "barley", "rye", "bun", "bagel", "noodle", "noodles", "pita", "naan", "seitan", "farro", "bulgur", "granola", "soy sauce"]
 NUTS = ["peanut", "peanuts", "almond", "almonds", "walnut", "walnuts", "cashew", "cashews", "pecan", "pecans", "hazelnut", "hazelnuts", "pistachio", "pistachios", "nut", "nuts"]
 PORK_HALAL = ["pork", "bacon", "ham", "lard", "gelatin", "wine", "beer", "sausage"]
 
@@ -20,6 +20,8 @@ GROUPS: Dict[str, List[str]] = {
     "meat": MEAT, "fish": FISH, "seafood": FISH + SHELLFISH, "shellfish": SHELLFISH,
     "dairy": DAIRY, "egg": EGG, "eggs": EGG, "gluten": GLUTEN, "nuts": NUTS, "nut": NUTS,
     "pork": PORK_HALAL, "honey": ["honey"],
+    "soy": ["soy", "edamame", "tofu", "tempeh"],
+    "sesame": ["sesame", "tahini", "hummus"],
 }
 
 RESTRICTION_TERMS: Dict[str, List[str]] = {
@@ -31,6 +33,7 @@ RESTRICTION_TERMS: Dict[str, List[str]] = {
     "shellfish_allergy": SHELLFISH,
     "egg_free": EGG,
     "halal": PORK_HALAL,
+    "sesame_allergy": GROUPS["sesame"],
 }
 
 # Exempt only the specific word replaced by a known substitute. Removing a
@@ -41,6 +44,8 @@ WORD_EXCEPTIONS = {
     "cream": ["cream of tartar", "coconut cream"],
     "nut": ["nut-free", "nut free"],
     "nuts": ["nut-free", "nut free"],
+    "tortilla": ["corn tortilla", "corn tortillas"],
+    "tortillas": ["corn tortilla", "corn tortillas"],
 }
 
 

@@ -1,0 +1,2850 @@
+{
+  "note": "Original student recipe templates. Nutrients are computed from sourced ingredient records. Costs use separate explicit demo package estimates; not live retailer quotes. Grain quantities marked cup use cooked measures.",
+  "recipes": [
+    {
+      "name": "Strawberry chia overnight oats",
+      "slots": [
+        "breakfast"
+      ],
+      "cook_minutes": 0,
+      "ingredients": [
+        {
+          "name": "rolled oats",
+          "quantity": 0.75,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.51
+        },
+        {
+          "name": "soy milk",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "dairy",
+          "cost": 0.45
+        },
+        {
+          "name": "strawberries",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.33
+        },
+        {
+          "name": "chia seeds",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.26
+        },
+        {
+          "name": "maple syrup",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.3
+        }
+      ],
+      "steps": [
+        "Stir oats, soy milk, chia and syrup in a jar.",
+        "Refrigerate overnight; top with sliced strawberries."
+      ]
+    },
+    {
+      "name": "Raspberry ricotta breakfast toast",
+      "slots": [
+        "breakfast"
+      ],
+      "cook_minutes": 5,
+      "ingredients": [
+        {
+          "name": "whole wheat bread",
+          "quantity": 3,
+          "unit": "slice",
+          "section": "bakery",
+          "cost": 0.6
+        },
+        {
+          "name": "ricotta cheese",
+          "quantity": 0.5,
+          "unit": "cup",
+          "section": "dairy",
+          "cost": 1.17
+        },
+        {
+          "name": "raspberries",
+          "quantity": 0.5,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.43
+        },
+        {
+          "name": "honey",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.2
+        }
+      ],
+      "steps": [
+        "Toast bread.",
+        "Spread ricotta; add raspberries and honey."
+      ]
+    },
+    {
+      "name": "Mango soy protein smoothie",
+      "slots": [
+        "breakfast"
+      ],
+      "cook_minutes": 3,
+      "ingredients": [
+        {
+          "name": "soy milk",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "dairy",
+          "cost": 0.45
+        },
+        {
+          "name": "soy protein powder",
+          "quantity": 1,
+          "unit": "scoop",
+          "section": "pantry",
+          "cost": 1.0
+        },
+        {
+          "name": "mango",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.5
+        },
+        {
+          "name": "rolled oats",
+          "quantity": 0.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.34
+        },
+        {
+          "name": "flaxseed",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.17
+        }
+      ],
+      "steps": [
+        "Blend soy milk, protein powder, mango, oats and flaxseed until smooth."
+      ]
+    },
+    {
+      "name": "Blackberry flax yogurt bowl",
+      "slots": [
+        "breakfast"
+      ],
+      "cook_minutes": 0,
+      "ingredients": [
+        {
+          "name": "greek yogurt",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "dairy",
+          "cost": 1.0
+        },
+        {
+          "name": "blackberries",
+          "quantity": 0.75,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 2.18
+        },
+        {
+          "name": "rolled oats",
+          "quantity": 0.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.34
+        },
+        {
+          "name": "flaxseed",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.17
+        },
+        {
+          "name": "honey",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.2
+        }
+      ],
+      "steps": [
+        "Spoon yogurt into a bowl.",
+        "Stir in oats and flaxseed; top with blackberries and honey."
+      ]
+    },
+    {
+      "name": "Pear walnut porridge",
+      "slots": [
+        "breakfast"
+      ],
+      "cook_minutes": 10,
+      "ingredients": [
+        {
+          "name": "rolled oats",
+          "quantity": 0.75,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.51
+        },
+        {
+          "name": "milk",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "dairy",
+          "cost": 0.7
+        },
+        {
+          "name": "pear",
+          "quantity": 1,
+          "unit": "each",
+          "section": "produce",
+          "cost": 1.16
+        },
+        {
+          "name": "walnuts",
+          "quantity": 2,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.39
+        },
+        {
+          "name": "maple syrup",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.3
+        }
+      ],
+      "steps": [
+        "Simmer oats in milk until soft.",
+        "Slice pear; serve over oats with walnuts and syrup."
+      ]
+    },
+    {
+      "name": "Pistachio kiwi yogurt bowl",
+      "slots": [
+        "breakfast"
+      ],
+      "cook_minutes": 0,
+      "ingredients": [
+        {
+          "name": "greek yogurt",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "dairy",
+          "cost": 1.0
+        },
+        {
+          "name": "kiwi",
+          "quantity": 2,
+          "unit": "each",
+          "section": "produce",
+          "cost": 1.33
+        },
+        {
+          "name": "pistachios",
+          "quantity": 2,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.54
+        },
+        {
+          "name": "granola",
+          "quantity": 0.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 1.0
+        }
+      ],
+      "steps": [
+        "Peel and slice kiwi.",
+        "Layer yogurt, kiwi, pistachios and granola."
+      ]
+    },
+    {
+      "name": "Quinoa berry breakfast bowl",
+      "slots": [
+        "breakfast"
+      ],
+      "cook_minutes": 15,
+      "ingredients": [
+        {
+          "name": "quinoa",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 1.5
+        },
+        {
+          "name": "soy milk",
+          "quantity": 0.5,
+          "unit": "cup",
+          "section": "dairy",
+          "cost": 0.23
+        },
+        {
+          "name": "blueberries",
+          "quantity": 0.5,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.9
+        },
+        {
+          "name": "pumpkin seeds",
+          "quantity": 2,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.43
+        },
+        {
+          "name": "maple syrup",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.3
+        }
+      ],
+      "steps": [
+        "Simmer quinoa following its package directions; measure the listed amount after cooking.",
+        "Warm with soy milk; add blueberries, seeds and syrup."
+      ]
+    },
+    {
+      "name": "Millet mango breakfast porridge",
+      "slots": [
+        "breakfast"
+      ],
+      "cook_minutes": 20,
+      "ingredients": [
+        {
+          "name": "millet",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 1.0
+        },
+        {
+          "name": "soy milk",
+          "quantity": 0.75,
+          "unit": "cup",
+          "section": "dairy",
+          "cost": 0.34
+        },
+        {
+          "name": "mango",
+          "quantity": 0.75,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.12
+        },
+        {
+          "name": "chia seeds",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.26
+        },
+        {
+          "name": "maple syrup",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.3
+        }
+      ],
+      "steps": [
+        "Simmer millet following its package directions; measure after cooking.",
+        "Stir in soy milk, then top with mango, chia and syrup."
+      ]
+    },
+    {
+      "name": "Kale mushroom egg toast",
+      "slots": [
+        "breakfast"
+      ],
+      "cook_minutes": 15,
+      "ingredients": [
+        {
+          "name": "eggs",
+          "quantity": 3,
+          "unit": "each",
+          "section": "dairy",
+          "cost": 0.9
+        },
+        {
+          "name": "kale",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.83
+        },
+        {
+          "name": "cremini mushrooms",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.78
+        },
+        {
+          "name": "whole wheat bread",
+          "quantity": 2,
+          "unit": "slice",
+          "section": "bakery",
+          "cost": 0.4
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Saute mushrooms and kale in oil.",
+        "Add eggs and scramble until set.",
+        "Toast bread and serve with the scramble."
+      ]
+    },
+    {
+      "name": "Goat cheese and tomato egg plate",
+      "slots": [
+        "breakfast"
+      ],
+      "cook_minutes": 12,
+      "ingredients": [
+        {
+          "name": "eggs",
+          "quantity": 3,
+          "unit": "each",
+          "section": "dairy",
+          "cost": 0.9
+        },
+        {
+          "name": "goat cheese",
+          "quantity": 1,
+          "unit": "oz",
+          "section": "dairy",
+          "cost": 1.0
+        },
+        {
+          "name": "tomato",
+          "quantity": 1,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.5
+        },
+        {
+          "name": "whole wheat bread",
+          "quantity": 2,
+          "unit": "slice",
+          "section": "bakery",
+          "cost": 0.4
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Saute chopped tomato in oil; add eggs and cook until set.",
+        "Toast bread; serve with eggs and crumbled goat cheese."
+      ]
+    },
+    {
+      "name": "Pineapple coconut chia oats",
+      "slots": [
+        "breakfast"
+      ],
+      "cook_minutes": 0,
+      "ingredients": [
+        {
+          "name": "rolled oats",
+          "quantity": 0.75,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.51
+        },
+        {
+          "name": "soy milk",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "dairy",
+          "cost": 0.45
+        },
+        {
+          "name": "pineapple",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.87
+        },
+        {
+          "name": "chia seeds",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.26
+        },
+        {
+          "name": "coconut milk",
+          "quantity": 0.1,
+          "unit": "can",
+          "section": "pantry",
+          "cost": 0.18
+        }
+      ],
+      "steps": [
+        "Combine oats, soy milk, coconut milk and chia.",
+        "Refrigerate overnight; top with pineapple."
+      ]
+    },
+    {
+      "name": "Orange cottage cheese breakfast bowl",
+      "slots": [
+        "breakfast"
+      ],
+      "cook_minutes": 0,
+      "ingredients": [
+        {
+          "name": "cottage cheese",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "dairy",
+          "cost": 1.2
+        },
+        {
+          "name": "orange",
+          "quantity": 1,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.87
+        },
+        {
+          "name": "walnuts",
+          "quantity": 2,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.39
+        },
+        {
+          "name": "rolled oats",
+          "quantity": 0.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.34
+        }
+      ],
+      "steps": [
+        "Peel and segment orange.",
+        "Serve with cottage cheese, oats and walnuts."
+      ]
+    },
+    {
+      "name": "Cashew raspberry breakfast oats",
+      "slots": [
+        "breakfast"
+      ],
+      "cook_minutes": 8,
+      "ingredients": [
+        {
+          "name": "rolled oats",
+          "quantity": 0.75,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.51
+        },
+        {
+          "name": "soy milk",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "dairy",
+          "cost": 0.45
+        },
+        {
+          "name": "cashews",
+          "quantity": 2,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.42
+        },
+        {
+          "name": "raspberries",
+          "quantity": 0.5,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.43
+        },
+        {
+          "name": "maple syrup",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.3
+        }
+      ],
+      "steps": [
+        "Simmer oats in soy milk until soft.",
+        "Add cashews, raspberries and syrup."
+      ]
+    },
+    {
+      "name": "Edamame egg breakfast rice",
+      "slots": [
+        "breakfast"
+      ],
+      "cook_minutes": 15,
+      "ingredients": [
+        {
+          "name": "brown rice",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.44
+        },
+        {
+          "name": "edamame",
+          "quantity": 0.75,
+          "unit": "cup",
+          "section": "frozen",
+          "cost": 0.87
+        },
+        {
+          "name": "eggs",
+          "quantity": 2,
+          "unit": "each",
+          "section": "dairy",
+          "cost": 0.6
+        },
+        {
+          "name": "sesame seeds",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.29
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Prepare rice according to package directions; measure after cooking.",
+        "Simmer edamame according to package instructions.",
+        "Scramble eggs in oil, then add rice and edamame; finish with sesame."
+      ]
+    },
+    {
+      "name": "White bean avocado breakfast toast",
+      "slots": [
+        "breakfast"
+      ],
+      "cook_minutes": 8,
+      "ingredients": [
+        {
+          "name": "white beans",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.56
+        },
+        {
+          "name": "avocado",
+          "quantity": 0.5,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.8
+        },
+        {
+          "name": "whole wheat bread",
+          "quantity": 2,
+          "unit": "slice",
+          "section": "bakery",
+          "cost": 0.4
+        },
+        {
+          "name": "lemon",
+          "quantity": 0.5,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.2
+        },
+        {
+          "name": "radishes",
+          "quantity": 0.5,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.37
+        }
+      ],
+      "steps": [
+        "Toast bread.",
+        "Mash cooked white beans with avocado and lemon; spread on toast.",
+        "Top with sliced radishes."
+      ]
+    },
+    {
+      "name": "Brown rice banana breakfast bowl",
+      "slots": [
+        "breakfast"
+      ],
+      "cook_minutes": 8,
+      "ingredients": [
+        {
+          "name": "brown rice",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.65
+        },
+        {
+          "name": "soy milk",
+          "quantity": 0.75,
+          "unit": "cup",
+          "section": "dairy",
+          "cost": 0.34
+        },
+        {
+          "name": "banana",
+          "quantity": 1,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.3
+        },
+        {
+          "name": "pumpkin seeds",
+          "quantity": 2,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.43
+        },
+        {
+          "name": "maple syrup",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.3
+        }
+      ],
+      "steps": [
+        "Warm cooked brown rice with soy milk in a pan.",
+        "Add banana, pumpkin seeds and syrup."
+      ]
+    },
+    {
+      "name": "Lemon quinoa edamame bowl",
+      "slots": [
+        "lunch",
+        "dinner"
+      ],
+      "cook_minutes": 20,
+      "ingredients": [
+        {
+          "name": "quinoa",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 1.5
+        },
+        {
+          "name": "edamame",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "frozen",
+          "cost": 1.16
+        },
+        {
+          "name": "cucumber",
+          "quantity": 0.5,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.3
+        },
+        {
+          "name": "tomato",
+          "quantity": 1,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.5
+        },
+        {
+          "name": "lemon",
+          "quantity": 0.5,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.2
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Simmer quinoa; measure after cooking.",
+        "Prepare edamame following package instructions.",
+        "Chop vegetables and toss with quinoa, edamame, lemon and oil."
+      ]
+    },
+    {
+      "name": "Bulgur white bean vegetable bowl",
+      "slots": [
+        "lunch",
+        "dinner"
+      ],
+      "cook_minutes": 20,
+      "ingredients": [
+        {
+          "name": "bulgur",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 1.0
+        },
+        {
+          "name": "white beans",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.56
+        },
+        {
+          "name": "zucchini",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.62
+        },
+        {
+          "name": "tomato",
+          "quantity": 1,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.5
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        },
+        {
+          "name": "lemon",
+          "quantity": 0.5,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.2
+        }
+      ],
+      "steps": [
+        "Simmer bulgur; measure after cooking.",
+        "Saute zucchini and tomato in oil; stir in cooked beans.",
+        "Serve over bulgur with lemon."
+      ]
+    },
+    {
+      "name": "Brown rice chicken broccoli plate",
+      "slots": [
+        "lunch",
+        "dinner"
+      ],
+      "cook_minutes": 25,
+      "ingredients": [
+        {
+          "name": "brown rice",
+          "quantity": 2,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.87
+        },
+        {
+          "name": "chicken breast",
+          "quantity": 6,
+          "unit": "oz",
+          "section": "meat",
+          "cost": 2.2
+        },
+        {
+          "name": "broccoli",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.7
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        },
+        {
+          "name": "lemon",
+          "quantity": 0.5,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.2
+        }
+      ],
+      "steps": [
+        "Simmer brown rice; measure after cooking.",
+        "Pan-sear sliced chicken until a thermometer reads 165F.",
+        "Steam broccoli; serve with rice, chicken, oil and lemon."
+      ]
+    },
+    {
+      "name": "Couscous roasted vegetables and feta",
+      "slots": [
+        "lunch",
+        "dinner"
+      ],
+      "cook_minutes": 25,
+      "ingredients": [
+        {
+          "name": "couscous",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.87
+        },
+        {
+          "name": "eggplant",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.5
+        },
+        {
+          "name": "zucchini",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.62
+        },
+        {
+          "name": "feta cheese",
+          "quantity": 2,
+          "unit": "oz",
+          "section": "dairy",
+          "cost": 1.33
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        },
+        {
+          "name": "lemon",
+          "quantity": 0.5,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.2
+        }
+      ],
+      "steps": [
+        "Roast diced vegetables with oil at 425F until tender.",
+        "Boil water and prepare couscous according to package directions; measure after cooking.",
+        "Combine with vegetables, feta and lemon."
+      ]
+    },
+    {
+      "name": "Wild rice turkey grape bowl",
+      "slots": [
+        "lunch"
+      ],
+      "cook_minutes": 15,
+      "ingredients": [
+        {
+          "name": "wild rice",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 2.25
+        },
+        {
+          "name": "turkey slices",
+          "quantity": 4,
+          "unit": "oz",
+          "section": "meat",
+          "cost": 1.87
+        },
+        {
+          "name": "grapes",
+          "quantity": 0.75,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.25
+        },
+        {
+          "name": "arugula",
+          "quantity": 2,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.85
+        },
+        {
+          "name": "walnuts",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.2
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Simmer wild rice according to package directions; measure after cooking.",
+        "Combine rice with sliced ready-to-eat turkey, grapes, arugula, walnuts and oil."
+      ]
+    },
+    {
+      "name": "Roasted beet goat cheese quinoa bowl",
+      "slots": [
+        "lunch",
+        "dinner"
+      ],
+      "cook_minutes": 30,
+      "ingredients": [
+        {
+          "name": "quinoa",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 1.5
+        },
+        {
+          "name": "beets",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.0
+        },
+        {
+          "name": "goat cheese",
+          "quantity": 2,
+          "unit": "oz",
+          "section": "dairy",
+          "cost": 2.0
+        },
+        {
+          "name": "arugula",
+          "quantity": 2,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.85
+        },
+        {
+          "name": "pumpkin seeds",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.22
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Roast diced beets with oil at 425F until tender.",
+        "Simmer quinoa; measure after cooking.",
+        "Top quinoa and arugula with beets, goat cheese and seeds."
+      ]
+    },
+    {
+      "name": "Mushroom barley lentil pilaf",
+      "slots": [
+        "lunch",
+        "dinner"
+      ],
+      "cook_minutes": 30,
+      "ingredients": [
+        {
+          "name": "pearl barley",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.82
+        },
+        {
+          "name": "dry lentils",
+          "quantity": 0.4,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.4
+        },
+        {
+          "name": "cremini mushrooms",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.78
+        },
+        {
+          "name": "onion",
+          "quantity": 0.5,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.25
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Simmer barley and lentils separately according to package directions.",
+        "Measure barley after cooking; lentil quantity is measured dry.",
+        "Saute onion and mushrooms in oil; fold into grains."
+      ]
+    },
+    {
+      "name": "Chickpea cucumber feta quinoa",
+      "slots": [
+        "lunch",
+        "dinner"
+      ],
+      "cook_minutes": 20,
+      "ingredients": [
+        {
+          "name": "quinoa",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 1.5
+        },
+        {
+          "name": "canned chickpeas",
+          "quantity": 0.5,
+          "unit": "can",
+          "section": "pantry",
+          "cost": 0.55
+        },
+        {
+          "name": "cucumber",
+          "quantity": 0.5,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.3
+        },
+        {
+          "name": "feta cheese",
+          "quantity": 1.5,
+          "unit": "oz",
+          "section": "dairy",
+          "cost": 1.0
+        },
+        {
+          "name": "lemon",
+          "quantity": 0.5,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.2
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Simmer quinoa; measure after cooking.",
+        "Drain chickpeas and slice cucumber.",
+        "Combine with quinoa, feta, lemon and oil."
+      ]
+    },
+    {
+      "name": "Tahini cauliflower chicken bowl",
+      "slots": [
+        "lunch",
+        "dinner"
+      ],
+      "cook_minutes": 25,
+      "ingredients": [
+        {
+          "name": "brown rice",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.65
+        },
+        {
+          "name": "chicken breast",
+          "quantity": 6,
+          "unit": "oz",
+          "section": "meat",
+          "cost": 2.2
+        },
+        {
+          "name": "cauliflower",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.05
+        },
+        {
+          "name": "tahini",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.18
+        },
+        {
+          "name": "lemon",
+          "quantity": 0.5,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.2
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Simmer rice; measure after cooking.",
+        "Saute cauliflower and sliced chicken in oil until chicken reaches 165F.",
+        "Whisk tahini with lemon and a splash of water; drizzle over the bowl."
+      ]
+    },
+    {
+      "name": "Red cabbage tofu sesame rice bowl",
+      "slots": [
+        "lunch",
+        "dinner"
+      ],
+      "cook_minutes": 20,
+      "ingredients": [
+        {
+          "name": "brown rice",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.65
+        },
+        {
+          "name": "firm tofu",
+          "quantity": 0.5,
+          "unit": "block",
+          "section": "produce",
+          "cost": 1.0
+        },
+        {
+          "name": "red cabbage",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.47
+        },
+        {
+          "name": "carrots",
+          "quantity": 1,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.3
+        },
+        {
+          "name": "sesame seeds",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.29
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Simmer rice; measure after cooking.",
+        "Pan-fry tofu in oil; add shredded cabbage and carrots until tender.",
+        "Serve over rice with sesame seeds."
+      ]
+    },
+    {
+      "name": "Mango lentil quinoa bowl",
+      "slots": [
+        "lunch",
+        "dinner"
+      ],
+      "cook_minutes": 25,
+      "ingredients": [
+        {
+          "name": "quinoa",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 1.5
+        },
+        {
+          "name": "dry lentils",
+          "quantity": 0.4,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.4
+        },
+        {
+          "name": "mango",
+          "quantity": 0.75,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.12
+        },
+        {
+          "name": "spinach",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.4
+        },
+        {
+          "name": "lemon",
+          "quantity": 0.5,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.2
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Simmer lentils and quinoa separately; lentils are measured dry and quinoa cooked.",
+        "Combine with mango, spinach, lemon and oil."
+      ]
+    },
+    {
+      "name": "Pear arugula white bean bowl",
+      "slots": [
+        "lunch"
+      ],
+      "cook_minutes": 10,
+      "ingredients": [
+        {
+          "name": "white beans",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.84
+        },
+        {
+          "name": "pear",
+          "quantity": 1,
+          "unit": "each",
+          "section": "produce",
+          "cost": 1.16
+        },
+        {
+          "name": "arugula",
+          "quantity": 2,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.85
+        },
+        {
+          "name": "walnuts",
+          "quantity": 2,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.39
+        },
+        {
+          "name": "whole wheat bread",
+          "quantity": 2,
+          "unit": "slice",
+          "section": "bakery",
+          "cost": 0.4
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Toss cooked beans, sliced pear, arugula, walnuts and oil.",
+        "Toast bread and serve alongside."
+      ]
+    },
+    {
+      "name": "Sockeye salmon quinoa lunch bowl",
+      "slots": [
+        "lunch",
+        "dinner"
+      ],
+      "cook_minutes": 25,
+      "ingredients": [
+        {
+          "name": "sockeye salmon",
+          "quantity": 6,
+          "unit": "oz",
+          "section": "seafood",
+          "cost": 5.62
+        },
+        {
+          "name": "quinoa",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 1.5
+        },
+        {
+          "name": "cucumber",
+          "quantity": 0.5,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.3
+        },
+        {
+          "name": "kale",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.83
+        },
+        {
+          "name": "lemon",
+          "quantity": 0.5,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.2
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Simmer quinoa; measure after cooking.",
+        "Pan-sear salmon in oil to 145F at the centre.",
+        "Serve with quinoa, cucumber, kale and lemon."
+      ]
+    },
+    {
+      "name": "Edamame tahini millet bowl",
+      "slots": [
+        "lunch",
+        "dinner"
+      ],
+      "cook_minutes": 20,
+      "ingredients": [
+        {
+          "name": "millet",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 1.0
+        },
+        {
+          "name": "edamame",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "frozen",
+          "cost": 1.16
+        },
+        {
+          "name": "carrots",
+          "quantity": 1,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.3
+        },
+        {
+          "name": "cucumber",
+          "quantity": 0.5,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.3
+        },
+        {
+          "name": "tahini",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.18
+        },
+        {
+          "name": "lemon",
+          "quantity": 0.5,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.2
+        }
+      ],
+      "steps": [
+        "Simmer millet and prepare edamame according to package directions; measure cooked portions.",
+        "Chop vegetables and toss with grains and edamame.",
+        "Thin tahini with lemon and water for dressing."
+      ]
+    },
+    {
+      "name": "Ricotta spinach tomato toast",
+      "slots": [
+        "lunch"
+      ],
+      "cook_minutes": 10,
+      "ingredients": [
+        {
+          "name": "whole wheat bread",
+          "quantity": 3,
+          "unit": "slice",
+          "section": "bakery",
+          "cost": 0.6
+        },
+        {
+          "name": "ricotta cheese",
+          "quantity": 0.75,
+          "unit": "cup",
+          "section": "dairy",
+          "cost": 1.76
+        },
+        {
+          "name": "spinach",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.4
+        },
+        {
+          "name": "tomato",
+          "quantity": 1,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.5
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Saute spinach and tomato in oil.",
+        "Toast bread; spread with ricotta and top with vegetables."
+      ]
+    },
+    {
+      "name": "Warm chicken orange couscous",
+      "slots": [
+        "lunch",
+        "dinner"
+      ],
+      "cook_minutes": 25,
+      "ingredients": [
+        {
+          "name": "couscous",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.87
+        },
+        {
+          "name": "chicken breast",
+          "quantity": 6,
+          "unit": "oz",
+          "section": "meat",
+          "cost": 2.2
+        },
+        {
+          "name": "orange",
+          "quantity": 1,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.87
+        },
+        {
+          "name": "spinach",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.4
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Boil water and prepare couscous; measure after cooking.",
+        "Pan-sear sliced chicken with oil until it reaches 165F.",
+        "Combine with orange segments and spinach."
+      ]
+    },
+    {
+      "name": "Wild rice cashew chickpea bowl",
+      "slots": [
+        "lunch",
+        "dinner"
+      ],
+      "cook_minutes": 20,
+      "ingredients": [
+        {
+          "name": "wild rice",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 2.25
+        },
+        {
+          "name": "canned chickpeas",
+          "quantity": 0.5,
+          "unit": "can",
+          "section": "pantry",
+          "cost": 0.55
+        },
+        {
+          "name": "cashews",
+          "quantity": 2,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.42
+        },
+        {
+          "name": "bell pepper",
+          "quantity": 1,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.9
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Simmer wild rice; measure after cooking.",
+        "Saute pepper in oil and add drained chickpeas.",
+        "Combine with rice and cashews."
+      ]
+    },
+    {
+      "name": "Lentil kale roasted squash bowl",
+      "slots": [
+        "lunch",
+        "dinner"
+      ],
+      "cook_minutes": 30,
+      "ingredients": [
+        {
+          "name": "dry lentils",
+          "quantity": 0.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.5
+        },
+        {
+          "name": "butternut squash",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.05
+        },
+        {
+          "name": "kale",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.83
+        },
+        {
+          "name": "quinoa",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 1.0
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Roast diced squash with oil at 425F until tender.",
+        "Simmer lentils and quinoa separately; measure lentils dry and quinoa cooked.",
+        "Wilt kale in the hot lentils and assemble."
+      ]
+    },
+    {
+      "name": "Sockeye salmon asparagus quinoa",
+      "slots": [
+        "dinner"
+      ],
+      "cook_minutes": 30,
+      "ingredients": [
+        {
+          "name": "sockeye salmon",
+          "quantity": 6,
+          "unit": "oz",
+          "section": "seafood",
+          "cost": 5.62
+        },
+        {
+          "name": "quinoa",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 1.5
+        },
+        {
+          "name": "asparagus",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.76
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        },
+        {
+          "name": "lemon",
+          "quantity": 0.5,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.2
+        }
+      ],
+      "steps": [
+        "Simmer quinoa; measure after cooking.",
+        "Roast salmon and asparagus with oil at 400F; cook salmon to 145F.",
+        "Serve with quinoa and lemon."
+      ]
+    },
+    {
+      "name": "Mackerel brown rice and greens",
+      "slots": [
+        "dinner"
+      ],
+      "cook_minutes": 25,
+      "ingredients": [
+        {
+          "name": "mackerel",
+          "quantity": 6,
+          "unit": "oz",
+          "section": "seafood",
+          "cost": 3.37
+        },
+        {
+          "name": "brown rice",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.65
+        },
+        {
+          "name": "kale",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.25
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        },
+        {
+          "name": "lemon",
+          "quantity": 0.5,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.2
+        }
+      ],
+      "steps": [
+        "Simmer rice; measure after cooking.",
+        "Pan-sear mackerel in oil to 145F at the centre.",
+        "Saute kale; serve with rice and lemon."
+      ]
+    },
+    {
+      "name": "Lemon cod white bean skillet",
+      "slots": [
+        "dinner"
+      ],
+      "cook_minutes": 25,
+      "ingredients": [
+        {
+          "name": "cod fillet",
+          "quantity": 7,
+          "unit": "oz",
+          "section": "seafood",
+          "cost": 4.81
+        },
+        {
+          "name": "white beans",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.56
+        },
+        {
+          "name": "brown rice",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.44
+        },
+        {
+          "name": "kale",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.83
+        },
+        {
+          "name": "tomato",
+          "quantity": 1,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.5
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Simmer rice; measure after cooking.",
+        "Saute tomato and kale in oil; add cooked white beans.",
+        "Nestle cod into the pan, cover and cook until the centre reaches 145F."
+      ]
+    },
+    {
+      "name": "Pork tenderloin barley and brussels sprouts",
+      "slots": [
+        "dinner"
+      ],
+      "cook_minutes": 35,
+      "ingredients": [
+        {
+          "name": "pork tenderloin",
+          "quantity": 7,
+          "unit": "oz",
+          "section": "meat",
+          "cost": 3.06
+        },
+        {
+          "name": "pearl barley",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.82
+        },
+        {
+          "name": "brussels sprouts",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.01
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Simmer barley; measure after cooking.",
+        "Roast sprouts with oil at 425F until tender.",
+        "Sear pork medallions to 145F; rest at least 3 minutes before serving."
+      ]
+    },
+    {
+      "name": "Chicken mushroom wild rice plate",
+      "slots": [
+        "dinner"
+      ],
+      "cook_minutes": 30,
+      "ingredients": [
+        {
+          "name": "chicken breast",
+          "quantity": 7,
+          "unit": "oz",
+          "section": "meat",
+          "cost": 2.57
+        },
+        {
+          "name": "wild rice",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 2.25
+        },
+        {
+          "name": "cremini mushrooms",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.17
+        },
+        {
+          "name": "onion",
+          "quantity": 0.5,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.25
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Simmer wild rice; measure after cooking.",
+        "Saute onion and mushrooms in oil.",
+        "Pan-sear sliced chicken until its centre reaches 165F; serve with rice and vegetables."
+      ]
+    },
+    {
+      "name": "Chicken butternut brown rice plate",
+      "slots": [
+        "dinner"
+      ],
+      "cook_minutes": 35,
+      "ingredients": [
+        {
+          "name": "chicken thighs",
+          "quantity": 7,
+          "unit": "oz",
+          "section": "meat",
+          "cost": 2.2
+        },
+        {
+          "name": "brown rice",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.65
+        },
+        {
+          "name": "butternut squash",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.05
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Simmer rice; measure after cooking.",
+        "Roast squash and chicken with oil at 425F.",
+        "Use a thermometer to confirm chicken reaches 165F."
+      ]
+    },
+    {
+      "name": "Roasted cauliflower chickpea tahini plate",
+      "slots": [
+        "dinner"
+      ],
+      "cook_minutes": 30,
+      "ingredients": [
+        {
+          "name": "cauliflower",
+          "quantity": 2,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.4
+        },
+        {
+          "name": "canned chickpeas",
+          "quantity": 0.6,
+          "unit": "can",
+          "section": "pantry",
+          "cost": 0.66
+        },
+        {
+          "name": "quinoa",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 1.5
+        },
+        {
+          "name": "tahini",
+          "quantity": 1.5,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.27
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        },
+        {
+          "name": "lemon",
+          "quantity": 0.5,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.2
+        }
+      ],
+      "steps": [
+        "Simmer quinoa; measure after cooking.",
+        "Roast cauliflower and drained chickpeas in oil at 425F until golden.",
+        "Drizzle with tahini thinned with lemon and water."
+      ]
+    },
+    {
+      "name": "Bulgur eggplant white bean skillet",
+      "slots": [
+        "dinner"
+      ],
+      "cook_minutes": 25,
+      "ingredients": [
+        {
+          "name": "bulgur",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 1.0
+        },
+        {
+          "name": "eggplant",
+          "quantity": 2,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.0
+        },
+        {
+          "name": "white beans",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.56
+        },
+        {
+          "name": "tomato",
+          "quantity": 1,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.5
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1.5,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.22
+        }
+      ],
+      "steps": [
+        "Simmer bulgur; measure after cooking.",
+        "Saute eggplant and tomato in oil until tender.",
+        "Add cooked white beans and serve over bulgur."
+      ]
+    },
+    {
+      "name": "Ricotta spinach zucchini bake",
+      "slots": [
+        "dinner"
+      ],
+      "cook_minutes": 30,
+      "ingredients": [
+        {
+          "name": "zucchini",
+          "quantity": 2,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.25
+        },
+        {
+          "name": "ricotta cheese",
+          "quantity": 0.75,
+          "unit": "cup",
+          "section": "dairy",
+          "cost": 1.76
+        },
+        {
+          "name": "spaghetti",
+          "quantity": 3,
+          "unit": "oz",
+          "section": "pantry",
+          "cost": 0.41
+        },
+        {
+          "name": "spinach",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.4
+        },
+        {
+          "name": "marinara sauce",
+          "quantity": 0.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.6
+        },
+        {
+          "name": "olive oil",
+          "quantity": 0.5,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.07
+        }
+      ],
+      "steps": [
+        "Boil pasta until just tender.",
+        "Combine with zucchini, spinach, ricotta, sauce and oil.",
+        "Bake at 400F until vegetables are tender and filling is hot."
+      ]
+    },
+    {
+      "name": "Tomato feta quinoa white bean bake",
+      "slots": [
+        "dinner"
+      ],
+      "cook_minutes": 30,
+      "ingredients": [
+        {
+          "name": "quinoa",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 1.5
+        },
+        {
+          "name": "feta cheese",
+          "quantity": 2,
+          "unit": "oz",
+          "section": "dairy",
+          "cost": 1.33
+        },
+        {
+          "name": "white beans",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.56
+        },
+        {
+          "name": "tomato",
+          "quantity": 2,
+          "unit": "each",
+          "section": "produce",
+          "cost": 1.0
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Simmer quinoa; measure after cooking.",
+        "Combine quinoa, cooked beans, tomatoes, feta and oil in a baking dish.",
+        "Bake at 400F until tomatoes soften and filling is hot."
+      ]
+    },
+    {
+      "name": "Cashew edamame millet stir-fry",
+      "slots": [
+        "dinner"
+      ],
+      "cook_minutes": 20,
+      "ingredients": [
+        {
+          "name": "millet",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 1.0
+        },
+        {
+          "name": "edamame",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "frozen",
+          "cost": 1.16
+        },
+        {
+          "name": "cashews",
+          "quantity": 2,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.42
+        },
+        {
+          "name": "bell pepper",
+          "quantity": 1,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.9
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Simmer millet and prepare edamame according to package directions.",
+        "Saute pepper in oil; add cooked millet, edamame and cashews."
+      ]
+    },
+    {
+      "name": "Walnut lentil mushroom rice bowl",
+      "slots": [
+        "dinner"
+      ],
+      "cook_minutes": 30,
+      "ingredients": [
+        {
+          "name": "dry lentils",
+          "quantity": 0.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.5
+        },
+        {
+          "name": "brown rice",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.65
+        },
+        {
+          "name": "cremini mushrooms",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.17
+        },
+        {
+          "name": "walnuts",
+          "quantity": 2,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.39
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Simmer lentils and rice separately; measure lentils dry and rice cooked.",
+        "Saute mushrooms in oil; stir in lentils and walnuts.",
+        "Serve over rice."
+      ]
+    },
+    {
+      "name": "Pork red cabbage potato plate",
+      "slots": [
+        "dinner"
+      ],
+      "cook_minutes": 30,
+      "ingredients": [
+        {
+          "name": "pork tenderloin",
+          "quantity": 7,
+          "unit": "oz",
+          "section": "meat",
+          "cost": 3.06
+        },
+        {
+          "name": "red cabbage",
+          "quantity": 2,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.62
+        },
+        {
+          "name": "potatoes",
+          "quantity": 2,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.7
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        },
+        {
+          "name": "orange",
+          "quantity": 0.5,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.44
+        }
+      ],
+      "steps": [
+        "Roast diced potatoes with oil at 425F until tender.",
+        "Saute cabbage with orange juice.",
+        "Pan-sear pork medallions to 145F; rest at least 3 minutes."
+      ]
+    },
+    {
+      "name": "Pistachio salmon wild rice plate",
+      "slots": [
+        "dinner"
+      ],
+      "cook_minutes": 30,
+      "ingredients": [
+        {
+          "name": "sockeye salmon",
+          "quantity": 6,
+          "unit": "oz",
+          "section": "seafood",
+          "cost": 5.62
+        },
+        {
+          "name": "pistachios",
+          "quantity": 2,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.54
+        },
+        {
+          "name": "wild rice",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 2.25
+        },
+        {
+          "name": "asparagus",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.17
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Simmer wild rice; measure after cooking.",
+        "Top salmon with crushed pistachios and roast with asparagus and oil at 400F.",
+        "Cook salmon until a thermometer reads 145F."
+      ]
+    },
+    {
+      "name": "Shrimp asparagus wild rice skillet",
+      "slots": [
+        "dinner"
+      ],
+      "cook_minutes": 25,
+      "ingredients": [
+        {
+          "name": "shrimp",
+          "quantity": 7,
+          "unit": "oz",
+          "section": "seafood",
+          "cost": 6.12
+        },
+        {
+          "name": "wild rice",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 2.25
+        },
+        {
+          "name": "asparagus",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.76
+        },
+        {
+          "name": "garlic",
+          "quantity": 2,
+          "unit": "clove",
+          "section": "produce",
+          "cost": 0.1
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Simmer wild rice; measure after cooking.",
+        "Saute asparagus and garlic in oil.",
+        "Add shrimp and cook until pearly and opaque; fold in rice."
+      ]
+    },
+    {
+      "name": "Coconut mango tofu brown rice",
+      "slots": [
+        "dinner"
+      ],
+      "cook_minutes": 25,
+      "ingredients": [
+        {
+          "name": "firm tofu",
+          "quantity": 0.5,
+          "unit": "block",
+          "section": "produce",
+          "cost": 1.0
+        },
+        {
+          "name": "brown rice",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.65
+        },
+        {
+          "name": "mango",
+          "quantity": 0.75,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.12
+        },
+        {
+          "name": "coconut milk",
+          "quantity": 0.2,
+          "unit": "can",
+          "section": "pantry",
+          "cost": 0.36
+        },
+        {
+          "name": "spinach",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.4
+        },
+        {
+          "name": "curry powder",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Simmer rice; measure after cooking.",
+        "Simmer tofu with coconut milk and curry powder until hot.",
+        "Add mango and spinach; serve over rice."
+      ]
+    },
+    {
+      "name": "Chicken pear spinach quinoa plate",
+      "slots": [
+        "dinner"
+      ],
+      "cook_minutes": 25,
+      "ingredients": [
+        {
+          "name": "chicken breast",
+          "quantity": 6,
+          "unit": "oz",
+          "section": "meat",
+          "cost": 2.2
+        },
+        {
+          "name": "quinoa",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 1.5
+        },
+        {
+          "name": "pear",
+          "quantity": 1,
+          "unit": "each",
+          "section": "produce",
+          "cost": 1.16
+        },
+        {
+          "name": "spinach",
+          "quantity": 2,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.8
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Simmer quinoa; measure after cooking.",
+        "Pan-sear sliced chicken in oil to 165F.",
+        "Add sliced pear and spinach until just warmed; serve over quinoa."
+      ]
+    },
+    {
+      "name": "Lemon chicken millet and greens",
+      "slots": [
+        "dinner"
+      ],
+      "cook_minutes": 25,
+      "ingredients": [
+        {
+          "name": "chicken breast",
+          "quantity": 7,
+          "unit": "oz",
+          "section": "meat",
+          "cost": 2.57
+        },
+        {
+          "name": "millet",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 1.0
+        },
+        {
+          "name": "broccoli",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.7
+        },
+        {
+          "name": "arugula",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.43
+        },
+        {
+          "name": "lemon",
+          "quantity": 0.5,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.2
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Simmer millet; measure after cooking.",
+        "Pan-sear chicken with oil until its centre reaches 165F.",
+        "Steam broccoli and serve with millet, arugula and lemon."
+      ]
+    },
+    {
+      "name": "White bean vegetable quinoa chili",
+      "slots": [
+        "dinner"
+      ],
+      "cook_minutes": 30,
+      "ingredients": [
+        {
+          "name": "white beans",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.84
+        },
+        {
+          "name": "quinoa",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 1.5
+        },
+        {
+          "name": "diced tomatoes",
+          "quantity": 0.5,
+          "unit": "can",
+          "section": "pantry",
+          "cost": 0.35
+        },
+        {
+          "name": "bell pepper",
+          "quantity": 1,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.9
+        },
+        {
+          "name": "chili powder",
+          "quantity": 1,
+          "unit": "tsp",
+          "section": "pantry",
+          "cost": 0.1
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Saute pepper with oil and chili powder.",
+        "Add tomatoes and cooked beans; simmer 15 minutes.",
+        "Serve with quinoa prepared according to package directions and measured cooked."
+      ]
+    },
+    {
+      "name": "Roasted brussels tempeh brown rice",
+      "slots": [
+        "dinner"
+      ],
+      "cook_minutes": 30,
+      "ingredients": [
+        {
+          "name": "tempeh",
+          "quantity": 6,
+          "unit": "oz",
+          "section": "produce",
+          "cost": 2.28
+        },
+        {
+          "name": "brown rice",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.65
+        },
+        {
+          "name": "brussels sprouts",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.01
+        },
+        {
+          "name": "tahini",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.18
+        },
+        {
+          "name": "lemon",
+          "quantity": 0.5,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.2
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Simmer rice; measure after cooking.",
+        "Roast cubed tempeh and sprouts with oil at 425F until tender.",
+        "Finish with tahini and lemon."
+      ]
+    },
+    {
+      "name": "Cod zucchini couscous plate",
+      "slots": [
+        "dinner"
+      ],
+      "cook_minutes": 25,
+      "ingredients": [
+        {
+          "name": "cod fillet",
+          "quantity": 7,
+          "unit": "oz",
+          "section": "seafood",
+          "cost": 4.81
+        },
+        {
+          "name": "couscous",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 0.87
+        },
+        {
+          "name": "zucchini",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.93
+        },
+        {
+          "name": "tomato",
+          "quantity": 1,
+          "unit": "each",
+          "section": "produce",
+          "cost": 0.5
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Boil water and prepare couscous; measure after cooking.",
+        "Saute zucchini and tomato in oil.",
+        "Pan-sear cod to 145F at the centre and serve."
+      ]
+    },
+    {
+      "name": "Roasted vegetable millet and goat cheese",
+      "slots": [
+        "dinner"
+      ],
+      "cook_minutes": 30,
+      "ingredients": [
+        {
+          "name": "millet",
+          "quantity": 1.5,
+          "unit": "cup",
+          "section": "pantry",
+          "cost": 1.0
+        },
+        {
+          "name": "butternut squash",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 0.7
+        },
+        {
+          "name": "beets",
+          "quantity": 1,
+          "unit": "cup",
+          "section": "produce",
+          "cost": 1.0
+        },
+        {
+          "name": "goat cheese",
+          "quantity": 2,
+          "unit": "oz",
+          "section": "dairy",
+          "cost": 2.0
+        },
+        {
+          "name": "pumpkin seeds",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.22
+        },
+        {
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "tbsp",
+          "section": "pantry",
+          "cost": 0.15
+        }
+      ],
+      "steps": [
+        "Roast diced squash and beets with oil at 425F until tender.",
+        "Simmer millet; measure after cooking.",
+        "Serve topped with goat cheese and pumpkin seeds."
+      ]
+    }
+  ]
+}

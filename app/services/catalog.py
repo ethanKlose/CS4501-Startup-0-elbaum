@@ -1,4 +1,4 @@
-"""Recipe catalog backing the offline fake LLM (used when ANTHROPIC_API_KEY is unset, and in tests).
+"""Approved recipe catalog used by both offline and live planners.
 
 Ingredient tuple: (name, quantity, unit, store_section, cost_usd_for_that_quantity)
 """
@@ -186,6 +186,15 @@ RECIPES: List[Dict] = [
        ["Dice and pan-fry sweet potato until tender.", "Add beans and pepper.", "Top with avocado."]),
 ]
 
+
+# Expanded recipes use the same canonical nutrient and explicit package-price data.
+import json
+from pathlib import Path
+_expanded = json.loads((Path(__file__).parents[1] / 'data/recipes_expanded.json').read_text())
+for _entry in _expanded['recipes']:
+    RECIPES.append(_r(_entry['name'], _entry['slots'], _entry['cook_minutes'], 0, 0,
+                      [(i['name'], i['quantity'], i['unit'], i['section'], i['cost']) for i in _entry['ingredients']],
+                      _entry['steps']))
 
 # Canonical nutrients are derived from ingredients, never the recipe author/LLM.
 from app.services.nutrition import calculate

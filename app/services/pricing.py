@@ -1,27 +1,23 @@
 """Whole-package checkout estimates, with user-entered price provenance."""
 import copy
 import math
-from statistics import median
+import json
+from pathlib import Path
 from app.services.nutrition import INGREDIENTS
 from app.services import grocery
 
 
+_REFERENCE = json.loads((Path(__file__).parents[1] / 'data/package_prices.json').read_text())['offers']
+
+
 def reference_offers():
-    from app.services.catalog import RECIPES
-    values={}
-    for recipe in RECIPES:
-        for i in recipe['ingredients']:
-            values.setdefault((i['name'],i['unit']),[]).append(i['cost']/i['quantity'])
-    offers={}
-    for (name,unit),prices in values.items():
-        size={'each':12 if name=='eggs' else 1,'slice':20,'oz':16,'cup':4,'tbsp':16,'tsp':24,'can':1,'block':1,'scoop':15,'leaf':10,'stalk':8,'clove':12}.get(unit,1)
-        offers[grocery.item_key(name,unit)]={'name':name,'unit':unit,'package_quantity':size,'package_price':round(median(prices)*size,2),'source':'Built-in demo estimate','observed_on':None}
-    return offers
+    """Prices do not drift when a new recipe is added; callers receive their own copy."""
+    return copy.deepcopy(_REFERENCE)
 
 
 def apply_recipe_prices(recipe,offers):
     recipe=copy.deepcopy(recipe)
-    all_offers=reference_offers();all_offers.update(offers or {})
+    all_offers=dict(_REFERENCE);all_offers.update(offers or {})
     for i in recipe['ingredients']:
         offer=all_offers.get(grocery.item_key(i['name'],i['unit']))
         if offer:i['cost']=round(i['quantity']*offer['package_price']/offer['package_quantity'],2)
@@ -30,7 +26,7 @@ def apply_recipe_prices(recipe,offers):
 
 
 def checkout(items,overrides=None,allow_unknown=False):
-    offers=reference_offers();offers.update(overrides or {})
+    offers=dict(_REFERENCE);offers.update(overrides or {})
     rows=[]
     for item in items:
         offer=offers.get(item['key'])

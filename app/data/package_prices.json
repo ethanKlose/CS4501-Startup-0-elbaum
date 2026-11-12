@@ -1,0 +1,973 @@
+{
+  "note": "Explicit built-in demo package estimates, not live store quotes. Existing reference prices frozen before catalog expansion. User-entered local prices override these.",
+  "offers": {
+    "rolled oats|cup": {
+      "name": "rolled oats",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 2.73,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "milk|cup": {
+      "name": "milk",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 2.8,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "banana|each": {
+      "name": "banana",
+      "unit": "each",
+      "package_quantity": 1,
+      "package_price": 0.3,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "honey|tbsp": {
+      "name": "honey",
+      "unit": "tbsp",
+      "package_quantity": 16,
+      "package_price": 3.2,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "whole wheat bread|slice": {
+      "name": "whole wheat bread",
+      "unit": "slice",
+      "package_quantity": 20,
+      "package_price": 4.0,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "peanut butter|tbsp": {
+      "name": "peanut butter",
+      "unit": "tbsp",
+      "package_quantity": 16,
+      "package_price": 2.4,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "eggs|each": {
+      "name": "eggs",
+      "unit": "each",
+      "package_quantity": 12,
+      "package_price": 3.6,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "spinach|cup": {
+      "name": "spinach",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 1.6,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "cheddar cheese|cup": {
+      "name": "cheddar cheese",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 8.0,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "olive oil|tsp": {
+      "name": "olive oil",
+      "unit": "tsp",
+      "package_quantity": 24,
+      "package_price": 2.4,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "greek yogurt|cup": {
+      "name": "greek yogurt",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 4.0,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "granola|cup": {
+      "name": "granola",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 8.0,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "blueberries|cup": {
+      "name": "blueberries",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 7.2,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "firm tofu|block": {
+      "name": "firm tofu",
+      "unit": "block",
+      "package_quantity": 1,
+      "package_price": 2.0,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "turmeric|tsp": {
+      "name": "turmeric",
+      "unit": "tsp",
+      "package_quantity": 24,
+      "package_price": 4.8,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "salsa|tbsp": {
+      "name": "salsa",
+      "unit": "tbsp",
+      "package_quantity": 16,
+      "package_price": 1.6,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "almonds|tbsp": {
+      "name": "almonds",
+      "unit": "tbsp",
+      "package_quantity": 16,
+      "package_price": 3.2,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "maple syrup|tbsp": {
+      "name": "maple syrup",
+      "unit": "tbsp",
+      "package_quantity": 16,
+      "package_price": 4.8,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "corn flakes|cup": {
+      "name": "corn flakes",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 2.0,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "avocado|each": {
+      "name": "avocado",
+      "unit": "each",
+      "package_quantity": 1,
+      "package_price": 1.6,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "flour tortilla|each": {
+      "name": "flour tortilla",
+      "unit": "each",
+      "package_quantity": 1,
+      "package_price": 0.4,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "black beans|cup": {
+      "name": "black beans",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 4.0,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "rice|cup": {
+      "name": "rice",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 1.6,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "soy protein powder|scoop": {
+      "name": "soy protein powder",
+      "unit": "scoop",
+      "package_quantity": 15,
+      "package_price": 15.0,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "soy milk|cup": {
+      "name": "soy milk",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 1.8,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "chicken breast|oz": {
+      "name": "chicken breast",
+      "unit": "oz",
+      "package_quantity": 16,
+      "package_price": 5.87,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "broccoli|cup": {
+      "name": "broccoli",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 2.8,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "soy sauce|tbsp": {
+      "name": "soy sauce",
+      "unit": "tbsp",
+      "package_quantity": 16,
+      "package_price": 1.6,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "turkey slices|oz": {
+      "name": "turkey slices",
+      "unit": "oz",
+      "package_quantity": 16,
+      "package_price": 7.47,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "cheddar cheese|slice": {
+      "name": "cheddar cheese",
+      "unit": "slice",
+      "package_quantity": 20,
+      "package_price": 8.0,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "lettuce|leaf": {
+      "name": "lettuce",
+      "unit": "leaf",
+      "package_quantity": 10,
+      "package_price": 1.0,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "canned tuna|can": {
+      "name": "canned tuna",
+      "unit": "can",
+      "package_quantity": 1,
+      "package_price": 1.1,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "mayonnaise|tbsp": {
+      "name": "mayonnaise",
+      "unit": "tbsp",
+      "package_quantity": 16,
+      "package_price": 2.4,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "celery|stalk": {
+      "name": "celery",
+      "unit": "stalk",
+      "package_quantity": 8,
+      "package_price": 1.6,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "hummus|tbsp": {
+      "name": "hummus",
+      "unit": "tbsp",
+      "package_quantity": 16,
+      "package_price": 2.67,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "cucumber|each": {
+      "name": "cucumber",
+      "unit": "each",
+      "package_quantity": 1,
+      "package_price": 0.6,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "carrots|each": {
+      "name": "carrots",
+      "unit": "each",
+      "package_quantity": 1,
+      "package_price": 0.3,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "dry lentils|cup": {
+      "name": "dry lentils",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 4.0,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "onion|each": {
+      "name": "onion",
+      "unit": "each",
+      "package_quantity": 1,
+      "package_price": 0.5,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "canned tomatoes|can": {
+      "name": "canned tomatoes",
+      "unit": "can",
+      "package_quantity": 1,
+      "package_price": 1.2,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "vegetable broth|cup": {
+      "name": "vegetable broth",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 1.33,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "garlic|clove": {
+      "name": "garlic",
+      "unit": "clove",
+      "package_quantity": 12,
+      "package_price": 0.6,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "canned chickpeas|can": {
+      "name": "canned chickpeas",
+      "unit": "can",
+      "package_quantity": 1,
+      "package_price": 1.1,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "tomato|each": {
+      "name": "tomato",
+      "unit": "each",
+      "package_quantity": 1,
+      "package_price": 0.5,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "olive oil|tbsp": {
+      "name": "olive oil",
+      "unit": "tbsp",
+      "package_quantity": 16,
+      "package_price": 2.4,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "lemon|each": {
+      "name": "lemon",
+      "unit": "each",
+      "package_quantity": 1,
+      "package_price": 0.4,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "strawberry jam|tbsp": {
+      "name": "strawberry jam",
+      "unit": "tbsp",
+      "package_quantity": 16,
+      "package_price": 3.2,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "frozen peas|cup": {
+      "name": "frozen peas",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 2.4,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "mixed greens|cup": {
+      "name": "mixed greens",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 1.33,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "parmesan cheese|tbsp": {
+      "name": "parmesan cheese",
+      "unit": "tbsp",
+      "package_quantity": 16,
+      "package_price": 3.2,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "ground turkey|oz": {
+      "name": "ground turkey",
+      "unit": "oz",
+      "package_quantity": 16,
+      "package_price": 7.68,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "spaghetti|oz": {
+      "name": "spaghetti",
+      "unit": "oz",
+      "package_quantity": 16,
+      "package_price": 2.2,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "marinara sauce|cup": {
+      "name": "marinara sauce",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 4.8,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "salmon fillet|oz": {
+      "name": "salmon fillet",
+      "unit": "oz",
+      "package_quantity": 16,
+      "package_price": 12.8,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "sweet potato|each": {
+      "name": "sweet potato",
+      "unit": "each",
+      "package_quantity": 1,
+      "package_price": 0.8,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "beef sirloin|oz": {
+      "name": "beef sirloin",
+      "unit": "oz",
+      "package_quantity": 16,
+      "package_price": 11.2,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "ginger|tsp": {
+      "name": "ginger",
+      "unit": "tsp",
+      "package_quantity": 24,
+      "package_price": 2.4,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "bell pepper|each": {
+      "name": "bell pepper",
+      "unit": "each",
+      "package_quantity": 1,
+      "package_price": 0.9,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "kidney beans|can": {
+      "name": "kidney beans",
+      "unit": "can",
+      "package_quantity": 1,
+      "package_price": 0.9,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "diced tomatoes|can": {
+      "name": "diced tomatoes",
+      "unit": "can",
+      "package_quantity": 1,
+      "package_price": 0.7,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "chili powder|tsp": {
+      "name": "chili powder",
+      "unit": "tsp",
+      "package_quantity": 24,
+      "package_price": 2.4,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "chicken sausage|oz": {
+      "name": "chicken sausage",
+      "unit": "oz",
+      "package_quantity": 16,
+      "package_price": 9.6,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "potatoes|each": {
+      "name": "potatoes",
+      "unit": "each",
+      "package_quantity": 1,
+      "package_price": 0.35,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "shrimp|oz": {
+      "name": "shrimp",
+      "unit": "oz",
+      "package_quantity": 16,
+      "package_price": 14.0,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "chicken thighs|oz": {
+      "name": "chicken thighs",
+      "unit": "oz",
+      "package_quantity": 16,
+      "package_price": 5.03,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "green beans|cup": {
+      "name": "green beans",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 3.2,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "coconut milk|can": {
+      "name": "coconut milk",
+      "unit": "can",
+      "package_quantity": 1,
+      "package_price": 1.8,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "curry powder|tbsp": {
+      "name": "curry powder",
+      "unit": "tbsp",
+      "package_quantity": 16,
+      "package_price": 2.4,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "frozen corn|cup": {
+      "name": "frozen corn",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 2.4,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "butter|tbsp": {
+      "name": "butter",
+      "unit": "tbsp",
+      "package_quantity": 16,
+      "package_price": 3.2,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "cottage cheese|cup": {
+      "name": "cottage cheese",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 4.8,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "peaches|each": {
+      "name": "peaches",
+      "unit": "each",
+      "package_quantity": 1,
+      "package_price": 0.7,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "sunflower seeds|tbsp": {
+      "name": "sunflower seeds",
+      "unit": "tbsp",
+      "package_quantity": 16,
+      "package_price": 3.2,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "tempeh|oz": {
+      "name": "tempeh",
+      "unit": "oz",
+      "package_quantity": 16,
+      "package_price": 6.08,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "parmesan cheese|cup": {
+      "name": "parmesan cheese",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 9.6,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "mozzarella cheese|cup": {
+      "name": "mozzarella cheese",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 8.0,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "quinoa|cup": {
+      "name": "quinoa",
+      "unit": "cup",
+      "package_quantity": 6,
+      "package_price": 5.99,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "brown rice|cup": {
+      "name": "brown rice",
+      "unit": "cup",
+      "package_quantity": 8,
+      "package_price": 3.49,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "bulgur|cup": {
+      "name": "bulgur",
+      "unit": "cup",
+      "package_quantity": 6,
+      "package_price": 3.99,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "pearl barley|cup": {
+      "name": "pearl barley",
+      "unit": "cup",
+      "package_quantity": 6,
+      "package_price": 3.29,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "millet|cup": {
+      "name": "millet",
+      "unit": "cup",
+      "package_quantity": 6,
+      "package_price": 3.99,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "wild rice|cup": {
+      "name": "wild rice",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 5.99,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "couscous|cup": {
+      "name": "couscous",
+      "unit": "cup",
+      "package_quantity": 6,
+      "package_price": 3.49,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "walnuts|tbsp": {
+      "name": "walnuts",
+      "unit": "tbsp",
+      "package_quantity": 28,
+      "package_price": 5.49,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "pistachios|tbsp": {
+      "name": "pistachios",
+      "unit": "tbsp",
+      "package_quantity": 28,
+      "package_price": 7.49,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "cashews|tbsp": {
+      "name": "cashews",
+      "unit": "tbsp",
+      "package_quantity": 26,
+      "package_price": 5.49,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "chia seeds|tbsp": {
+      "name": "chia seeds",
+      "unit": "tbsp",
+      "package_quantity": 19,
+      "package_price": 4.99,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "flaxseed|tbsp": {
+      "name": "flaxseed",
+      "unit": "tbsp",
+      "package_quantity": 23,
+      "package_price": 3.99,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "pumpkin seeds|tbsp": {
+      "name": "pumpkin seeds",
+      "unit": "tbsp",
+      "package_quantity": 23,
+      "package_price": 4.99,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "sesame seeds|tbsp": {
+      "name": "sesame seeds",
+      "unit": "tbsp",
+      "package_quantity": 12,
+      "package_price": 3.49,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "strawberries|cup": {
+      "name": "strawberries",
+      "unit": "cup",
+      "package_quantity": 3,
+      "package_price": 3.99,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "raspberries|cup": {
+      "name": "raspberries",
+      "unit": "cup",
+      "package_quantity": 1.4,
+      "package_price": 3.99,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "blackberries|cup": {
+      "name": "blackberries",
+      "unit": "cup",
+      "package_quantity": 1.2,
+      "package_price": 3.49,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "mango|cup": {
+      "name": "mango",
+      "unit": "cup",
+      "package_quantity": 3,
+      "package_price": 4.49,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "pineapple|cup": {
+      "name": "pineapple",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 3.49,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "kiwi|each": {
+      "name": "kiwi",
+      "unit": "each",
+      "package_quantity": 6,
+      "package_price": 3.99,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "orange|each": {
+      "name": "orange",
+      "unit": "each",
+      "package_quantity": 4,
+      "package_price": 3.49,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "pear|each": {
+      "name": "pear",
+      "unit": "each",
+      "package_quantity": 3,
+      "package_price": 3.49,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "grapes|cup": {
+      "name": "grapes",
+      "unit": "cup",
+      "package_quantity": 3,
+      "package_price": 4.99,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "asparagus|cup": {
+      "name": "asparagus",
+      "unit": "cup",
+      "package_quantity": 3.4,
+      "package_price": 3.99,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "brussels sprouts|cup": {
+      "name": "brussels sprouts",
+      "unit": "cup",
+      "package_quantity": 5.2,
+      "package_price": 3.49,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "cauliflower|cup": {
+      "name": "cauliflower",
+      "unit": "cup",
+      "package_quantity": 5,
+      "package_price": 3.49,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "zucchini|cup": {
+      "name": "zucchini",
+      "unit": "cup",
+      "package_quantity": 4,
+      "package_price": 2.49,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "eggplant|cup": {
+      "name": "eggplant",
+      "unit": "cup",
+      "package_quantity": 5,
+      "package_price": 2.49,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "beets|cup": {
+      "name": "beets",
+      "unit": "cup",
+      "package_quantity": 3,
+      "package_price": 2.99,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "red cabbage|cup": {
+      "name": "red cabbage",
+      "unit": "cup",
+      "package_quantity": 8,
+      "package_price": 2.49,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "arugula|cup": {
+      "name": "arugula",
+      "unit": "cup",
+      "package_quantity": 7,
+      "package_price": 2.99,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "kale|cup": {
+      "name": "kale",
+      "unit": "cup",
+      "package_quantity": 3,
+      "package_price": 2.49,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "radishes|cup": {
+      "name": "radishes",
+      "unit": "cup",
+      "package_quantity": 2,
+      "package_price": 1.49,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "butternut squash|cup": {
+      "name": "butternut squash",
+      "unit": "cup",
+      "package_quantity": 5,
+      "package_price": 3.49,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "cremini mushrooms|cup": {
+      "name": "cremini mushrooms",
+      "unit": "cup",
+      "package_quantity": 3.2,
+      "package_price": 2.49,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "white beans|cup": {
+      "name": "white beans",
+      "unit": "cup",
+      "package_quantity": 2.3,
+      "package_price": 1.29,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "edamame|cup": {
+      "name": "edamame",
+      "unit": "cup",
+      "package_quantity": 3,
+      "package_price": 3.49,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "ricotta cheese|cup": {
+      "name": "ricotta cheese",
+      "unit": "cup",
+      "package_quantity": 1.7,
+      "package_price": 3.99,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "feta cheese|oz": {
+      "name": "feta cheese",
+      "unit": "oz",
+      "package_quantity": 6,
+      "package_price": 3.99,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "goat cheese|oz": {
+      "name": "goat cheese",
+      "unit": "oz",
+      "package_quantity": 4,
+      "package_price": 3.99,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "tahini|tbsp": {
+      "name": "tahini",
+      "unit": "tbsp",
+      "package_quantity": 30,
+      "package_price": 5.49,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "pork tenderloin|oz": {
+      "name": "pork tenderloin",
+      "unit": "oz",
+      "package_quantity": 16,
+      "package_price": 6.99,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "sockeye salmon|oz": {
+      "name": "sockeye salmon",
+      "unit": "oz",
+      "package_quantity": 16,
+      "package_price": 14.99,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "mackerel|oz": {
+      "name": "mackerel",
+      "unit": "oz",
+      "package_quantity": 16,
+      "package_price": 8.99,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    },
+    "cod fillet|oz": {
+      "name": "cod fillet",
+      "unit": "oz",
+      "package_quantity": 16,
+      "package_price": 10.99,
+      "source": "Built-in demo estimate",
+      "observed_on": null
+    }
+  }
+}
