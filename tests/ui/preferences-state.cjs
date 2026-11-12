@@ -95,3 +95,18 @@ test('new edits made immediately after a successful save survive the next refres
  const saved=setup({saved:true});let restored;
  try{assert.equal(saved.win.location.search,'');saved.type('budget',177);saved.win.dispatchEvent(new saved.win.Event('pagehide'));restored=setup({stored:{[saved.key]:saved.win.sessionStorage.getItem(saved.key)}});assert.equal(restored.input('budget').value,'177');assert.equal(restored.doc.querySelector('[data-draft-notice]').hidden,false);}finally{if(restored)restored.close();saved.close();}
 });
+
+testCase('preferences expose separate save-only and save-and-generate actions',s=>{
+ const build=s.form.querySelector('[data-build-plan]'),save=s.form.querySelector('[data-save-only]');
+ assert.equal(build.getAttribute('formaction'),'/survey/generate');assert.equal(build.type,'submit');assert.equal(save.type,'submit');assert.equal(save.hasAttribute('formaction'),false);
+});
+testCase('invalid preferences block generation before showing the loading state',s=>{
+ let shown=0;s.win.PJ.showGenerating=()=>shown++;s.type('budget',1);
+ const event=new s.win.SubmitEvent('submit',{bubbles:true,cancelable:true,submitter:s.form.querySelector('[data-build-plan]')});s.form.dispatchEvent(event);
+ assert.equal(event.defaultPrevented,true);assert.equal(shown,0);assert.equal(s.form.dataset.busy,undefined);
+});
+testCase('valid save-and-generate shows progress once and blocks duplicate submissions',s=>{
+ let shown=0;s.win.PJ.showGenerating=()=>shown++;
+ const submit=()=>{const event=new s.win.SubmitEvent('submit',{bubbles:true,cancelable:true,submitter:s.form.querySelector('[data-build-plan]')});s.form.dispatchEvent(event);return event;};
+ assert.equal(submit().defaultPrevented,false);assert.equal(s.form.dataset.busy,'1');assert.equal(shown,1);assert.equal(submit().defaultPrevented,true);assert.equal(shown,1);
+});

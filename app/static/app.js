@@ -154,6 +154,15 @@
   if(next) next.addEventListener('click',function(){var bad=invalid(steps[cur]);if(bad){reveal(bad);return;}go(cur+1,true);});
   if(prev) prev.addEventListener('click',function(){go(cur-1,true);});
   form.addEventListener('submit',function(event){var bad=invalid(form);if(bad){event.preventDefault();reveal(bad);}});
+  form.addEventListener('submit',function(event){
+    if(event.defaultPrevented)return;
+    if(form.dataset.busy){event.preventDefault();return;}
+    if(event.submitter && event.submitter.hasAttribute('data-build-plan')){
+      form.dataset.busy='1';
+      if(window.PJ && window.PJ.showGenerating)window.PJ.showGenerating('Saving preferences and building your week…');
+      setTimeout(function(){form.querySelectorAll('button').forEach(function(button){button.disabled=true;});},0);
+    }
+  });
   form.addEventListener('keydown',function(event){
     if(first && event.key==='Enter' && event.target.tagName==='INPUT' && !['checkbox','radio','range','submit'].includes(event.target.type) && cur<steps.length-1){event.preventDefault();next.click();}
   });

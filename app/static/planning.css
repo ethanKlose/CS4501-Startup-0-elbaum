@@ -179,3 +179,6 @@ html:not(.js) .planning-step-caption,html:not(.js) .planning-page [data-next],ht
 [data-pantry-status]:empty { display:none; }
 [data-pantry-status] { font-size:.8rem; margin:12px 0; }
 @media(max-width:600px){.planning-draft-notice{align-items:start;flex-direction:column;gap:5px;}}
+
+.planning-page .planning-save-actions { grid-column:4; display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; }
+@media (max-width:600px) { .planning-page .planning-save-actions { flex-basis:100%; } .planning-save-actions .btn { flex:1; } }

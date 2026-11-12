@@ -3,6 +3,7 @@ from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse, JSONResponse
+from starlette.concurrency import run_in_threadpool
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -200,7 +201,7 @@ def survey_form(request: Request, user: User = Depends(current_user), db: Sessio
     ctx = survey_context(db, user)
     values = field_values(ctx["profile"], ctx["days"])
     db.commit()
-    return render(request, "survey.html", user, errors={}, values=values, saved=request.query_params.get("saved"), pantry_error=request.query_params.get("pantry_error"), **ctx)
+    return render(request, "survey.html", user, errors={}, values=values, saved=request.session.pop("preferences_saved", False) or request.query_params.get("saved"), pantry_error=request.query_params.get("pantry_error"), **ctx)
 
 
 def understood(profile: Profile, days) -> List[str]:
@@ -271,6 +272,7 @@ def survey_context(db, user, form=None):
     return dict(preferences_version=preferences_version,lifestyle=lifestyle, window_values=window_values, time_values=time_values, equipment_options=EQUIPMENT, pantry=pantry, profile=profile, days=days, understood=understood(profile, days), weekdays=WEEKDAYS, restriction_options=RESTRICTIONS, goal_options=GOALS, prep_styles=PREP_STYLES)
 
 
+@router.post("/survey/generate")
 @router.post("/survey")
 async def survey_submit(request: Request, user: User = Depends(current_user), db: Session = Depends(get_db), llm=Depends(get_llm)):
     form = await request.form()
@@ -304,6 +306,18 @@ async def survey_submit(request: Request, user: User = Depends(current_user), db
     if profile.budget is not None:
         profile.onboarded = True
     db.commit()
+    if request.url.path == "/survey/generate":
+        # Save every section before building. A failed generation rolls back
+        # inventory/plan changes while retaining the user's saved preferences.
+        from app.services import planner
+        request.session.pop("welcome", None)
+        request.session["preferences_saved"] = True
+        try:
+            await run_in_threadpool(planner.generate, db, user, llm, start_mode="keep")
+        except planner.PlanFailed as exc:
+            db.rollback()
+            request.session["flash_error"] = {"message": "Preferences saved, but the new plan could not be generated. Your previous plan is still available. " + exc.message, "conflicts": exc.conflicts}
+        return RedirectResponse("/", 303)
     if first_time and profile.onboarded:
         request.session["welcome"] = True  # the home page will offer to build the first week right away
         return RedirectResponse("/", 303)
