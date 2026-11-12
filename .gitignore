@@ -4,6 +4,8 @@ __pycache__/
 .env
 *.db
 .pytest_cache/
+.coverage
+htmlcov/
 
 node_modules/
 test-results/

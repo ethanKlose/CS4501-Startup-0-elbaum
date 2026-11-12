@@ -1,0 +1,37 @@
+......................................................................   [100%]
+=============================== warnings summary ===============================
+../../../../tmp/platejoy-integration-venv/lib/python3.12/site-packages/starlette/testclient.py:40
+  /tmp/platejoy-integration-venv/lib/python3.12/site-packages/starlette/testclient.py:40: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = typing.Callable[[], typing.ContextManager[anyio.abc.BlockingPortal]]
+
+tests/integration/test_identity_and_persistence.py: 59 warnings
+tests/integration/test_inventory_and_feedback.py: 22 warnings
+tests/integration/test_llm_boundary.py: 18 warnings
+tests/integration/test_password_recovery.py: 7 warnings
+tests/integration/test_planning_workflows.py: 30 warnings
+tests/integration/test_shopping_provider.py: 16 warnings
+  /tmp/platejoy-integration-venv/lib/python3.12/site-packages/sqlalchemy/sql/schema.py:3596: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return util.wrap_callable(lambda ctx: fn(), fn)  # type: ignore
+
+tests/integration/test_identity_and_persistence.py: 31 warnings
+tests/integration/test_inventory_and_feedback.py: 12 warnings
+tests/integration/test_llm_boundary.py: 15 warnings
+tests/integration/test_password_recovery.py: 1 warning
+tests/integration/test_planning_workflows.py: 23 warnings
+tests/integration/test_shopping_provider.py: 8 warnings
+  /workspace/scratch/8e952f42f5e7/KS_LLM/app/routers/checkin.py:27: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    now = now or dt.datetime.utcnow()
+
+tests/integration/test_inventory_and_feedback.py::test_shopping_cooking_settlement_is_once_only_and_undo_restores_stock
+tests/integration/test_inventory_and_feedback.py::test_shopping_cooking_settlement_is_once_only_and_undo_restores_stock
+tests/integration/test_inventory_and_feedback.py::test_undo_preserves_manual_stock_adjustments_after_checkin
+tests/integration/test_inventory_and_feedback.py::test_two_http_clients_checking_in_concurrently_settle_purchases_once
+tests/integration/test_inventory_and_feedback.py::test_two_http_clients_checking_in_concurrently_settle_purchases_once
+tests/integration/test_inventory_and_feedback.py::test_two_http_clients_checking_in_concurrently_settle_purchases_once
+tests/integration/test_inventory_and_feedback.py::test_ratings_and_checkin_change_next_week_and_archive_previous_week
+  /workspace/scratch/8e952f42f5e7/KS_LLM/app/routers/checkin.py:73: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    row.created_at = dt.datetime.utcnow()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /workspace/scratch/8e952f42f5e7/KS_LLM/test-results/integration.xml -
+70 passed, 250 warnings in 19.97s

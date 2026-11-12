@@ -69,6 +69,13 @@ Check persistence before using it with real data: create a test account, run `do
 `app/routers` HTTP routes · `app/services` planner, validators, LLM clients · `app/templates` UI · `tests/` pytest · `scripts/seed.py`.
 Database migrations run on startup and from `python -m alembic upgrade head`. Existing compatible alpha tables are adopted non-destructively. `make reset` deletes the default local database; it is not an upgrade command.
 
+## Integration tests
+For application integration tests, run `python -m pytest tests/integration -m integration -q`
+from your active virtual environment. The 70 integration cases exercise actual routes,
+middleware, database migrations and service workflows with controlled external I/O.
+See [INTEGRATION_TESTING.md](INTEGRATION_TESTING.md) for the coverage matrix,
+Windows commands, CI configuration and the limits of provider testing.
+
 ## Browser smoke test
 Requires Node.js 20 or newer, in addition to the Python setup above.
 

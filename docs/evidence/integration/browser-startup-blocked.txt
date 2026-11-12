@@ -1,0 +1,7 @@
+npm run test:e2e: BLOCKED BEFORE WORKFLOW
+browserType.launch: Target page, context or browser has been closed
+[pid=36][err] [36:36:1111/193028.946314:FATAL:chrome/browser/process_singleton_posix.cc:297] Check failed: . socket() failed: Operation not permitted (1)
+
+npm run test:e2e:audit: BLOCKED BEFORE WORKFLOW
+browserType.launch: Target page, context or browser has been closed
+[pid=36][err] [36:36:1111/193029.751888:FATAL:chrome/browser/process_singleton_posix.cc:297] Check failed: . socket() failed: Operation not permitted (1)

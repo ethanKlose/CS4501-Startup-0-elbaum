@@ -113,6 +113,19 @@ macOS/Linux:
 .venv/bin/python -m pytest -q
 ```
 
+## Run the integration tests
+
+With the virtual environment active, run:
+
+```bash
+python -m pytest tests/integration -m integration -q --strict-markers --junitxml=test-results/integration.xml
+```
+
+On Windows Git Bash you can also use `.venv/Scripts/python.exe` instead of
+`python`. These 70 cases use temporary databases and controlled provider I/O;
+no paid API key or actual email delivery is required. See
+`INTEGRATION_TESTING.md` for the workflow matrix and recorded results.
+
 ## Optional browser test
 
 Install Node.js 20 or newer, then run these commands from the repository folder:
