@@ -1,0 +1,9 @@
+{% from "_icons.html" import icon %}
+<p class="planning-help">Pantry changes save separately. Your preference edits stay in place.</p>
+<p class="muted">What you already have. Plans use these first and your grocery list skips covered quantities.</p>
+<noscript><p class="planning-help">Save preferences before changing pantry items when JavaScript is disabled.</p></noscript>
+{% if pantry_error %}<p class="error" role="alert">{{ pantry_error }}</p>{% endif %}
+<ul class="plain pantry">
+{% for item in pantry %}<li><span class="pname">{{ item.name }}{% if item.quantity is not none %} — {{ '%g' % item.quantity }} {{ item.unit }}{% endif %}</span><form method="post" action="/pantry/{{ item.id }}/delete" class="inline" data-pantry-form><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="iconbtn sm" aria-label="Remove {{ item.name }}">{{ icon('x',14) }}</button></form></li>{% else %}<li class="muted">Nothing yet.</li>{% endfor %}
+</ul>
+<form method="post" action="/pantry/add" class="row pantry-add" data-pantry-form><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input name="name" maxlength="100" placeholder="item (e.g. rice)" required aria-label="Item name" style="flex:2;min-width:140px"><input name="quantity" type="number" step="any" min="0" max="1000000" placeholder="qty" aria-label="Quantity" style="flex:1;min-width:70px"><input name="unit" maxlength="20" placeholder="unit" aria-label="Unit" style="flex:1;min-width:70px"><button class="btn soft">Add</button></form>

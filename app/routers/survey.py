@@ -2,7 +2,7 @@ import math
 from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -10,6 +10,7 @@ from app.db import get_db
 from app.deps import current_user, render
 from app.services.llm import get_llm
 from app.services.preferences import get_preferences,save_preferences
+from app.services.locking import lock_user
 from app.services.lifestyle import EQUIPMENT
 from app.routers.lifestyle import lifestyle_fields, schedule_fields
 from app.services.nutrition_goals import DEFAULT_PROTEIN, MIN_PROTEIN, MAX_PROTEIN, MIN_CALORIES, MAX_CALORIES, selected_goals
@@ -26,6 +27,7 @@ RESTRICTIONS = {
     "dairy_free": "Dairy-free",
     "nut_allergy": "Nut allergy",
     "shellfish_allergy": "Shellfish allergy",
+    "sesame_allergy": "Sesame allergy",
     "egg_free": "Egg-free",
     "halal": "Halal",
 }
@@ -253,6 +255,9 @@ def survey_context(db, user, form=None):
     pantry = list(db.scalars(select(PantryItem).where(PantryItem.user_id == user.id).order_by(PantryItem.name)))
     profile, days = get_profile(db, user), get_days(db, user)
     lifestyle = get_preferences(db,user.id)
+    import hashlib, json
+    relevant={key:lifestyle[key] for key in ['equipment','cooking_skill','external_slots','cooking_windows','meal_times'] if key in lifestyle}
+    preferences_version=hashlib.sha256(json.dumps([field_values(profile,days),relevant],sort_keys=True).encode()).hexdigest()
     if form is not None and 'lifestyle_present' in form:
         lifestyle.update(lifestyle_fields(form))
     window_values = {str(d): ', '.join(f'{a//60:02d}:{a%60:02d}-{b//60:02d}:{b%60:02d}'
@@ -263,7 +268,7 @@ def survey_context(db, user, form=None):
     if form is not None and 'schedule_present' in form:
         window_values = {str(d): form.get(f'windows_{d}', '') for d in range(7)}
         time_values = {slot: form.get(f'time_{slot}', '') for slot in time_values}
-    return dict(lifestyle=lifestyle, window_values=window_values, time_values=time_values, equipment_options=EQUIPMENT, pantry=pantry, profile=profile, days=days, understood=understood(profile, days), weekdays=WEEKDAYS, restriction_options=RESTRICTIONS, goal_options=GOALS, prep_styles=PREP_STYLES)
+    return dict(preferences_version=preferences_version,lifestyle=lifestyle, window_values=window_values, time_values=time_values, equipment_options=EQUIPMENT, pantry=pantry, profile=profile, days=days, understood=understood(profile, days), weekdays=WEEKDAYS, restriction_options=RESTRICTIONS, goal_options=GOALS, prep_styles=PREP_STYLES)
 
 
 @router.post("/survey")
@@ -305,44 +310,59 @@ async def survey_submit(request: Request, user: User = Depends(current_user), db
     return RedirectResponse("/survey?saved=1", 303)
 
 
-@router.post("/pantry/add")
-def pantry_add(
-    request: Request,
-    name: str = Form(""),
-    quantity: str = Form(""),
-    unit: str = Form(""),
-    user: User = Depends(current_user),
-    db: Session = Depends(get_db),
-):
-    name = name.strip().lower()
-    if not name or len(name) > 100:
-        return RedirectResponse("/survey?pantry_error=Enter+an+item+name", 303)
-    qty = None
+def pantry_response(request, db, user, error=None, message='Pantry updated.', status=200):
+    if 'application/json' in request.headers.get('accept',''):
+        if error:
+            return JSONResponse({'ok':False,'error':error},status_code=status,headers={'Cache-Control':'no-store'})
+        rows=list(db.scalars(select(PantryItem).where(PantryItem.user_id==user.id).order_by(PantryItem.name)))
+        body=render(request,'_pantry_body.html',user,pantry=rows,pantry_error=None).body.decode()
+        return JSONResponse({'ok':True,'html':body,'message':message},headers={'Cache-Control':'no-store'})
+    if error:
+        from urllib.parse import quote
+        return RedirectResponse('/survey?pantry_error='+quote(error),303)
+    return RedirectResponse('/survey#pantry',303)
+
+
+@router.get('/pantry')
+def pantry_snapshot(request:Request,user:User=Depends(current_user),db:Session=Depends(get_db)):
+    return pantry_response(request,db,user,message='Pantry refreshed.')
+
+
+@router.post('/pantry/add')
+def pantry_add(request:Request,name:str=Form(''),quantity:str=Form(''),unit:str=Form(''),
+               user:User=Depends(current_user),db:Session=Depends(get_db)):
+    name=name.strip().lower()
+    if not name or len(name)>100:
+        return pantry_response(request,db,user,'Enter an item name of 1–100 characters.',status=400)
+    qty=None
     if quantity.strip():
-        try:
-            qty = float(quantity)
-        except ValueError:
-            qty = -1
-        if qty < 0 or not math.isfinite(qty) or qty > 1_000_000:
-            return RedirectResponse("/survey?pantry_error=Quantity+must+be+between+0+and+1000000", 303)
-    unit = unit.lower().strip()
-    if len(unit) > 20:
-        return RedirectResponse("/survey?pantry_error=Unit+must+be+20+characters+or+fewer", 303)
-    existing = db.scalar(select(PantryItem).where(PantryItem.user_id == user.id, PantryItem.name == name, PantryItem.unit == unit))
-    if existing:
-        existing.quantity, existing.unit = qty, unit.strip()[:20]
+        try:qty=float(quantity)
+        except ValueError:qty=-1
+        if qty<0 or not math.isfinite(qty) or qty>1_000_000:
+            return pantry_response(request,db,user,'Quantity must be between 0 and 1000000.',status=400)
+    unit=unit.lower().strip()
+    if len(unit)>20:
+        return pantry_response(request,db,user,'Unit must be 20 characters or fewer.',status=400)
+    lock_user(db,user.id)
+    existing=db.scalar(select(PantryItem).where(PantryItem.user_id==user.id,PantryItem.name==name,PantryItem.unit==unit))
+    if existing:existing.quantity,existing.unit=qty,unit
     else:
-        if len(list(db.scalars(select(PantryItem.id).where(PantryItem.user_id == user.id)))) >= 200:
-            return RedirectResponse("/survey?pantry_error=Pantry+limit+is+200+items", 303)
-        db.add(PantryItem(user_id=user.id, name=name, quantity=qty, unit=unit))
+        if len(list(db.scalars(select(PantryItem.id).where(PantryItem.user_id==user.id))))>=200:
+            db.rollback()
+            return pantry_response(request,db,user,'Pantry limit is 200 items.',status=400)
+        db.add(PantryItem(user_id=user.id,name=name,quantity=qty,unit=unit))
     db.commit()
-    return RedirectResponse("/survey#pantry", 303)
+    return pantry_response(request,db,user,message='Added '+name+' to your pantry.')
 
 
-@router.post("/pantry/{item_id}/delete")
-def pantry_delete(item_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)):
-    item = db.get(PantryItem, item_id)
-    if item and item.user_id == user.id:
-        db.delete(item)
-        db.commit()
-    return RedirectResponse("/survey#pantry", 303)
+@router.post('/pantry/{item_id}/delete')
+def pantry_delete(item_id:int,request:Request,user:User=Depends(current_user),db:Session=Depends(get_db)):
+    lock_user(db,user.id)
+    item=db.get(PantryItem,item_id)
+    if item and item.user_id==user.id:
+        db.delete(item);db.commit()
+        return pantry_response(request,db,user,message='Removed the pantry item.')
+    db.rollback()
+    if 'application/json' in request.headers.get('accept',''):
+        return pantry_response(request,db,user,'Pantry item not found.',status=404)
+    return RedirectResponse('/survey#pantry',303)

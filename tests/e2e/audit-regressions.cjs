@@ -4,7 +4,7 @@ const {spawn}=require('node:child_process');const {chromium}=require('playwright
 const repo=path.resolve(__dirname,'../..'),temp=fs.mkdtempSync(path.join(os.tmpdir(),'platejoy-audit-fixes-'));
 const base='http://127.0.0.1:8139';
 const python=process.env.PYTHON || path.join(repo,fs.existsSync(path.join(repo,'.venv/Scripts/python.exe'))?'.venv/Scripts/python.exe':'.venv/bin/python');
-const server=spawn(python,['-m','uvicorn','app.main:app','--host','127.0.0.1','--port','8139'],{cwd:repo,env:{...process.env,DATABASE_URL:'sqlite:///'+path.join(temp,'audit.db'),ANTHROPIC_API_KEY:'',INSTACART_API_KEY:'',SECRET_KEY:'audit-regressions-only'}});
+const server=spawn(python,['-m','uvicorn','app.main:app','--host','127.0.0.1','--port','8139'],{cwd:repo,env:{...process.env,DATABASE_URL:'sqlite:///'+path.join(temp,'audit.db'),ANTHROPIC_API_KEY:'',OPENAI_API_KEY:'',APP_ENV:'development',INSTACART_API_KEY:'',SECRET_KEY:'audit-regressions-only'}});
 let log='',browser;server.stdout.on('data',d=>log+=d);server.stderr.on('data',d=>log+=d);
 (async()=>{
   let healthy=false;for(let i=0;i<150;i++){try{if((await fetch(base+'/health')).ok){healthy=true;break}}catch{}await new Promise(r=>setTimeout(r,100));}assert.ok(healthy,log);

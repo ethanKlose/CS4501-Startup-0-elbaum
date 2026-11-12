@@ -4,10 +4,11 @@
 {% block content %}
 {% set first = not profile.onboarded %}
 {% set ns = namespace(days_err=false) %}{% for k in errors %}{% if k[:8] == 'minutes_' %}{% set ns.days_err = true %}{% endif %}{% endfor %}
-<div class="planning-page">
+<div class="planning-page" data-preferences-user="{{ user.id }}" data-preferences-version="{{ preferences_version }}" data-preferences-errors="{{ '1' if errors else '' }}" data-preferences-saved="{{ '1' if saved else '' }}">
 <header class="planning-heading"><p class="planning-eyebrow">MAKE THE WEEK YOURS</p><h1>{{ 'Let’s set up your week' if first else 'Your preferences' }}</h1><p class="muted">Budget, food, schedule and cooking — all in one place. Changes apply when you generate or regenerate a plan.</p></header>
 {% if saved %}<div class="alert info" role="status" data-preferences-saved>{{ icon('check-circle') }}<span>Saved. Regenerate your week to apply the changes.</span></div>{% endif %}
 {% if errors %}<div class="alert error" role="alert" id="survey-errors">{{ icon('alert') }}<div>Please fix this first:<ul>{% for m in errors.values() %}<li>{{ m }}</li>{% endfor %}</ul></div></div>{% endif %}
+<div class="planning-draft-notice" data-draft-notice role="status" hidden><span data-draft-message>Your unsaved preferences were restored in this tab. Save to apply them.</span><button type="button" class="planning-text-button" data-restore-draft hidden>Restore draft</button><button type="button" class="planning-text-button" data-discard-draft>Discard draft</button></div>
 <div class="wiz-layout"><div>
 <form method="post" id="wizard" class="wiz" data-first="{{ '1' if first else '' }}" novalidate>
   <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
@@ -55,24 +56,8 @@
   </section>
   <div class="wiz-nav"><button type="button" class="btn line" data-prev>{{ icon('back',16) }} Back</button><span class="planning-nav-note" data-save-note>Changes are saved together.</span><button type="button" class="btn line" data-next>Next {{ icon('arrow',16) }}</button><button class="btn primary" data-save>{{ icon('check',16) }} {{ 'Save & build my week' if first else 'Save changes' }}</button></div>
 </form>
-  <details class="planning-pantry card pad-lg" id="pantry"><summary>Pantry <span class="muted">Optional · add what you already have</span></summary><div>
-    <p class="planning-help">Save your preferences above before editing pantry items. Pantry changes save separately.</p>
-    <p class="muted">What you already have. Plans use these first and your grocery list skips them.</p>
-    {% if pantry_error %}<p class="error" role="alert">{{ pantry_error }}</p>{% endif %}
-    <ul class="plain pantry">
-      {% for item in pantry %}
-      <li><span class="pname">{{ item.name }}{% if item.quantity is not none %} — {{ '%g' % item.quantity }} {{ item.unit }}{% endif %}</span>
-        <form method="post" action="/pantry/{{ item.id }}/delete" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="iconbtn sm" aria-label="Remove {{ item.name }}">{{ icon('x', 14) }}</button></form></li>
-      {% else %}<li class="muted">Nothing yet.</li>{% endfor %}
-    </ul>
-    <form method="post" action="/pantry/add" class="row pantry-add"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <input name="name" maxlength="100" placeholder="item (e.g. rice)" required aria-label="Item name" style="flex:2;min-width:140px">
-      <input name="quantity" type="number" step="any" min="0" max="1000000" placeholder="qty" aria-label="Quantity" style="flex:1;min-width:70px">
-      <input name="unit" maxlength="20" placeholder="unit" aria-label="Unit" style="flex:1;min-width:70px">
-      <button class="btn soft">Add</button>
-    </form>
-  </div></details>
-
+<details class="planning-pantry card pad-lg" id="pantry"><summary>Pantry <span class="muted">Optional · add what you already have</span></summary><p data-pantry-status role="status" aria-live="polite"></p><div data-pantry-body>{% include "_pantry_body.html" %}</div><button type="button" class="planning-text-button" data-pantry-refresh hidden>Refresh pantry list</button></details>
 </div><aside class="wiz-side"><section class="card planning-summary"><p class="planning-eyebrow">YOUR PLAN, AT A GLANCE</p><h3>{{ icon('sliders',19) }} Your priorities</h3><dl><div><dt>Weekly budget</dt><dd data-summary-budget>{{ ('$%g' % values.budget) if values.budget is number else (('$' ~ values.budget) if values.budget else 'Not set') }}</dd></div><div><dt>Protein target</dt><dd data-summary-protein>{{ (values.protein_target|string ~ 'g / day') if 'high_protein' in values.goals else 'Not selected' }}</dd></div><div><dt>Calorie target</dt><dd data-summary-calories>{{ (values.calorie_target|string ~ ' kcal / day') if 'calorie_target' in values.goals else 'Not selected' }}</dd></div></dl><p class="planning-help">Save to keep these settings. Regenerate your plan to apply them.</p></section>
 {% if profile.onboarded %}<details class="card understood" data-testid="understood"><summary>Saved interpretation</summary><ul class="plain">{% for line in understood %}<li>{{ line }}</li>{% endfor %}</ul><small class="muted">Based on your last save. Review after changing preferences.</small></details>{% else %}<section class="card planning-why"><h3>{{ icon('shield',18) }} Built around your week</h3><p class="planning-help">Budget and dietary restrictions are checked before a plan is shown. Nutrition and time goals that need attention are flagged for review.</p></section>{% endif %}</aside></div></div>
+<script src="/static/planning-pantry.js" defer></script>
 {% endblock %}

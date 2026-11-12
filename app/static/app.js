@@ -59,6 +59,10 @@
   window.PJ.showGenerating = showGenerating;
   document.addEventListener('submit', function (e) {
     var f = e.target;
+    if (f.getAttribute && f.getAttribute('action') === '/logout') {
+      window.PJ=window.PJ||{};window.PJ.loggingOut=true;
+      try { for (var k=sessionStorage.length-1;k>=0;k--) { var name=sessionStorage.key(k);if(name && name.startsWith('pj-preferences-draft:'))sessionStorage.removeItem(name); } } catch(error) {}
+    }
     if (!f.matches || !f.matches('form[data-generate]')) return;
     if (f.dataset.confirm && !window.confirm(f.dataset.confirm)) { e.preventDefault(); return; }
     if (f.dataset.busy) { e.preventDefault(); return; }
@@ -83,6 +87,45 @@
   var $$ = function (s, r) { return Array.from((r || form).querySelectorAll(s)); };
   var steps = $$('.wstep'), tabs = $$('.wiz-tabs button'), first = form.dataset.first === '1';
   var cur = 0;
+  var draftKey='pj-preferences-draft:'+page.dataset.preferencesUser;
+  var draftVersion=page.dataset.preferencesVersion, restored=null, conflict=null, draftDirty=page.dataset.preferencesErrors==='1';
+  var controls=Array.from(form.elements).filter(function(input){return input.name && input.type!=='hidden' && !['submit','button'].includes(input.type);});
+  function writeDraft(){
+    if((window.PJ && window.PJ.loggingOut) || conflict || !draftDirty || !draftVersion || !page.dataset.preferencesUser)return;
+    var fields={};controls.forEach(function(input){
+      if(!fields[input.name])fields[input.name]=[];
+      if(!['checkbox','radio'].includes(input.type) || input.checked)fields[input.name].push(input.value);
+    });
+    var expanded=['pantry','schedule-windows'].filter(function(id){var section=page.querySelector('#'+id);return section && section.open;});
+    try{sessionStorage.setItem(draftKey,JSON.stringify({version:draftVersion,fields:fields,step:cur,expanded:expanded}));}catch(error){}
+  }
+  function restoreFields(candidate){
+        controls.forEach(function(input){
+          var values=candidate.fields[input.name];
+          if(!Array.isArray(values) || !values.every(function(value){return typeof value==='string' && value.length<=2000;}))return;
+          if(['checkbox','radio'].includes(input.type))input.checked=values.includes(input.value);
+          else if(values.length)input.value=values[0];
+        });
+        restored=candidate;draftDirty=true;
+        (Array.isArray(candidate.expanded)?candidate.expanded:[]).forEach(function(id){if(['pantry','schedule-windows'].includes(id)){var section=document.getElementById(id);if(section)section.open=true;}});
+  }
+  try{
+    var encoded=sessionStorage.getItem(draftKey);
+    if(page.dataset.preferencesSaved==='1'){
+      // Treat the redirect marker once. Leaving it in the URL would discard
+      // a NEW draft typed after saving when the user refreshes this page.
+      var cleanURL=new URL(location.href);cleanURL.searchParams.delete('saved');
+      history.replaceState(history.state,'',cleanURL.pathname+cleanURL.search+cleanURL.hash);
+    }
+    if(page.dataset.preferencesSaved==='1' || page.dataset.preferencesErrors==='1')sessionStorage.removeItem(draftKey);
+    else if(encoded && encoded.length<=50000){
+      var candidate=JSON.parse(encoded);
+      if(candidate && candidate.fields && typeof candidate.fields==='object'){
+        if(candidate.version===draftVersion)restoreFields(candidate);
+        else conflict=candidate;
+      }else sessionStorage.removeItem(draftKey);
+    }
+  }catch(error){try{sessionStorage.removeItem(draftKey);}catch(ignored){}}
   function go(i, scroll) {
     cur = Math.max(0, Math.min(steps.length - 1, i));
     steps.forEach(function (section, index) { section.hidden=index!==cur;section.classList.toggle('on', index===cur); });
@@ -94,6 +137,7 @@
     var label=document.getElementById('planning-step-label');if(label) label.textContent='Step '+(cur+1)+' of '+steps.length;
     form.classList.toggle('last',cur===steps.length-1);
     steps.forEach(function (_,index) { form.classList.remove('step'+index); });form.classList.add('step'+cur);
+    writeDraft();
     if(scroll) form.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
   }
   function invalid(section) {
@@ -130,6 +174,7 @@
   function dirty(){
     var note=form.querySelector('[data-save-note]');if(note)note.textContent='Unsaved changes';
     var saved=page.querySelector('[data-preferences-saved]');if(saved)saved.hidden=true;
+    draftDirty=true;writeDraft();
   }
   function syncGoals(){
     $$('input[name=goals]').forEach(function(check){
@@ -147,7 +192,7 @@
   }
   form.addEventListener('input',summary);
   form.addEventListener('input',dirty);form.addEventListener('change',dirty);
-  $$('.dayrow').forEach(function(row){var check=row.querySelector('input[type=checkbox]');check.addEventListener('change',function(){row.classList.toggle('is-busy',check.checked);});});
+  $$('.dayrow').forEach(function(row){var check=row.querySelector('input[type=checkbox]');row.classList.toggle('is-busy',check.checked);check.addEventListener('change',function(){row.classList.toggle('is-busy',check.checked);});});
   function openHash(){
     var target=document.getElementById(location.hash.slice(1));if(!target || !page.contains(target))return;
     var index=steps.findIndex(function(step){return step.contains(target);});if(index>=0)go(index,false);
@@ -155,9 +200,35 @@
     target.scrollIntoView({block:'start'});
   }
   syncGoals();
-  var start=steps.findIndex(function(step){return step.dataset.hasError==='1';});go(start>=0?start:0,false);
+  var start=steps.findIndex(function(step){return step.dataset.hasError==='1';});go(start>=0?start:(restored && Number.isInteger(restored.step)?restored.step:0),false);
   if(start>=0){var bad=invalid(steps[start]);if(bad)reveal(bad);}else openHash();
   window.addEventListener('hashchange',openHash);
+  window.addEventListener('pagehide',writeDraft);
+  form.addEventListener('submit',writeDraft);
+  page.addEventListener('toggle',writeDraft,true);
+  var notice=page.querySelector('[data-draft-notice]');
+  if(restored){dirty();if(notice)notice.hidden=false;}
+  var restoreButton=page.querySelector('[data-restore-draft]');
+  if(conflict && notice){
+    notice.hidden=false;form.setAttribute('inert','');
+    notice.querySelector('[data-draft-message]').textContent='Preferences were saved in another tab. Restore your unsaved draft for review, or keep the saved preferences.';
+    if(restoreButton)restoreButton.hidden=false;
+  }
+  if(restoreButton)restoreButton.addEventListener('click',function(){
+    if(!conflict)return;var candidate=conflict;conflict=null;form.removeAttribute('inert');
+    restoreFields(candidate);syncGoals();summary();$$('.presets').forEach(function(box){var input=form.elements.namedItem(box.dataset.target);input.dispatchEvent(new Event('input'));});if(protein)protein.dispatchEvent(new Event('input'));$$('.dayrow').forEach(function(row){row.classList.toggle('is-busy',row.querySelector('input[type=checkbox]').checked);});go(Number.isInteger(candidate.step)?candidate.step:0,false);dirty();
+    restoreButton.hidden=true;
+    notice.querySelector('[data-draft-message]').textContent='Your draft is restored for review. Save to apply these changes.';
+  });
+  var discard=page.querySelector('[data-discard-draft]');
+  if(discard)discard.addEventListener('click',function(){
+    form.reset();draftDirty=false;restored=null;conflict=null;form.removeAttribute('inert');if(restoreButton)restoreButton.hidden=true;
+    try{sessionStorage.removeItem(draftKey);}catch(error){}
+    syncGoals();summary();go(0,false);if(notice)notice.hidden=true;
+    var note=form.querySelector('[data-save-note]');if(note)note.textContent='Changes are saved together.';
+    $$('.presets').forEach(function(box){var input=form.elements.namedItem(box.dataset.target);box.querySelectorAll('.pill').forEach(function(button){var on=String(input.value)===button.dataset.set;button.classList.toggle('on',on);button.setAttribute('aria-pressed',String(on));});});
+    $$('.dayrow').forEach(function(row){row.classList.toggle('is-busy',row.querySelector('input[type=checkbox]').checked);});
+  });
 })();
 
 /* ---- calendar: meal quick-view dialog ---- */

@@ -4,7 +4,7 @@
   "scripts": {
     "test:e2e": "node tests/e2e/smoke.cjs",
     "test:e2e:audit": "node tests/e2e/audit-regressions.cjs",
-    "test:ui": "node --test tests/ui/*.cjs"
+    "test:ui": "node --test tests/ui/planning-controls.cjs tests/ui/kroger-controls.cjs tests/ui/preferences-state.cjs"
   },
   "devDependencies": {
     "jsdom": "26.1.0",

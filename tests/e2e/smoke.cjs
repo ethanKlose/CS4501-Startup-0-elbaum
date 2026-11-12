@@ -12,7 +12,7 @@ const port = Number(process.env.E2E_PORT || 8123);
 const baseURL = `http://127.0.0.1:${port}`;
 const python = process.env.PYTHON || (fs.existsSync(path.join(repo, '.venv/bin/python')) ? path.join(repo, '.venv/bin/python') : 'python');
 const server = spawn(python, ['-m', 'uvicorn', 'app.main:app', '--host', '127.0.0.1', '--port', String(port)], {
-  cwd: repo, env: {...process.env, DATABASE_URL: 'sqlite:///' + path.join(temp, 'test.db'), ANTHROPIC_API_KEY: '', SECRET_KEY: 'isolated-e2e-only'}
+  cwd: repo, env: {...process.env, DATABASE_URL: 'sqlite:///' + path.join(temp, 'test.db'), ANTHROPIC_API_KEY: '', OPENAI_API_KEY: '', APP_ENV: 'development', SECRET_KEY: 'isolated-e2e-only'}
 });
 let serverLog = '', browser, context, page;
 server.stdout.on('data', d => { serverLog += d; });
@@ -72,6 +72,35 @@ async function confirmClick(button, accept) {
   await planReady();
   assert.equal(await page.locator('a[data-meal]').count(), 21);
   pass('signup, survey, automatic generation, demo label');
+
+  await page.goto('/survey');
+  await page.locator('input[name=budget]').fill('177');
+  await page.locator('[data-nutrition-card=high_protein] .goal-toggle').click();
+  await page.locator('input[name=protein_target]').fill('137');
+  await page.locator('[data-goto="3"]').click();
+  await page.locator('#pantry > summary').click();
+  await page.locator('.pantry-add [name=name]').fill('rice');
+  await page.locator('.pantry-add [name=quantity]').fill('2');
+  await page.locator('.pantry-add [name=unit]').fill('cup');
+  await page.locator('.pantry-add button').click();
+  await page.waitForFunction(()=>document.querySelector('[data-pantry-status]').textContent.includes('Added rice'));
+  assert.equal(await page.locator('input[name=budget]').inputValue(),'177');
+  assert.equal(await page.locator('input[name=protein_target]').inputValue(),'137');
+  assert.ok(await page.locator('#planning-step-3').isVisible());
+  await page.getByRole('button',{name:'Remove rice',exact:true}).click();
+  await page.waitForFunction(()=>document.querySelector('[data-pantry-status]').textContent.includes('Removed'));
+  assert.equal(await page.locator('input[name=budget]').inputValue(),'177');
+  await page.goto('/grocery');
+  await page.goto('/survey');
+  assert.equal(await page.locator('input[name=budget]').inputValue(),'177');
+  assert.equal(await page.locator('input[name=protein_target]').inputValue(),'137');
+  assert.ok(await page.locator('#planning-step-3').isVisible());
+  await page.locator('[data-discard-draft]').click();
+  assert.equal(await page.locator('input[name=budget]').inputValue(),'150');
+  assert.equal(await page.locator('[name=goals][value=high_protein]').isChecked(),false);
+  pass('pantry add/remove and navigation preserve unsaved preference fields and wizard progress');
+  await page.goto('/');
+
 
   await page.getByRole('button', {name: 'Agenda', exact: true}).click();
   assert.ok(await page.locator('.gcal').evaluate(e => e.classList.contains('is-agenda')));

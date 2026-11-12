@@ -27,6 +27,12 @@ with TestClient(app,follow_redirects=False) as client:
         if '--goals' in sys.argv:
             values.update(goals_present='1',goals=['high_protein','calorie_target'],protein_target='120',calorie_target='2200')
         assert post('/survey',values).status_code==303
+    if '--pantry-fragment' in sys.argv:
+        assert post('/pantry/add',{'name':'rice','quantity':'2','unit':'cup'}).status_code==303
+        response=client.get('/pantry',headers={'Accept':'application/json'})
+        assert response.status_code==200
+        sys.stdout.buffer.write(response.json()['html'].encode('utf-8'))
+        raise SystemExit(0)
     response=client.get('/survey')
     assert response.status_code==200
     sys.stdout.buffer.write(response.text.encode('utf-8'))
