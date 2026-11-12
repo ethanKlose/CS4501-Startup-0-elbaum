@@ -1,6 +1,7 @@
 # Application integration testing
 
-The integration suite adds **70 automated cases** under `tests/integration/`.
+The integration suite adds **71 automated cases** under `tests/integration/`
+(the original 70 plus one Windows event-loop regression).
 It supplements the 508 existing Python cases and the two existing Playwright
 workflows. Existing tests are not relabeled or counted again as new cases.
 
@@ -36,7 +37,9 @@ planner, validators, scheduler, inventory or authentication services with mocks.
 Assertions read committed results through separate database sessions.
 
 The clock, random seed and configuration are controlled for reproducibility.
-Network connections are blocked. Third-party HTTP or SMTP responses are replaced
+Application network connections are blocked. Only the standard library's internal
+loopback TCP socketpair construction is allowed, in the constructing thread, so
+Windows asyncio can create its wake-up pipe. Third-party HTTP or SMTP responses are replaced
 at the I/O boundary only. Browser behavior is covered separately by Playwright;
 FastAPI's TestClient does not execute frontend JavaScript.
 
@@ -52,7 +55,8 @@ Story numbers below are the GitHub issue numbers used by the acceptance document
 | LLM boundary | Actual Anthropic SDK request/response processing, catalog hydration, untrusted-field replacement, validation feedback, bounded retries and rollback preserving the previous plan and purchase ledger | 9 | #6, #10-#15, #22-#23 |
 | Shopping provider | Actual Instacart adapter, unchecked-item payload, cached link reuse/invalidation, missing credentials, empty lists, timeout/status/JSON failures and untrusted redirects | 8 | #24-#28 |
 | Password recovery | Real development outbox or controlled SMTP transport, verified TLS setup, token hashing, expiry/single use, password change, session revocation and generic failure responses | 6 | Account/security foundation for all stories |
-| **Total new automated cases** | **Each parameter combination is one collected pytest case** | **70** | **All six Alpha feature groups** |
+| Windows event loop | Force CPython's Windows-style TCP socketpair, start the real application, generate a plan, exchange wake-up bytes, and confirm application network calls are still rejected | 1 | Test-fixture compatibility |
+| **Total new automated cases** | **Each parameter combination is one collected pytest case** | **71** | **All six Alpha feature groups** |
 
 The mapping covers workflows associated with all 31 story records. It is not a
 claim that every acceptance criterion has been proven. Human onboarding duration,
@@ -77,9 +81,10 @@ automated suite. The 24 existing manual procedures remain manual and unexecuted.
 
 ## CI and evidence
 
-GitHub Actions has a dedicated integration job on Ubuntu and Windows, with JUnit
+GitHub Actions has dedicated integration jobs on Ubuntu and Windows with Python
+3.11 and 3.13, with JUnit
 results uploaded even when a test fails. The full Python job also includes these
-70 cases and retains its 90% line-coverage gate. The browser jobs remain separate.
+71 cases and retains its 90% line-coverage gate. The browser jobs remain separate.
 Adding a CI configuration is not evidence that the hosted Windows job has run.
 
 See `docs/evidence/integration/` for the recorded local run, collected-case

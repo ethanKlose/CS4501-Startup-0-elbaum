@@ -122,7 +122,7 @@ python -m pytest tests/integration -m integration -q --strict-markers --junitxml
 ```
 
 On Windows Git Bash you can also use `.venv/Scripts/python.exe` instead of
-`python`. These 70 cases use temporary databases and controlled provider I/O;
+`python`. These 71 cases use temporary databases and controlled provider I/O;
 no paid API key or actual email delivery is required. See
 `INTEGRATION_TESTING.md` for the workflow matrix and recorded results.
 

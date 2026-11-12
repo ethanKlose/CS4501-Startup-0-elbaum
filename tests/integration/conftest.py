@@ -4,7 +4,9 @@ Unlike the older shared in-memory fixture, these tests keep the real get_db
 dependency and lifespan. Only environment, time and external I/O are controlled.
 """
 import datetime as dt
+import ipaddress
 import socket
+import threading
 from contextlib import contextmanager
 from dataclasses import dataclass
 from zoneinfo import ZoneInfo
@@ -60,10 +62,30 @@ def application(tmp_path, monkeypatch):
 
     monkeypatch.setattr(socket, "create_connection", forbid_network)
     original_connect = socket.socket.connect
+    original_socketpair = socket.socketpair
+    socketpair_scope = threading.local()
+
+    def guarded_socketpair(*args, **kwargs):
+        # Windows implements the event loop's self-pipe with loopback TCP.
+        # Allow that only during stdlib socketpair construction in this thread.
+        previous = getattr(socketpair_scope, "active", False)
+        socketpair_scope.active = True
+        try:
+            return original_socketpair(*args, **kwargs)
+        finally:
+            socketpair_scope.active = previous
+
     def guarded_connect(sock, address):
         if sock.family in (socket.AF_INET, socket.AF_INET6):
-            forbid_network()
+            try:
+                loopback = ipaddress.ip_address(address[0]).is_loopback
+            except (ValueError, TypeError, IndexError):
+                loopback = False
+            if not (getattr(socketpair_scope, "active", False) and loopback):
+                forbid_network()
         return original_connect(sock, address)
+
+    monkeypatch.setattr(socket, "socketpair", guarded_socketpair)
     monkeypatch.setattr(socket.socket, "connect", guarded_connect)
     app = create_app()
     assert app.dependency_overrides == {}, "Integration tests must exercise real application dependencies"

@@ -71,7 +71,7 @@ Database migrations run on startup and from `python -m alembic upgrade head`. Ex
 
 ## Integration tests
 For application integration tests, run `python -m pytest tests/integration -m integration -q`
-from your active virtual environment. The 70 integration cases exercise actual routes,
+from your active virtual environment. The 71 integration cases exercise actual routes,
 middleware, database migrations and service workflows with controlled external I/O.
 See [INTEGRATION_TESTING.md](INTEGRATION_TESTING.md) for the coverage matrix,
 Windows commands, CI configuration and the limits of provider testing.
