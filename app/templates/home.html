@@ -39,6 +39,7 @@
   </div>
 </div>
 
+{% if plan.settings.get('closest',{}).get('variety') %}<p class="muted tiny" data-testid="meal-variety-summary">{% for slot,details in plan.settings.closest.variety.by_slot.items() %}{{ slot|capitalize }}: {{ details.distinct }} / {{ details.target }} recipe choices{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
 {% if checkin_due %}<div class="alert info banner" data-testid="checkin-banner">{{ icon('check-circle') }}<span><strong>It’s almost the end of the week.</strong> <a href="/checkin">Take the 1-minute check-in</a> so next week’s plan learns from this one.</span></div>{% endif %}
 
 <div class="cal-layout">

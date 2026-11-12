@@ -15,6 +15,8 @@ def summary(plan):
     add('Diet and kitchen rules',[v.check_diet],known='restrictions' in st and 'excluded' in st)
     add('Cooking schedule',[v.check_schedule,v.check_cooking_deadlines])
     add('Nutrition goal',[v.check_goal],requested=ctx.goal!='none')
+    variety=st.get('closest',{}).get('variety')
+    if variety:rows.append(dict(label='Meal variety',status='Needs review' if variety['notices'] else 'Passed',details=variety['notices']))
     rows.append(dict(label='Extra notes',status='Needs review' if ctx.preference_warnings else 'Passed',details=ctx.preference_warnings))
     review=bool(plan.warnings) or any(r['status'] in {'Needs review','Not recorded'} for r in rows)
     return dict(label=('Closest available plan' if st.get('closest') else 'Needs review') if review else 'Checks passed',needs_review=review,checks=rows)

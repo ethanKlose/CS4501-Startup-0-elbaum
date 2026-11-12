@@ -13,7 +13,7 @@ class PlanningBlocked(PlanFailed):
     redirect_to_preferences = True
 
 
-def assess(raw, ctx):
+def assess(raw, ctx, available=None):
     plan, errors = parse_plan(raw)
     if errors:
         return plan, errors, [], None
@@ -59,16 +59,19 @@ def assess(raw, ctx):
                  calorie_difference=round(row['calories']-ctx.calorie_target) if ctx.calorie_target else None,
                  protein_shortfall=round(max(0,target-row['protein']),1) if target else None)
             for day,row in sorted(daily.items())]
-    score = 4*over/max(ctx.budget,1)
-    if ctx.calorie_target and not ctx.external_slots:
-        score += 3*sum(abs(r['calories']-ctx.calorie_target)/ctx.calorie_target for r in daily.values())/n
-    if target and not ctx.external_slots:
-        score += 3*sum(max(0,target-r['protein'])/target for r in daily.values())/n
-    score += .1*(len(v.check_schedule(plan,ctx))+len(v.check_cooking_deadlines(plan,ctx)))
+    from app.services.meal_variety import available_recipes,describe,objective
+    available=available if available is not None else available_recipes(ctx)
+    variety=describe(plan,ctx,available)
+    warnings+=variety['notices']
+    score=objective(plan,ctx,shopping,available)
+    schedule=v.schedule_for(plan,ctx)
+    excess=sum(max(0,used-cap) for used,cap in schedule.overbooked.values())
+    score+=.8*excess/max(45,sum(max(0,day.minutes) for day in ctx.active_days()))
+    score+=.1*len(v.check_cooking_deadlines(plan,ctx))
     report = dict(shopping=shopping, budget=ctx.budget, over_budget=round(over,2),
                   average_calories=round(cal), calorie_target=ctx.calorie_target,
                   average_protein=round(pro,1), protein_target=target, days=days,
-                  score=round(score,6), unique_recipes=len({m['name'] for m in plan['meals']}))
+                  score=round(score,6), variety=variety, unique_recipes=len({m['name'] for m in plan['meals']}))
     return plan, [], list(dict.fromkeys(warnings+list(ctx.preference_warnings))), report
 
 
@@ -76,12 +79,16 @@ def select_plan(llm, ctx):
     from app.services.llm import FakeLLM
     if not math.isfinite(ctx.budget) or ctx.budget < 30 or ctx.budget > 10000 or (ctx.calorie_target and not 1200 <= ctx.calorie_target <= 4500):
         raise PlanningBlocked('These settings are outside the supported planning range. Use a weekly budget of $30–$10,000 and a calorie goal of 1,200–4,500 kcal/day. Please revise your preferences.')
+    from app.services.meal_variety import available_recipes,diversify
+    available=available_recipes(ctx)
     candidates=[]; failures=[]; requested=getattr(llm,'name','custom'); started=time.perf_counter()
     def consider(raw, source):
-        plan, hard, warnings, report = assess(raw, ctx)
+        plan, hard, warnings, report = assess(raw, ctx, available)
         ctx.generation_trace.append(dict(attempt=len(ctx.generation_trace)+1,source=source,
             seconds=round(time.perf_counter()-started,3),hard_errors=hard,soft_warnings=warnings))
         if hard: failures.extend(hard);return
+        plan=diversify(plan,ctx,available,assess)
+        plan,hard,warnings,report=assess(plan,ctx,available)
         key=(report['score'], max(0,ctx.budget*.5-report['shopping'])/max(ctx.budget,1),-report['unique_recipes'])
         candidates.append((key,plan,warnings,report,source))
     try:

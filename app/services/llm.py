@@ -218,7 +218,8 @@ BEST-EFFORT goals (misses are shown to the user as warnings, so try hard):
   reach at least protein_target grams each day. A legacy high_protein goal with no protein_target means 75g/day;
 - calorie_target is per DAY: the three meals of every day must add up to about that number (2000 kcal means
   ~650 per meal, not 300). Choose appropriately sized approved dishes to reach it;
-- variety: do not repeat a dish more than 3 times in the week unless batching helps the schedule;
+- variety: aim for 3 breakfast choices, 3 lunch choices and 4 dinner choices when available;
+  normally repeat a dish at most 3 times and at most 2 consecutive days. These are preferences, not rejection rules;
 - prefer meals that share ingredients and use pantry items and leftovers first.
 
 You choose WHAT to eat, not WHEN to cook. A separate scheduler decides the cook day for every meal, so a busy
