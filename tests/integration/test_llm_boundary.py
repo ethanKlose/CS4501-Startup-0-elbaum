@@ -71,7 +71,7 @@ def test_sdk_response_is_hydrated_validated_persisted_and_rendered(application, 
     assert 'AI mode: plans use your configured model.' in page.text
 
 
-def test_invalid_provider_output_is_fed_back_and_successful_retry_is_only_saved_plan(application, web, monkeypatch):
+def test_invalid_pick_is_repaired_for_only_missing_slot_and_saved_once(application, web, monkeypatch):
     onboard(web)
     payloads = []
     def handler(request):
@@ -79,16 +79,51 @@ def test_invalid_provider_output_is_fed_back_and_successful_retry_is_only_saved_
         payload = json.loads(body["messages"][0]["content"])
         payloads.append(payload)
         if len(payloads) == 1:
-            return message('{"meals":[{"day":0,"slot":"breakfast","name":"Not an approved recipe"}]}')
+            choices = valid_choices(payload)
+            choices["meals"][-1]["name"] = "Not an approved recipe"
+            return message(json.dumps(choices))
         return message(json.dumps(valid_choices(payload)))
+    attach_transport(monkeypatch, handler)
+    generate(web)
+    saved = snapshot(application)
+    assert len(payloads) == 2 and saved["attempts"] == 1
+    assert payloads[0]["feedback_from_previous_attempt"] == []
+    assert payloads[1]["required_slots"] == [payloads[0]["required_slots"][-1]]
+    assert len(payloads[1]["already_planned"]) == 20
+    assert payloads[1]["note"] == "Return ONLY the missing meals, in the same JSON format."
+    trace = saved["settings"]["generation"]["trace"]
+    assert len(trace) == 1 and not trace[0]["hard_errors"]
+    assert len(saved["settings"]["generation"]["api_calls"]) == 2
+    assert len(saved["meals"]) == 21
+    with application.sessions() as db:
+        assert db.query(Plan).count() == 1
+
+
+def test_complete_but_diet_invalid_plan_uses_outer_validation_feedback(application, web, monkeypatch):
+    onboard(web, restrictions_present="1", restrictions=["vegan"])
+    payloads = []
+    def handler(request):
+        body = json.loads(request.content)
+        payload = json.loads(body["messages"][0]["content"])
+        payloads.append(payload)
+        choices = valid_choices(payload)
+        if len(payloads) > 1:
+            for meal in choices["meals"]:
+                if meal["slot"] == "breakfast":
+                    meal["name"] = "Tofu scramble"
+        return message(json.dumps(choices))
     attach_transport(monkeypatch, handler)
     generate(web)
     saved = snapshot(application)
     assert len(payloads) == saved["attempts"] == 2
     assert payloads[0]["feedback_from_previous_attempt"] == []
     assert payloads[1]["feedback_from_previous_attempt"]
+    # Complete responses skip the adapter's gap repair and reach the validator.
+    assert all(len(payload["required_slots"]) == 21 and "already_planned" not in payload for payload in payloads)
     trace = saved["settings"]["generation"]["trace"]
     assert trace[0]["hard_errors"] and not trace[1]["hard_errors"]
+    assert saved["settings"]["restrictions"] == ["vegan"]
+    assert all(meal["name"] != "Overnight oats with banana" for meal in saved["meals"])
     with application.sessions() as db:
         assert db.query(Plan).count() == 1
 
@@ -114,7 +149,10 @@ def test_exhausted_provider_failures_preserve_existing_plan_and_unsettled_invent
     attach_transport(monkeypatch, handler)
     response = post(web, "/plan/regenerate")
     assert response.status_code == 303
-    assert len(calls) == 3  # App attempts, no extra SDK retries.
+    # Semantically incomplete responses allow two gap-fill requests inside each
+    # of three planner attempts. Transport/JSON failures stop that inner pass.
+    expected_calls = 9 if failure in {"missing_meals", "unknown_recipe"} else 3
+    assert len(calls) == expected_calls
     assert snapshot(application) == before
     assert pantry(application, before["user_id"]) == {}
     assert "alert" in web.get("/").text

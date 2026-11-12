@@ -1,7 +1,7 @@
 """LLM access. Two interchangeable clients:
 
 * FakeLLM      - deterministic, offline, catalog-based. Used when no API key is set and in tests.
-* AnthropicLLM - the real thing. Only needs ANTHROPIC_API_KEY in .env.
+* AnthropicLLM / OpenAILLM - the real thing. Need ANTHROPIC_API_KEY or OPENAI_API_KEY in .env.
 
 Both implement:
     generate_plan(ctx: PlanContext, feedback: list[str]) -> dict   (raw, UNVALIDATED plan)
@@ -193,13 +193,17 @@ Return ONLY a JSON object (no prose, no markdown fences) of the form:
   "section": "produce"|"dairy"|"meat"|"seafood"|"bakery"|"pantry"|"frozen"|"other", "cost": number}]}]}
 
 HARD rules (a plan breaking any of these is thrown away):
-- exactly one meal per slot per active day; skipped days get no meals;
+- exactly one meal per slot per active day: return every (day, slot) listed in required_meals, nothing
+  missing, nothing extra (skipped days get no meals);
 - the sum of all ingredient costs must not exceed the weekly budget;
 - never use an ingredient that violates a restriction or an excluded ingredient;
 - keep pinned meals exactly as given; do not use the disliked meal names.
 
 BEST-EFFORT goals (misses are shown to the user as warnings, so try hard):
 - hit the calorie target (weekly average within 10%, each day within 30%) or the protein goal;
+- calorie_target is per DAY: the three meals of every day must add up to about that number (2000 kcal means
+  ~650 per meal, not 300). Size portions up, and add rice, pasta, oil, nuts or sides to reach it;
+- variety: do not repeat a dish more than 3 times in the week unless batching helps the schedule;
 - prefer meals that share ingredients and use pantry items and leftovers first.
 
 You choose WHAT to eat, not WHEN to cook. A separate scheduler decides the cook day for every meal, so a busy
@@ -218,6 +222,19 @@ def _extract_json(text: str):
     text = re.sub(r"^```(?:json)?|```$", "", text.strip(), flags=re.M).strip()
     start, end = text.find("{"), text.rfind("}")
     return json.loads(text[start : end + 1])
+
+
+def _fix_costs(plan):
+    """A meal's cost is, by definition, the sum of its ingredient costs. Models get this arithmetic wrong
+    often, so we derive it instead of burning a retry on it."""
+    try:
+        for m in plan.get("meals", []):
+            ings = m.get("ingredients") or []
+            if ings:
+                m["cost"] = round(sum(float(i.get("cost", 0)) for i in ings), 2)
+    except (TypeError, ValueError, AttributeError):
+        pass  # malformed output is left for the validators to report
+    return plan
 
 
 class AnthropicLLM:
@@ -246,10 +263,48 @@ class AnthropicLLM:
         payload = {"context": asdict(ctx), "cook_capacity_minutes": {str(k): v for k, v in sorted(caps.items())},
                    "feedback_from_previous_attempt": list(feedback)}
         from app.services.nutrition import catalog_plan
-        payload['approved_recipes']=[{k:v for k,v in r.items() if k in {'name','slots','calories','protein','cost','cook_minutes'}} for r in RECIPES]
-        payload['required_slots']=[{'day':d.weekday,'slot':slot} for d in ctx.active_days() for slot in ctx.slots_for(d.weekday)]
-        prompt=SYSTEM+"\nSelect ONLY names from approved_recipes. Return {\"meals\":[{\"day\":0,\"slot\":\"breakfast\",\"name\":\"approved recipe name\"}]}. Do not generate nutrition, ingredients or instructions; the server supplies those. Cover required_slots exactly."
-        return catalog_plan(self._ask(prompt,json.dumps(payload),int(os.environ.get("LLM_MAX_OUTPUT_TOKENS","5000"))),ctx)
+        self._tight = getattr(self, '_tight', False) or any('budget' in str(f).lower() for f in feedback)  # sticky for this generation
+        over_budget = self._tight  # retry after a budget miss: cheapest 2 recipes per slot
+        pool = sorted(RECIPES, key=lambda r: r['cost'])
+        by_slot = {sl: [r["name"] for r in pool if sl in r["slots"]][: 2 if over_budget else None] for sl in SLOTS}
+        allowed = {n for names in by_slot.values() for n in names}
+        payload['approved_recipes'] = [{k: v for k, v in r.items() if k in {'name', 'slots', 'calories', 'protein', 'cost', 'cook_minutes'}} for r in RECIPES if r['name'] in allowed]
+        payload['approved_names_by_slot'] = by_slot  # a recipe may only be used for a slot listed here
+        required = [{'day': d.weekday, 'slot': slot} for d in ctx.active_days() for slot in ctx.slots_for(d.weekday)]
+        payload['required_slots'] = required
+        prompt = SYSTEM + "\nSelect ONLY names from approved_names_by_slot[slot] for that slot. Return {\"meals\":[{\"day\":0,\"slot\":\"breakfast\",\"name\":\"approved recipe name\"}]}. Do not generate nutrition, ingredients or instructions; the server supplies those. Cover required_slots exactly. Groceries are bought in whole packages, so every distinct recipe adds shopping cost: choose only about 5-8 different recipes and repeat them across the week (batch cooking), keeping the total well under the weekly budget in context.budget. If feedback_from_previous_attempt mentions the budget, use fewer and cheaper recipes."
+        max_tokens = int(os.environ.get("LLM_MAX_OUTPUT_TOKENS", "5000"))
+        pinned = {(m['day'], m['slot']) for m in ctx.pinned}
+
+        def usable(raw):
+            """Keep picks that are real recipes for their slot; a bad pick should cost one meal, not the plan."""
+            good = []
+            for m in (raw.get('meals') if isinstance(raw, dict) else None) or []:
+                if not isinstance(m, dict):
+                    continue
+                if (m.get('day'), m.get('slot')) in pinned or m.get('name') in by_slot.get(m.get('slot'), ()):
+                    good.append(m)
+            return good
+
+        meals = usable(self._ask(prompt, json.dumps(payload), max_tokens))
+        for _ in range(2):  # small models drop or mis-slot a few picks; ask only for the gaps
+            have = {(m.get('day'), m.get('slot')) for m in meals}
+            missing = [x for x in required if (x['day'], x['slot']) not in have]
+            if not missing:
+                break
+            extra = dict(payload, required_slots=missing, already_planned=[{'day': m.get('day'), 'slot': m.get('slot'), 'name': m.get('name')} for m in meals],
+                         note="Return ONLY the missing meals, in the same JSON format.")
+            try:
+                meals += usable(self._ask(prompt, json.dumps(extra), max_tokens))
+            except Exception:
+                break
+        wanted, seen, final = {(x['day'], x['slot']) for x in required}, set(), []
+        for m in meals:  # one pick per required slot: drop duplicates and slots that aren't part of the plan
+            key = (m.get('day'), m.get('slot'))
+            if key in wanted and key not in seen:
+                seen.add(key)
+                final.append(m)
+        return catalog_plan({'meals': final}, ctx)
 
     def interpret_preferences(self, text: str) -> Dict:
         if not (text or "").strip():
@@ -258,7 +313,8 @@ class AnthropicLLM:
             'Extract structured constraints from a student\'s free-text meal preferences. Return ONLY JSON: '
             '{"excluded": [ingredient or food-group words to never serve, e.g. "fish"], '
             '"day_minutes_cap": {"<weekday 0=Mon..6=Sun>": max cooking minutes that day}}. '
-            'Use 15 for "hate cooking" and 0 for "no cooking".'
+            'Use 15 for "hate cooking" and 0 for "no cooking". Weekday numbers: 0=Monday, 1=Tuesday, 2=Wednesday, '
+            '3=Thursday, 4=Friday, 5=Saturday, 6=Sunday.'
         )
         try:
             out = self._ask(system, text, 500)
@@ -268,10 +324,40 @@ class AnthropicLLM:
             return FakeLLM().interpret_preferences(text)
 
 
+class OpenAILLM(AnthropicLLM):
+    """Same prompts and parsing as AnthropicLLM, served by the OpenAI chat API."""
+
+    name = "openai"
+
+    def __init__(self, api_key: str, model: str):
+        import openai
+
+        self.client = openai.OpenAI(api_key=api_key, timeout=float(os.environ.get("LLM_TIMEOUT_SECONDS", "60")), max_retries=0)
+        self.metrics = []
+        self.model = model
+
+    def _ask(self, system: str, user: str, max_tokens: int):
+        started = time.perf_counter()
+        resp = self.client.chat.completions.create(
+            model=self.model, max_tokens=max_tokens, response_format={"type": "json_object"},
+            messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
+        )
+        usage = getattr(resp, "usage", None)
+        if not hasattr(self, "metrics"):
+            self.metrics = []
+        self.metrics.append({"latency_seconds": round(time.perf_counter() - started, 3),
+                             "input_tokens": getattr(usage, "prompt_tokens", None),
+                             "output_tokens": getattr(usage, "completion_tokens", None),
+                             "stop_reason": resp.choices[0].finish_reason})
+        return _extract_json(resp.choices[0].message.content or "")
+
+
 # ----------------------------------------------------------------------------- selection
 
 def get_llm():
     """FastAPI dependency. Override in tests via app.dependency_overrides[get_llm]."""
+    if settings.openai_api_key.strip():
+        return OpenAILLM(settings.openai_api_key, settings.openai_model)
     if settings.anthropic_api_key.strip():
         return AnthropicLLM(settings.anthropic_api_key, settings.anthropic_model)
     return FakeLLM()
