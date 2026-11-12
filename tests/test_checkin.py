@@ -138,10 +138,10 @@ def test_checkin_saved_and_summary_shown(planned):
         assert s.query(CheckIn).count() == 1
 
 
-def test_checkin_invalid_values_fall_back(planned):
-    planned.post("/checkin", data={"overall": "???", "cook_time": "x", "variety": "y"})
-    c = last_checkin(planned)
-    assert (c.overall, c.cook_time, c.variety) == ("ok", "right", "right")
+def test_checkin_invalid_values_are_rejected(planned):
+    r = planned.post("/checkin", data={"overall": "???", "cook_time": "x", "variety": "y"})
+    assert r.status_code == 422
+    assert last_checkin(planned) is None
 
 
 def test_checkin_responses_shape_next_plan(planned):

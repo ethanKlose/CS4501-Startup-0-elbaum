@@ -44,9 +44,10 @@
       </label>
     </section>
 
-    <section class="wstep card pad-lg" data-step="1" data-has-error="{{ '1' if errors.free_text else '' }}">
+    <section class="wstep card pad-lg" data-step="1" data-has-error="{{ '1' if errors.free_text or errors.restrictions else '' }}">
       <h2>Any dietary restrictions or allergies?</h2>
       <p class="muted">We check every ingredient in every meal against these.</p>
+      {% if errors.restrictions %}<p class="error" role="alert">{{ errors.restrictions }}</p>{% endif %}
       <input type="hidden" name="restrictions_present" value="1">
       <div class="chips">
         {% for key, label in restriction_options.items() %}
@@ -115,9 +116,9 @@
       {% else %}<li class="muted">Nothing yet.</li>{% endfor %}
     </ul>
     <form method="post" action="/pantry/add" class="row pantry-add"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <input name="name" placeholder="item (e.g. rice)" required aria-label="Item name" style="flex:2;min-width:140px">
-      <input name="quantity" type="number" step="any" min="0" placeholder="qty" aria-label="Quantity" style="flex:1;min-width:70px">
-      <input name="unit" placeholder="unit" aria-label="Unit" style="flex:1;min-width:70px">
+      <input name="name" maxlength="100" placeholder="item (e.g. rice)" required aria-label="Item name" style="flex:2;min-width:140px">
+      <input name="quantity" type="number" step="any" min="0" max="1000000" placeholder="qty" aria-label="Quantity" style="flex:1;min-width:70px">
+      <input name="unit" maxlength="20" placeholder="unit" aria-label="Unit" style="flex:1;min-width:70px">
       <button class="btn soft">Add</button>
     </form>
   </section>
@@ -131,7 +132,7 @@
 
 <section class="card pad-lg" id="schedule-windows" style="margin-top:20px"><h2>Cooking windows and meal times</h2><p>Optional windows use 24-hour times, for example 07:00-08:00, 17:00-19:00. Blank means flexible. Your daily minute limits still apply.</p>
 <form method="post" action="/preferences/schedule"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-{% for d in range(7) %}<label>{{ weekdays[d] }}<input name="windows_{{ d }}" placeholder="07:00-08:00,17:00-19:00" value="{% for a,b in lifestyle.get('cooking_windows',{}).get(d|string,[]) %}{{ '%02d:%02d' % (a//60,a%60) }}-{{ '%02d:%02d' % (b//60,b%60) }}{{ ',' if not loop.last }}{% endfor %}"></label>{% endfor %}
+{% for d in range(7) %}<label>{{ weekdays[d] }}<input name="windows_{{ d }}" maxlength="127" placeholder="07:00-08:00,17:00-19:00" value="{% for a,b in lifestyle.get('cooking_windows',{}).get(d|string,[]) %}{{ '%02d:%02d' % (a//60,a%60) }}-{{ '%02d:%02d' % (b//60,b%60) }}{{ ',' if not loop.last }}{% endfor %}"></label>{% endfor %}
 {% for slot,default in [('breakfast',480),('lunch',750),('dinner',1110)] %}{% set t=lifestyle.get('meal_times',{}).get(slot,default) %}<label>{{ slot|capitalize }} time<input type="time" name="time_{{ slot }}" value="{{ '%02d:%02d' % (t//60,t%60) }}" required></label>{% endfor %}<button class="btn primary">Save cooking windows</button></form></section>
 
 </div>

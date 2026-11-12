@@ -45,3 +45,27 @@ def toggle(key: str = Form(...), checked: bool = Form(...), plan_id: int = Form(
         db.delete(row)
     db.commit()
     return Response(status_code=204)
+
+
+@router.post('/grocery/instacart')
+def instacart_handoff(plan_id: int = Form(...), user: User = Depends(current_user), db: Session = Depends(get_db)):
+    from fastapi import HTTPException
+    from fastapi.responses import RedirectResponse
+    from app.services.instacart import create_link,HandoffError
+    lock_user(db,user.id)
+    plan=planner.latest_plan(db,user)
+    if not plan or plan.id!=plan_id:
+        raise HTTPException(409,'The shopping list changed. Reload before sending it.')
+    if inventory.closed(plan):
+        raise HTTPException(409,'This plan is closed. Generate a new week before shopping.')
+    items=inventory.shopping_items(db,plan)
+    checked=inventory.checked_keys(plan,items)
+    items=[i for i in items if i['key'] not in checked]
+    if not items:
+        return RedirectResponse('/grocery?handoff=empty',303)
+    try:cache=create_link(items,(plan.settings or {}).get('instacart'))
+    except HandoffError as e:
+        return RedirectResponse('/grocery?handoff='+str(e),303)
+    plan.settings=dict(plan.settings or {},instacart=cache)
+    db.commit()
+    return RedirectResponse(cache['url'],303)

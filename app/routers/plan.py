@@ -76,6 +76,8 @@ def toggle_day(weekday: int, request: Request, user: User = Depends(current_user
 @router.post("/meals/{meal_id}/pin")
 def toggle_pin(meal_id: int, request: Request, next: str = Form("/"), user: User = Depends(current_user), db: Session = Depends(get_db)):
     meal = owned_meal(db, user, meal_id)
+    if inventory.closed(db.get(Plan, meal.plan_id)):
+        raise HTTPException(409, "This plan is closed. Reopen it before changing pins.")
     meal.pinned = not meal.pinned
     db.commit()
     return RedirectResponse(next if next.startswith("/") and not next.startswith("//") else "/", 303)
@@ -100,6 +102,8 @@ def set_status(meal_id: int, status: str = Form(...), next: str = Form("/"), use
     if status not in ("planned", "cooked", "skipped"):
         raise HTTPException(422, "status must be planned, cooked or skipped")
     meal.status = status
+    if status != "cooked":
+        meal.rating = None
     db.commit()
     return RedirectResponse(next if next.startswith("/") and not next.startswith("//") else "/", 303)
 

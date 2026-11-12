@@ -30,7 +30,7 @@
         <div class="optcards two">{% for k, label in variety.items() %}
           <label class="optcard"><input type="radio" name="variety" value="{{ k }}" {% if (existing.variety if existing else 'right') == k %}checked{% endif %}><span class="oc"><b>{{ label }}</b></span></label>{% endfor %}</div></section>
       <section class="card pad-lg"><label><span style="font-size:1.1rem">Anything else?</span>
-        <textarea name="notes" rows="3" maxlength="500" placeholder="e.g. too much chicken, no mushrooms">{{ existing.notes if existing else '' }}</textarea></label></section>
+        <textarea name="notes" maxlength="500" rows="3" maxlength="500" placeholder="e.g. too much chicken, no mushrooms">{{ existing.notes if existing else '' }}</textarea></label></section>
       <button class="btn primary lg">Save check-in</button>
     </form>
   </div>

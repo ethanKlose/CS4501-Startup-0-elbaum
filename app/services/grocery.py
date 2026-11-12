@@ -4,7 +4,7 @@ from typing import Dict, Iterable, List
 
 
 def norm(name: str) -> str:
-    n = " ".join(name.lower().split())
+    n = " ".join(name.casefold().split())
     return n
 
 
@@ -18,7 +18,7 @@ def build_list(meals: Iterable[dict]) -> List[Dict]:
     for m in meals:
         for i in m["ingredients"]:
             k = item_key(i["name"], i.get("unit", ""))
-            it = merged.setdefault(k, dict(key=k, name=norm(i["name"]), unit=(i.get("unit") or "").strip(),
+            it = merged.setdefault(k, dict(key=k, name=norm(i["name"]), unit=(i.get("unit") or "").lower().strip(),
                                            quantity=0.0, cost=0.0, sections=Counter(), meals=[]))
             it["quantity"] += i["quantity"]
             it["cost"] += i["cost"]
