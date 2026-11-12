@@ -33,5 +33,8 @@ def current_user(user: Optional[User] = Depends(current_user_optional)) -> User:
 
 
 def render(request: Request, name: str, user: Optional[User] = None, status_code: int = 200, **ctx):
+    plan=ctx.get("plan")
+    closest=(plan.settings or {}).get("closest",{}) if plan else {}
+    ctx["local_fallback_plan"]=closest.get("source")=="catalog_fallback" and closest.get("requested_engine") not in {"fake",None}
     ctx.update(user=user, request=request, csrf_token=request.session.get("csrf_token", ""), offline_mode=not (settings.openai_api_key.strip() or settings.anthropic_api_key.strip()))
     return templates.TemplateResponse(request, name, ctx, status_code=status_code)

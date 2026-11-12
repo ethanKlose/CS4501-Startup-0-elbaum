@@ -21,6 +21,9 @@ def generate_plan(request: Request, start_mode: str = Form("keep"), user: User =
         planner.generate(db, user, llm, start_mode=start_mode)
     except planner.PlanFailed as e:
         db.rollback()
+        if getattr(e,"redirect_to_preferences",False):
+            request.session["planning_error"]={"message":e.message,"details":e.errors}
+            return RedirectResponse("/survey",303)
         request.session["flash_error"] = {"message": e.message, "conflicts": e.conflicts}
     return RedirectResponse("/", 303)
 
@@ -31,6 +34,9 @@ def next_week(request: Request, user: User = Depends(current_user), db: Session 
         planner.generate(db, user, llm, new_week=True)
     except planner.PlanFailed as e:
         db.rollback()
+        if getattr(e,"redirect_to_preferences",False):
+            request.session["planning_error"]={"message":e.message,"details":e.errors}
+            return RedirectResponse("/survey",303)
         request.session["flash_error"] = {"message": e.message, "conflicts": e.conflicts}
     return RedirectResponse("/", 303)
 
@@ -66,6 +72,9 @@ def toggle_day(weekday: int, request: Request, user: User = Depends(current_user
         planner.set_day_skipped(db, plan, weekday, not currently)
     except planner.PlanFailed as e:
         db.rollback()
+        if getattr(e,"redirect_to_preferences",False):
+            request.session["planning_error"]={"message":e.message,"details":e.errors}
+            return RedirectResponse("/survey",303)
         request.session['flash_error'] = {'message': e.message, 'conflicts': []}
         return RedirectResponse('/', 303)
     if currently:
@@ -90,6 +99,9 @@ def swap(meal_id: int, request: Request, user: User = Depends(current_user), db:
         planner.swap_meal(db, user, llm, meal)
     except planner.PlanFailed as e:
         db.rollback()
+        if getattr(e,"redirect_to_preferences",False):
+            request.session["planning_error"]={"message":e.message,"details":e.errors}
+            return RedirectResponse("/survey",303)
         request.session["flash_error"] = {"message": "Couldn't swap that meal: " + e.message, "conflicts": e.conflicts}
     return RedirectResponse("/", 303)
 

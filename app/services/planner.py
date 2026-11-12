@@ -1,4 +1,5 @@
 """Builds the PlanContext from the user's saved answers, asks the LLM, validates, and saves."""
+import os
 import random
 import time
 import datetime as dt
@@ -15,7 +16,7 @@ from app.services.schedule import capacities, schedule
 from app.services.types import DayCtx, PlanContext
 from app.services import inventory
 from app.services.locking import lock_user
-from app.services.preferences import get_preferences
+from app.services.preferences import get_preferences, signature
 from app.services.weeks import plan_week_start, planning_today, planning_now, target_week
 from app.services.validators import SOFT_CHECKS, schedule_for, validate_full
 
@@ -55,7 +56,11 @@ def build_context(db: Session, user: User, llm, seed: int = 0, week_start=None) 
     days = {d.weekday: d for d in db.scalars(select(DaySetting).where(DaySetting.user_id == user.id))}
     checkin = db.scalar(select(CheckIn).where(CheckIn.user_id == user.id).order_by(CheckIn.id.desc()).limit(1))
     prefs_text = " . ".join(t for t in [profile.free_text, checkin.notes if checkin else ""] if t)
-    interp = llm.interpret_preferences(prefs_text) if prefs_text else {"excluded": [], "day_minutes_cap": {}}
+    try:
+        interp = llm.interpret_preferences(prefs_text) if prefs_text else {"excluded": [], "day_minutes_cap": {}}
+    except Exception:
+        from app.services.llm import FakeLLM
+        interp = FakeLLM().interpret_preferences(prefs_text)
     caps = interp.get("day_minutes_cap", {})
     prev = latest_plan(db, user)
     week_start = week_start or target_week(prev)
@@ -107,7 +112,7 @@ def build_context(db: Session, user: User, llm, seed: int = 0, week_start=None) 
     active_days={d.weekday for d in day_ctx if not d.skipped}
     pinned=[p for p in pinned if p['day'] in active_days and (p['day'],p['slot']) not in inactive]
     return PlanContext(
-        budget=profile.budget, days=day_ctx,
+        budget=profile.budget, days=day_ctx, preferences_signature=signature(db,user.id),
         preference_warnings=list(interp.get('warnings',[])),
         price_offers=dict(lifestyle.get('price_offers',{})), checkout_budget=True, equipment=lifestyle.get('equipment'), cooking_skill=lifestyle.get('cooking_skill','any'),
         allow_freezer='freezer' in lifestyle.get('equipment',['freezer']),
@@ -121,7 +126,7 @@ def build_context(db: Session, user: User, llm, seed: int = 0, week_start=None) 
 
 
 def plan_settings(ctx: PlanContext) -> dict:
-    return dict(restrictions=list(ctx.restrictions),excluded=list(ctx.excluded),pantry=list(ctx.pantry),preference_warnings=list(ctx.preference_warnings),prep_style=ctx.prep_style, prep_days=list(ctx.prep_days), prep_minutes=ctx.prep_minutes,
+    return dict(closest=dict(ctx.closest_metrics),preferences_signature=ctx.preferences_signature,restrictions=list(ctx.restrictions),excluded=list(ctx.excluded),pantry=list(ctx.pantry),preference_warnings=list(ctx.preference_warnings),prep_style=ctx.prep_style, prep_days=list(ctx.prep_days), prep_minutes=ctx.prep_minutes,
                 quality=dict(ctx.quality_metrics), goal=ctx.goal, calorie_target=ctx.calorie_target, protein_target=ctx.protein_target, equipment=ctx.equipment, cooking_skill=ctx.cooking_skill,
                 allow_freezer=ctx.allow_freezer, price_offers=ctx.price_offers, checkout_budget=ctx.checkout_budget, earliest_day=ctx.earliest_day, earliest_minute=ctx.earliest_minute, external_slots=ctx.external_slots, cooking_windows=ctx.cooking_windows, meal_times=ctx.meal_times, week_start=ctx.week_start, allow_pre_week=ctx.allow_pre_week)
 
@@ -169,15 +174,24 @@ def reschedule(plan: Plan) -> None:
     for m in plan.meals:
         m.cook_day, m.frozen = sched.assign[(m.day, m.slot)]
     plan.warnings = ([w for check in SOFT_CHECKS for w in check(pd, ctx)] if pd["meals"] else []) + list(ctx.preference_warnings)
+    if (plan.settings or {}).get('closest'):
+        from app.services.closest_plan import assess
+        _,hard,warnings,report=assess(pd,ctx)
+        plan.warnings=warnings+hard
+        if report:plan.settings=dict(plan.settings,closest=dict(plan.settings['closest'],**report))
 
 
-def run_with_retries(llm, ctx: PlanContext):
+
+def run_with_retries(llm, ctx: PlanContext, best_effort=False):
     """generate -> validate -> feed errors back -> retry.
 
     Attempts 1..N-1 are strict: hard AND soft issues go back to the LLM. The final attempt is tolerant:
     a plan with only soft issues (e.g. a rest day below the calorie target) is accepted with warnings.
     Returns (plan_dict, attempts, warnings) or raises PlanFailed.
     """
+    if best_effort:
+        from app.services.closest_plan import select_plan
+        return select_plan(llm,ctx)
     feedback: list = []
     errors: list = []
     for attempt in range(1, MAX_ATTEMPTS + 1):
@@ -210,9 +224,9 @@ def generate(db: Session, user: User, llm, seed: Optional[int] = None, new_week:
         from app.services.weeks import next_monday
         week=next_monday(planning_today())
     ctx = build_context(db, user, llm, seed, week_start=week)
-    plan_dict, attempts, warnings = run_with_retries(llm, ctx)
+    plan_dict, attempts, warnings = run_with_retries(llm, ctx, best_effort=os.environ.get("BEST_EFFORT_PLANNING", "1") != "0")
     plan = save_plan(db, user, ctx, plan_dict, attempts, warnings)
-    plan.settings=dict(plan.settings,generation={'engine':getattr(llm,'name','custom'),'attempts':attempts,'trace':ctx.generation_trace,'api_calls':list(getattr(llm,'metrics',[]))})
+    plan.settings=dict(plan.settings,generation={'engine':ctx.closest_metrics.get('source',getattr(llm,'name','custom')),'requested_engine':getattr(llm,'name','custom'),'attempts':attempts,'trace':ctx.generation_trace,'api_calls':list(getattr(llm,'metrics',[]))})
     db.commit()
     return plan
 
@@ -229,7 +243,7 @@ def swap_meal(db: Session, user: User, llm, meal: Meal) -> Meal:
                        busy=d.get("busy", False), skipped=d.get("skipped", False)) for d in plan.days]
     ctx.pinned = [m.as_dict() for m in plan.meals if m.id != meal.id]
     ctx.disliked = list(ctx.disliked) + [meal.name]
-    plan_dict, _, _ = run_with_retries(llm, ctx)
+    plan_dict, _, _ = run_with_retries(llm, ctx, best_effort=os.environ.get("BEST_EFFORT_PLANNING", "1") != "0")
     new = next(m for m in plan_dict["meals"] if m["day"] == meal.day and m["slot"] == meal.slot)
     meal.name, meal.cook_minutes, meal.calories, meal.protein = new["name"], new["cook_minutes"], new["calories"], new["protein"]
     meal.steps, meal.ingredients, meal.pinned = new["steps"], new["ingredients"], False

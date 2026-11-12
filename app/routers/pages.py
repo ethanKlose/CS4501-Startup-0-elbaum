@@ -60,7 +60,10 @@ def home(request: Request, user=Depends(current_user_optional), db: Session = De
     error = request.session.pop("flash_error", None)
     info = request.session.pop("flash_info", None)
     welcome = request.session.pop("welcome", False)
-    ctx = dict(profile=profile, plan=plan, archived=archived, error=error, info=info, welcome=welcome, weekdays=WEEKDAYS)
+    from app.services.preferences import signature
+    stored=(plan.settings or {}).get("preferences_signature") if plan else None
+    changed=bool(plan and (signature(db,user.id)!=stored if stored else (plan.budget!=profile.budget or (plan.settings or {}).get("goal","none")!=profile.goal or (plan.settings or {}).get("protein_target")!=profile.protein_target or (plan.settings or {}).get("calorie_target")!=profile.calorie_target)))
+    ctx = dict(preferences_changed=changed,profile=profile, plan=plan, archived=archived, error=error, info=info, welcome=welcome, weekdays=WEEKDAYS)
     if not (plan and plan.status == "ok"):
         return render(request, "home.html", user, **ctx)
 
@@ -89,7 +92,9 @@ def home(request: Request, user=Depends(current_user_optional), db: Session = De
                  checkout=st.get("checkout_total",plan.total_cost),checkout_known="checkout_total" in st,
                  pct=min(100, round(st.get("checkout_total",plan.total_cost) / plan.budget * 100)) if plan.budget else 0)
     from app.services.verification import summary
-    return render(request, "home.html", user, verification=summary(plan),columns=columns, hours=hour_labels(start_hour,hour_end=end_hour), hour_px=HOUR_PX, grid_px=(end_hour - start_hour) * HOUR_PX, week_title=week_title(start), stats=stats,
+    verification=summary(plan)
+    if changed and not archived:verification=dict(verification,label="Previous preferences",needs_review=True)
+    return render(request, "home.html", user, verification=verification,columns=columns, hours=hour_labels(start_hour,hour_end=end_hour), hour_px=HOUR_PX, grid_px=(end_hour - start_hour) * HOUR_PX, week_title=week_title(start), stats=stats,
                   cook_plan=cook_plan, sharing=sharing_stats(m.as_dict() for m in meals), checkin_due=checkin_due(plan, done),
                   short=[w[:3] for w in WEEKDAYS], meals_json=meals_json(meals, inventory.closed(plan)), closed=inventory.closed(plan), prep_col=bool(columns and columns[0]["prep"]), **ctx)
 

@@ -9,6 +9,8 @@
   {% if error.conflicts %}<ul>{% for c in error.conflicts %}<li>{{ c }}</li>{% endfor %}</ul>{% endif %}
   <a href="/survey">Edit your survey</a></div></div>{% endif %}
 
+{% if preferences_changed and not archived %}<div class="alert info" role="status" data-testid="preferences-changed"><div><strong>This calendar uses your previous preferences.</strong> Your saved options have changed. <a href="/survey">Save & generate a new plan from Preferences</a> to apply them.</div></div>{% endif %}
+{% if plan and not archived and plan.settings.get('closest') and plan.warnings %}{% set closest=plan.settings.closest %}<div class="alert info" role="status" data-testid="closest-plan"><div><strong>New plan generated from your latest options — review the differences.</strong><ul><li>Estimated shopping: ${{ '%.2f' % closest.shopping }} against ${{ '%.2f' % closest.budget }} budget{% if closest.over_budget %} — ${{ '%.2f' % closest.over_budget }} over{% endif %}.</li>{% if closest.calorie_target %}<li>Planned calories: {{ closest.average_calories }} kcal/day average; goal {{ closest.calorie_target }}.</li>{% endif %}{% if closest.protein_target %}<li>Planned protein: {{ closest.average_protein }}g/day average; goal {{ closest.protein_target }}g.</li>{% endif %}</ul><details><summary>See all differences and daily checks</summary><p>Closest found in this bounded search; an optimal plan is not guaranteed.</p><ul>{% for warning in plan.warnings %}<li>{{ warning }}</li>{% endfor %}</ul></details><a href="/survey">Adjust preferences</a></div></div>{% endif %}
 {% if archived %}<div class="alert info">Archived plan. <a href="/">Return to the current plan</a></div>{% endif %}
 {% if not plan or plan.status != 'ok' %}
 <section class="empty card reveal">
@@ -95,7 +97,7 @@
     <section class="card side-card reveal" style="--i:1">
       <div class="sc-head"><span>{{ icon('dollar', 16) }} Weekly budget</span><strong>${{ '%.2f' % stats.checkout }} <small class="muted">of ${{ '%.2f' % plan.budget }}</small></strong></div>
       <div class="meter" role="progressbar" aria-valuenow="{{ stats.pct }}" aria-valuemin="0" aria-valuemax="100"><span style="width:{{ stats.pct }}%"></span></div>
-      <p class="muted tiny" style="margin:8px 0 0">{{ 'Estimated whole-package shopping total' if stats.checkout_known else 'Legacy portion estimate; shopping total not recorded' }} · <span class="{% if stats.checkout <= plan.budget %}ok{% else %}error{% endif %}">${{ '%.2f' % (plan.budget - stats.checkout) }} below budget</span></p>
+      <p class="muted tiny" style="margin:8px 0 0">{{ 'Estimated whole-package shopping total' if stats.checkout_known else 'Legacy portion estimate; shopping total not recorded' }} · <span class="{% if stats.checkout <= plan.budget %}ok{% else %}error{% endif %}">${{ '%.2f' % ((plan.budget - stats.checkout)|abs) }} {{ 'below budget' if stats.checkout <= plan.budget else 'over budget' }}</span></p>
       <p class="muted tiny">Portions used in meals: ${{ '%.2f' % plan.total_cost }}. Pantry stock and package leftovers explain the difference. <a href="/prices">Price sources</a></p>{% if plan.settings.get("quality") %}<p class="muted tiny">{{ plan.settings.quality.recipes }} different recipes · {{ plan.settings.quality.ingredients }} ingredients. Budget is a ceiling; variety and nutrition guide the choices.</p>{% endif %}<div class="statgrid">
         <div><b>{{ '{:,}'.format(stats.calories) }}</b><span>cal / day</span></div>
         <div><b>{{ stats.protein }}g</b><span>protein / day</span></div>

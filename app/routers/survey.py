@@ -201,7 +201,7 @@ def survey_form(request: Request, user: User = Depends(current_user), db: Sessio
     ctx = survey_context(db, user)
     values = field_values(ctx["profile"], ctx["days"])
     db.commit()
-    return render(request, "survey.html", user, errors={}, values=values, saved=request.session.pop("preferences_saved", False) or request.query_params.get("saved"), pantry_error=request.query_params.get("pantry_error"), **ctx)
+    return render(request, "survey.html", user, planning_error=request.session.pop("planning_error",None), errors={}, values=values, saved=request.session.pop("preferences_saved", False) or request.query_params.get("saved"), pantry_error=request.query_params.get("pantry_error"), **ctx)
 
 
 def understood(profile: Profile, days) -> List[str]:
@@ -316,6 +316,9 @@ async def survey_submit(request: Request, user: User = Depends(current_user), db
             await run_in_threadpool(planner.generate, db, user, llm, start_mode="keep")
         except planner.PlanFailed as exc:
             db.rollback()
+            if getattr(exc,"redirect_to_preferences",False):
+                request.session["planning_error"]={"message":exc.message,"details":exc.errors}
+                return RedirectResponse("/survey",303)
             request.session["flash_error"] = {"message": "Preferences saved, but the new plan could not be generated. Your previous plan is still available. " + exc.message, "conflicts": exc.conflicts}
         return RedirectResponse("/", 303)
     if first_time and profile.onboarded:

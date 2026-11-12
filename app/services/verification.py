@@ -17,4 +17,4 @@ def summary(plan):
     add('Nutrition goal',[v.check_goal],requested=ctx.goal!='none')
     rows.append(dict(label='Extra notes',status='Needs review' if ctx.preference_warnings else 'Passed',details=ctx.preference_warnings))
     review=bool(plan.warnings) or any(r['status'] in {'Needs review','Not recorded'} for r in rows)
-    return dict(label='Needs review' if review else 'Checks passed',needs_review=review,checks=rows)
+    return dict(label=('Closest available plan' if st.get('closest') else 'Needs review') if review else 'Checks passed',needs_review=review,checks=rows)

@@ -1,4 +1,7 @@
+# Preserve the explicit strict-budget contract of the legacy regression suite.
+# Closest-plan integration tests enable and exercise the production default.
 import os
+os.environ["BEST_EFFORT_PLANNING"] = "0"
 
 os.environ.setdefault("DATABASE_URL", "sqlite://")
 os.environ.setdefault("RATE_LIMIT_ENABLED", "0")

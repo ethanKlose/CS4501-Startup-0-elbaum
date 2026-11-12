@@ -51,6 +51,8 @@ class PlanContext:
     seed: int = 0
     protein_target: Optional[int] = None
     quality_metrics: Dict = field(default_factory=dict)
+    closest_metrics: Dict = field(default_factory=dict)
+    preferences_signature: str = ""
 
     def active_days(self) -> List[DayCtx]:
         return [d for d in self.days if not d.skipped]

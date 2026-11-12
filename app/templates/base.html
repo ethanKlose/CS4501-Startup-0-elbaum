@@ -18,7 +18,7 @@
   <script src="/static/app.js" defer></script>
 </head>
 <body class="{% block body_class %}{% endblock %}">
-<div class="mode-banner" data-testid="planner-mode">{% if offline_mode %}Demo mode: plans use a built-in recipe catalog. Live AI is not connected.{% else %}AI mode: plans use your configured model.{% endif %}</div>
+<div class="mode-banner" data-testid="planner-mode">{% if local_fallback_plan %}Local fallback: this plan uses approved recipes.{% elif offline_mode %}Demo mode: plans use a built-in recipe catalog. Live AI is not connected.{% else %}AI mode: plans use your configured model.{% endif %}</div>
 {% block header %}
 <header class="topbar">
   <div class="topbar-in">
