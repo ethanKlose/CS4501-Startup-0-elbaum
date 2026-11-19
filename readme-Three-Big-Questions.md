@@ -53,3 +53,6 @@ How will you validate the output of the LLM you are using?
 - Human-in-the-Loop UX because format it in a weekly calendar for the user to review and then click regenerate if they want to change it.
 - To an extent we are doing edge-case guardrails because we have tests for edge cases and programmed functionality for edge cases.
 
+
+
+How good is your system?
