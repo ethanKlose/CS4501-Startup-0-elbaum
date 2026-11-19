@@ -56,3 +56,14 @@ How will you validate the output of the LLM you are using?
 
 
 How good is your system?
+
+
+| Metric | Reported result | What it demonstrates |
+|---|---:|---|
+| Automated test execution | **581/581 passed — 100%** | The tested behaviors passed in that particular run. |
+| Python line coverage | **95.32%** | Percentage of application lines executed during an earlier coverage run—not accuracy. |
+| Plan generation completion | **57/60 — 95%** | The earlier evaluation generated plans for 57 scenarios. |
+| Plans meeting every encoded check | **54/60 — 90%** | Across all scenarios, 54 produced plans passing the implemented checks. |
+| Check compliance among generated plans | **54/57 — 94.7%** | Of the generated plans, this proportion passed every encoded check. |
+| Allergy challenge failures | **19/31 — 61.3% missed** | Your separate probe exposed weaknesses in the keyword matcher. This is a challenge-set result, not a real-world failure rate. |
+
