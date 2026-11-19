@@ -65,5 +65,5 @@ How good is your system?
 | Plan generation completion | **57/60 — 95%** | The earlier evaluation generated plans for 57 scenarios. |
 | Plans meeting every encoded check | **54/60 — 90%** | Across all scenarios, 54 produced plans passing the implemented checks. |
 | Check compliance among generated plans | **54/57 — 94.7%** | Of the generated plans, this proportion passed every encoded check. |
-| Allergy challenge failures | **19/31 — 61.3% missed** | Your separate probe exposed weaknesses in the keyword matcher. This is a challenge-set result, not a real-world failure rate. |
+| Allergy challenge failures | **19/31 — 61.3% missed** | The separate probe exposed weaknesses in the keyword matcher. This is a challenge-set result, not a real-world failure rate. |
 
