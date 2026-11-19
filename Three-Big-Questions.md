@@ -39,3 +39,17 @@ We could add:
 - Diversity-aware ranking: Reward different dishes, cuisines, ingredients, and protein sources within the user’s restrictions.
 - Feedback that explains rejection: Distinguish “I dislike this ingredient” from “I didn’t have time this week,” avoiding incorrect assumptions.
 - Evaluation across user profiles: Check whether recommendations remain varied and appropriate across different diets, budgets, and cooking backgrounds.
+
+
+
+
+
+
+
+How will you validate the output of the LLM you are using?
+- Checking output format is not enough because we give it a way to form the information
+- Symbolic checks like constraints because we check if we meet budget constraints, meal preference constraints etc.
+- Differential checks against other LLMs because we use a second LLM to check if the generated meal plan meets allergy, budget, busyness and other specifications.
+- Human-in-the-Loop UX because format it in a weekly calendar for the user to review and then click regenerate if they want to change it.
+- To an extent we are doing edge-case guardrails because we have tests for edge cases and programmed functionality for edge cases.
+
