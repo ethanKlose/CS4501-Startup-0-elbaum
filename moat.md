@@ -1,7 +1,7 @@
 Summary of Moat:
-PlateJoy is not just a standalone app, instead we are working to generate an integrated system that works with Kroger, Instacart, and other systems that a personal agent can interact with and automatically buy groceries etc.
-A gym intensive person's LLM would generate biased results based on the personality of the user in the context, but our system removes that bias and only goes based off user inputted information.
-We have measures to validate the accuracy of a given generated plan that will neatly fit within the many preferences that need to be balanced which an LLM would not be able to do. For example, we validate that a plan meets budget, calories, macros, allergies, etc.
+- PlateJoy is not just a standalone app, instead we are working to generate an integrated system that works with Kroger, Instacart, and other systems that a personal agent can interact with and automatically buy groceries etc.
+- A gym intensive person's LLM would generate biased results based on the personality of the user in the context, but our system removes that bias and only goes based off user inputted information.
+- We have measures to validate the accuracy of a given generated plan that will neatly fit within the many preferences that need to be balanced which an LLM would not be able to do. For example, we validate that a plan meets budget, calories, macros, allergies, etc.
 
 
 Proposed Direction: PlateJoy as a Service for AI Agents
